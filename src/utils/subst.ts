@@ -1,28 +1,22 @@
-class Var {
-	n: number;
-	constructor(n: number) {
-		this.n = n;
-	}
-}
-class App {
-	t1: Term;
-	t2: Term;
-	constructor(t1: Term, t2: Term) {
-		this.t1 = t1;
-		this.t2 = t2;
-	}
-}
-class Lam {
-	p: number;
-	t: Term;
-	constructor(p: number, t: Term) {
-		this.p = p;
-		this.t = t;
-	}
-}
+type Term =
+	| { type: "Var"; var: number }
+	| { type: "App"; lam: Term; param: Term }
+	| { type: "Lam"; var: number; ret: Term };
 
-type Term = Var | App | Lam;
-
-const t: Term = new App(new Lam(0, new Var(0)), new Var(1));
+const t: Term = {
+	type: "App",
+	lam: {
+		type: "Lam",
+		var: 0,
+		ret: {
+			type: "Var",
+			var: 0,
+		},
+	},
+	param: {
+		type: "Var",
+		var: 1,
+	},
+};
 
 export default Term;
