@@ -1,4 +1,4 @@
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 
 type Term =
 	| { type: "Var"; var: number }
@@ -40,14 +40,56 @@ function freeValue(t: Term): number[] {
 
 export const fv = freeValue(t);
 
-function subst(ts: Term[], b: Term, a: Term, last_var: Term): Term[] {
-	// return match(ts)
-	// 	.with([{ type: "App" }, (a) => {
-	// 		return match(a)
-	// 	}])
-	// 	.with([{ type: "Var" }, (v) => {}])
-	// 	.with([{ type: "Lam" }, (l) => {}])
-	// 	.exhaustive();
+function substInternal(ts: Term[], b: Term, a: Term, last_var: number): Term[] {
+	return match<[Term[], Term, Term], Term[]>([ts, b, a])
+		.with(
+			[
+				[
+					{
+						type: "App",
+						lam: {
+							type: "Lam",
+						},
+					},
+					...P.rest(P._),
+				],
+				{ type: "Var" },
+				{ type: "Var" },
+			],
+			([ts, b, a]) => {
+				if (b.var == a.var) {
+					return substInternal(
+						[ts[0].lam.ret],
+						{ type: "Var", var: ts[0].lam.var },
+						{ type: "Var", var: a.bar },
+						last_var
+					);
+				}
+				return [{ type: "Var", var: 300 }];
+			}
+		)
+		.with([P._, P._, P._], () => [])
+		.exhaustive();
 }
+
+function subst(ts: Term[], b: Term, a: Term): Term[] {
+	return substInternal(
+		ts,
+		b,
+		a,
+		freeValue(ts[0])
+			.concat(freeValue(b))
+			.concat(freeValue(a))
+			.reduce((acc: number, e: number) => {
+				return acc < e ? e : acc;
+			}, 0) + 1
+	);
+}
+
+export const s = subst(
+	[t, t],
+	{ type: "Var", var: 1 },
+	{ type: "Var", var: 2 }
+);
 
 export default Term;

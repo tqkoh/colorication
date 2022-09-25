@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { t } from "../utils/subst";
+import { s, t } from "../utils/subst";
 
 class Title extends Phaser.Scene {
 	constructor() {
@@ -7,7 +7,7 @@ class Title extends Phaser.Scene {
 	}
 
 	preload() {
-		console.log(t);
+		console.log(s);
 	}
 
 	create() {}
