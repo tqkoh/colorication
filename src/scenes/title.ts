@@ -1,18 +1,36 @@
 import Phaser from "phaser";
-import { s, t } from "../utils/subst";
 
-class Title extends Phaser.Scene {
+export default class Title extends Phaser.Scene {
+	private keys:
+		| {
+				Enter: Phaser.Input.Keyboard.Key;
+		  }
+		| undefined;
+
 	constructor() {
 		super({ key: "title" });
 	}
 
 	preload() {
-		console.log(s);
+		console.log("Title.preload");
 	}
 
-	create() {}
+	create() {
+		console.log("Title.create");
+		this.keys = {
+			Enter: this.input.keyboard.addKey(
+				Phaser.Input.Keyboard.KeyCodes.ENTER
+			),
+		};
+		// if (localStorage.getItem("played") == null) {
+		// 	this.scene.start("game");
+		// }
+	}
 
-	update() {}
+	update() {
+		if (Phaser.Input.Keyboard.JustDown(this.keys!.Enter)) {
+			console.log("enter");
+			this.scene.start("play");
+		}
+	}
 }
-
-export default Title;

@@ -1,36 +1,35 @@
 import { match, P } from "ts-pattern";
-import { select } from "ts-pattern/dist/patterns";
 
 type Term =
-	| { type: "Var"; var: number }
-	| { type: "App"; lam: Term; param: Term }
-	| { type: "Lam"; var: number; ret: Term };
+	| { _type: "Var"; var: number }
+	| { _type: "App"; lam: Term; param: Term }
+	| { _type: "Lam"; var: number; ret: Term };
 
 export const t: Term = {
-	type: "App",
+	_type: "App",
 	lam: {
-		type: "Lam",
+		_type: "Lam",
 		var: 0,
 		ret: {
-			type: "Var",
+			_type: "Var",
 			var: 0,
 		},
 	},
 	param: {
-		type: "Var",
+		_type: "Var",
 		var: 1,
 	},
 };
 
 function freeValue(t: Term): number[] {
 	return match(t)
-		.with({ type: "Var" }, (v) => {
+		.with({ _type: "Var" }, (v) => {
 			return [v.var];
 		})
-		.with({ type: "App" }, (a) => {
+		.with({ _type: "App" }, (a) => {
 			return [...new Set([...freeValue(a.lam), ...freeValue(a.param)])];
 		})
-		.with({ type: "Lam" }, (l) => {
+		.with({ _type: "Lam" }, (l) => {
 			let a = freeValue(l.ret);
 			return a.reduce((acc: number[], e: number) => {
 				if (e != l.var) acc.push(e);
@@ -52,19 +51,19 @@ function substInternal(
 		// app の場合、subst した後適用する。(lam の返り値の中の引数を、適用するものでさらに subst する)
 		.with(
 			[
-				{ type: "App", lam: { type: "Lam" } },
-				{ type: "Var", var: b },
+				{ _type: "App", lam: { _type: "Lam" } },
+				{ _type: "Var", var: b },
 			],
 			([ap, a]) => {
 				acc.push(subst([ap.lam.ret], ap.lam.var, a).slice(-1)[0]);
 				return acc;
 			}
 		)
-		.with([{ type: "App", lam: { type: "Lam" } }, P._], ([ap, a]) => {
+		.with([{ _type: "App", lam: { _type: "Lam" } }, P._], ([ap, a]) => {
 			let substLam = subst([ap.lam], b, a).slice(-1)[0];
 			let substParam = subst([ap.param], b, a).slice(-1)[0];
 			acc.push({
-				type: "App",
+				_type: "App",
 				lam: substLam,
 				param: substParam,
 			});
@@ -77,38 +76,38 @@ function substInternal(
 			);
 			return acc;
 		})
-		// App の lam が App nanka nanka の結果の lam のこともあるのでこれはいる
-		.with([{ type: "App" }, P._], ([ap, a]) => {
+		// App の lam が lam 以外のこともあるのでこれはいる
+		.with([{ _type: "App" }, P._], ([ap, a]) => {
 			let substLam = subst([ap.lam], b, a).slice(-1)[0];
 			let substParam = subst([ap.param], b, a).slice(-1)[0];
 			acc.push({
-				type: "App",
+				_type: "App",
 				lam: substLam,
 				param: substParam,
 			});
 			return acc;
 		})
 		// Var
-		.with([P._, { type: "Var", var: b }], ([_t, _a]) => {
+		.with([P._, { _type: "Var", var: b }], ([_t, _a]) => {
 			return acc;
 		})
-		.with([{ type: "Var" }, P._], ([va, a]) => {
+		.with([{ _type: "Var" }, P._], ([va, a]) => {
 			if (va.var == b) acc.push(a);
 			return acc;
 		})
-		.with([{ type: "Lam" }, P._], ([la, a]) => {
+		.with([{ _type: "Lam" }, P._], ([la, a]) => {
 			if (b == la.var) return acc;
 			else if (!freeValue(la.ret).includes(b)) return acc;
 			else {
 				if (freeValue(a).includes(la.var)) {
 					acc.push({
-						type: "Lam",
+						_type: "Lam",
 						var: last_var,
 						ret: subst(
 							substInternal(
 								[la.ret],
 								la.var,
-								{ type: "Var", var: last_var },
+								{ _type: "Var", var: last_var },
 								last_var + 1
 							),
 							b,
@@ -117,7 +116,7 @@ function substInternal(
 					});
 				} else {
 					acc.push({
-						type: "Lam",
+						_type: "Lam",
 						var: la.var,
 						ret: subst([la.ret], b, a).slice(-1)[0],
 					});
@@ -135,13 +134,13 @@ function substInternal(
 	return ret;
 }
 
-function subst(ts: Term[], b: number, a: Term): Term[] {
+export function subst(ts: Term[], b: number, a: Term): Term[] {
 	return substInternal(
 		ts,
 		b,
 		a,
 		freeValue(ts.slice(-1)[0])
-			.concat(freeValue({ type: "Var", var: b }))
+			.concat(freeValue({ _type: "Var", var: b }))
 			.concat(freeValue(a))
 			.reduce((acc: number, e: number) => {
 				return acc < e ? e : acc;
@@ -149,6 +148,6 @@ function subst(ts: Term[], b: number, a: Term): Term[] {
 	);
 }
 
-export const s = subst([t], 1, { type: "Var", var: 2 });
+export const s = subst([t], 1, { _type: "Var", var: 2 });
 
 export default Term;
