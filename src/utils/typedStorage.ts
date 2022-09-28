@@ -28,7 +28,7 @@ type StorageValTypeOf<
 > = Spec[K] extends Codec<infer T> ? T : never;
 
 /** 型安全StorageラッパーのAPI */
-interface TypedStorage<Spec extends StorageCodecSpec> {
+export interface TypedStorage<Spec extends StorageCodecSpec> {
 	get<K extends StorageKeys<Spec>>(key: K): StorageValTypeOf<Spec, K> | null;
 	set<K extends StorageKeys<Spec>>(
 		key: K,
@@ -70,19 +70,18 @@ export const createTypedStorage = <Spec extends StorageCodecSpec>(
 	});
 };
 
-export const stringCodec: Codec<string> = {
-	encode: (s: string) => s,
-	decode: (s: string) => s,
-};
-
-// 簡単のため、エッジケースへの対処は省略しています
-export const numberCodec: Codec<number> = {
-	encode: (n: number) => n.toString(),
-	decode: (s: string) => {
-		const n = Number(s);
-		if (isNaN(n)) {
-			throw new Error("input is not decodable as number");
-		}
-		return n;
-	},
-};
+export class baseStorage implements BaseStorage {
+	s: Storage;
+	constructor(storage: Storage) {
+		this.s = storage;
+	}
+	get(key: string): string | null {
+		return this.s.getItem(key);
+	}
+	set(key: string, value: string): void {
+		this.s.setItem(key, value);
+	}
+	remove(key: string): void {
+		this.s.removeItem(key);
+	}
+}
