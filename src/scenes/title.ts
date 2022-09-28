@@ -19,18 +19,18 @@ export default class Title extends Phaser.Scene {
 	create() {
 		console.log("Title.create");
 
-		// this.keys.next = this.game.config.keyConfig.map(...)
-
-		this.registry.set("test", "test");
+		this.keys.next = globalThis.keyConfig.Enter.map((k: number) => {
+			return this.input.keyboard.addKey(k);
+		});
 		// if (localStorage.getItem("played") == null) {
 		// 	this.scene.start("game");
 		// }
 	}
 
 	update() {
-		// if (Phaser.Input.Keyboard.JustDown(this.keys!.Enter)) {
-		// 	console.log("enter");
-		// 	this.scene.start("play");
-		// }
+		if (Phaser.Input.Keyboard.JustDown(this.keys.next[0])) {
+			console.log("enter");
+			this.scene.start("play");
+		}
 	}
 }

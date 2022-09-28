@@ -1,45 +1,30 @@
 import Phaser from "phaser";
-import { defaultKeyConfig, KeyConfig } from "./data/defaultKeyConfig";
+import { defaultKeyConfig } from "./data/defaultKeyConfig";
 import Play from "./scenes/play";
 import Title from "./scenes/title";
 import { keyConfigCodec } from "./utils/storageCodecs";
-import {
-	baseStorage,
-	Codec,
-	createTypedStorage,
-	TypedStorage,
-} from "./utils/typedStorage";
+import { baseStorage, createTypedStorage } from "./utils/typedStorage";
 
-class Game extends Phaser.Game {
-	storage;
-	keyConfig: KeyConfig;
-	constructor(config: Phaser.Types.Core.GameConfig) {
-		super(config);
-		this.storage = createTypedStorage(
-			{
-				keyConfig: keyConfigCodec,
-			},
-			new baseStorage(localStorage)
-		);
+globalThis.storage = createTypedStorage(
+	{
+		keyConfig: keyConfigCodec,
+	},
+	new baseStorage(localStorage)
+);
 
-		let keyConfigFromStorage = this.storage.get("keyConfig");
-		if (keyConfigFromStorage == null) {
-			this.storage.set("keyConfig", defaultKeyConfig);
-			this.keyConfig = defaultKeyConfig;
-		} else {
-			this.keyConfig = keyConfigFromStorage;
-		}
+globalThis.keyConfig = defaultKeyConfig;
+
+{
+	let keyConfigFromStorage = globalThis.storage.get("keyConfig");
+	if (keyConfigFromStorage == null) {
+		globalThis.storage.set("keyConfig", defaultKeyConfig);
+		globalThis.keyConfig = defaultKeyConfig;
+	} else {
+		globalThis.keyConfig = keyConfigFromStorage;
 	}
 }
 
-type GameConfig = Phaser.Types.Core.GameConfig & {
-	storage: TypedStorage<{
-		keyConfig: Codec<KeyConfig>;
-	}>;
-	keyConfig: KeyConfig;
-};
-
-let config: GameConfig = {
+let config: Phaser.Types.Core.GameConfig = {
 	type: Phaser.AUTO,
 	width: 800,
 	height: 600,
@@ -48,22 +33,6 @@ let config: GameConfig = {
 		autoCenter: Phaser.Scale.CENTER_BOTH,
 	},
 	scene: [Title, Play],
-	storage: createTypedStorage(
-		{
-			keyConfig: keyConfigCodec,
-		},
-		new baseStorage(localStorage)
-	),
-	keyConfig: defaultKeyConfig,
 };
-{
-	let keyConfigFromStorage = config.storage.get("keyConfig");
-	if (keyConfigFromStorage == null) {
-		config.storage.set("keyConfig", defaultKeyConfig);
-		config.keyConfig = defaultKeyConfig;
-	} else {
-		config.keyConfig = keyConfigFromStorage;
-	}
-}
-// const game = new Phaser.Game<GameConfig>(config);
-// game.config.storage;
+
+new Phaser.Game(config);
