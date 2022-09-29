@@ -17,10 +17,14 @@ globalThis.keyConfig = defaultKeyConfig;
 {
 	let keyConfigFromStorage = globalThis.storage.get("keyConfig");
 	if (keyConfigFromStorage == null) {
-		globalThis.storage.set("keyConfig", defaultKeyConfig);
 		globalThis.keyConfig = defaultKeyConfig;
+		globalThis.storage.set("keyConfig", globalThis.keyConfig);
 	} else {
-		globalThis.keyConfig = keyConfigFromStorage;
+		globalThis.keyConfig = {
+			...globalThis.keyConfig,
+			...keyConfigFromStorage,
+		};
+		globalThis.storage.set("keyConfig", globalThis.keyConfig);
 	}
 }
 

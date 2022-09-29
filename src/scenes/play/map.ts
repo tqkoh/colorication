@@ -14,11 +14,10 @@ export type Test = {
 	output: Term;
 };
 
-export interface Stage {
+export type Stage = {
 	tests: Test[];
 	terms: Term[];
-	init(): Square[][];
-}
+};
 
 export type Square = (
 	| { _type: "air" }
@@ -104,6 +103,5 @@ export function squaresFrom(s: Stage): Square[][] {
 		collidable: false,
 		locked: false,
 	};
-	// for(let i in s.terms){}...
 	return ret;
 }

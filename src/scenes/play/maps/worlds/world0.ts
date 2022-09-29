@@ -1,9 +1,9 @@
 import { airSquare as air, parentSquare as par, Square } from "../../map";
-import { Stage0 } from "./world0/stage0";
+import { stage0 } from "./world0/stage0";
 
 const s_0: Square = {
 	_type: "stage",
-	stage: new Stage0(),
+	stage: stage0,
 	name: "",
 	movable: false,
 	collidable: false,

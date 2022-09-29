@@ -1,14 +1,6 @@
-import Term from "../../../../../utils/subst";
-import { Square, squaresFrom, Stage, Test } from "../../../map";
+import { Stage } from "../../../map";
 
-export class Stage0 implements Stage {
-	tests: Test[];
-	terms: Term[];
-	constructor() {
-		this.tests = [];
-		this.terms = [];
-	}
-	init(): Square[][] {
-		return squaresFrom(this);
-	}
-}
+export const stage0: Stage = {
+	tests: [],
+	terms: [],
+};

@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "dependency-cruiser": "^11.16.1",
     "typescript": "^4.8.3",
     "vite": "^3.1.0"
   },
