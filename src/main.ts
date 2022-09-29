@@ -1,8 +1,34 @@
 import Phaser from "phaser";
+import { defaultKeyConfig } from "./data/keyConfig";
 import Play from "./scenes/play";
 import Title from "./scenes/title";
+import { keyConfigCodec } from "./utils/storageCodecs";
+import { baseStorage, createTypedStorage } from "./utils/typedStorage";
 
-const config: Phaser.Types.Core.GameConfig = {
+globalThis.storage = createTypedStorage(
+	{
+		keyConfig: keyConfigCodec,
+	},
+	new baseStorage(localStorage)
+);
+
+globalThis.keyConfig = defaultKeyConfig;
+
+{
+	let keyConfigFromStorage = globalThis.storage.get("keyConfig");
+	if (keyConfigFromStorage == null) {
+		globalThis.keyConfig = defaultKeyConfig;
+		globalThis.storage.set("keyConfig", globalThis.keyConfig);
+	} else {
+		globalThis.keyConfig = {
+			...globalThis.keyConfig,
+			...keyConfigFromStorage,
+		};
+		globalThis.storage.set("keyConfig", globalThis.keyConfig);
+	}
+}
+
+let config: Phaser.Types.Core.GameConfig = {
 	type: Phaser.AUTO,
 	width: 800,
 	height: 600,
@@ -12,4 +38,5 @@ const config: Phaser.Types.Core.GameConfig = {
 	},
 	scene: [Title, Play],
 };
+
 new Phaser.Game(config);

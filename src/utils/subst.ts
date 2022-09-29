@@ -1,35 +1,35 @@
 import { match, P } from "ts-pattern";
 
 type Term =
-	| { _type: "Var"; var: number }
-	| { _type: "App"; lam: Term; param: Term }
-	| { _type: "Lam"; var: number; ret: Term };
+	| { _type: "var"; var: number }
+	| { _type: "app"; lam: Term; param: Term }
+	| { _type: "lam"; var: number; ret: Term };
 
 export const t: Term = {
-	_type: "App",
+	_type: "app",
 	lam: {
-		_type: "Lam",
+		_type: "lam",
 		var: 0,
 		ret: {
-			_type: "Var",
+			_type: "var",
 			var: 0,
 		},
 	},
 	param: {
-		_type: "Var",
+		_type: "var",
 		var: 1,
 	},
 };
 
 function freeValue(t: Term): number[] {
 	return match(t)
-		.with({ _type: "Var" }, (v) => {
+		.with({ _type: "var" }, (v) => {
 			return [v.var];
 		})
-		.with({ _type: "App" }, (a) => {
+		.with({ _type: "app" }, (a) => {
 			return [...new Set([...freeValue(a.lam), ...freeValue(a.param)])];
 		})
-		.with({ _type: "Lam" }, (l) => {
+		.with({ _type: "lam" }, (l) => {
 			let a = freeValue(l.ret);
 			return a.reduce((acc: number[], e: number) => {
 				if (e != l.var) acc.push(e);
@@ -51,19 +51,19 @@ function substInternal(
 		// app の場合、subst した後適用する。(lam の返り値の中の引数を、適用するものでさらに subst する)
 		.with(
 			[
-				{ _type: "App", lam: { _type: "Lam" } },
-				{ _type: "Var", var: b },
+				{ _type: "app", lam: { _type: "lam" } },
+				{ _type: "var", var: b },
 			],
 			([ap, a]) => {
 				acc.push(subst([ap.lam.ret], ap.lam.var, a).slice(-1)[0]);
 				return acc;
 			}
 		)
-		.with([{ _type: "App", lam: { _type: "Lam" } }, P._], ([ap, a]) => {
+		.with([{ _type: "app", lam: { _type: "lam" } }, P._], ([ap, a]) => {
 			let substLam = subst([ap.lam], b, a).slice(-1)[0];
 			let substParam = subst([ap.param], b, a).slice(-1)[0];
 			acc.push({
-				_type: "App",
+				_type: "app",
 				lam: substLam,
 				param: substParam,
 			});
@@ -77,37 +77,37 @@ function substInternal(
 			return acc;
 		})
 		// App の lam が lam 以外のこともあるのでこれはいる
-		.with([{ _type: "App" }, P._], ([ap, a]) => {
+		.with([{ _type: "app" }, P._], ([ap, a]) => {
 			let substLam = subst([ap.lam], b, a).slice(-1)[0];
 			let substParam = subst([ap.param], b, a).slice(-1)[0];
 			acc.push({
-				_type: "App",
+				_type: "app",
 				lam: substLam,
 				param: substParam,
 			});
 			return acc;
 		})
 		// Var
-		.with([P._, { _type: "Var", var: b }], ([_t, _a]) => {
+		.with([P._, { _type: "var", var: b }], ([_t, _a]) => {
 			return acc;
 		})
-		.with([{ _type: "Var" }, P._], ([va, a]) => {
+		.with([{ _type: "var" }, P._], ([va, a]) => {
 			if (va.var == b) acc.push(a);
 			return acc;
 		})
-		.with([{ _type: "Lam" }, P._], ([la, a]) => {
+		.with([{ _type: "lam" }, P._], ([la, a]) => {
 			if (b == la.var) return acc;
 			else if (!freeValue(la.ret).includes(b)) return acc;
 			else {
 				if (freeValue(a).includes(la.var)) {
 					acc.push({
-						_type: "Lam",
+						_type: "lam",
 						var: last_var,
 						ret: subst(
 							substInternal(
 								[la.ret],
 								la.var,
-								{ _type: "Var", var: last_var },
+								{ _type: "var", var: last_var },
 								last_var + 1
 							),
 							b,
@@ -116,7 +116,7 @@ function substInternal(
 					});
 				} else {
 					acc.push({
-						_type: "Lam",
+						_type: "lam",
 						var: la.var,
 						ret: subst([la.ret], b, a).slice(-1)[0],
 					});
@@ -140,7 +140,7 @@ export function subst(ts: Term[], b: number, a: Term): Term[] {
 		b,
 		a,
 		freeValue(ts.slice(-1)[0])
-			.concat(freeValue({ _type: "Var", var: b }))
+			.concat(freeValue({ _type: "var", var: b }))
 			.concat(freeValue(a))
 			.reduce((acc: number, e: number) => {
 				return acc < e ? e : acc;
@@ -148,6 +148,6 @@ export function subst(ts: Term[], b: number, a: Term): Term[] {
 	);
 }
 
-export const s = subst([t], 1, { _type: "Var", var: 2 });
+export const s = subst([t], 1, { _type: "var", var: 2 });
 
 export default Term;
