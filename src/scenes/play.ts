@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { keysFrom } from "../data/keyConfig";
 import { Map } from "./play/map";
+import { mapRoot } from "./play/maps/root";
 
 export default class Play extends Phaser.Scene {
 	private keys: {
@@ -23,7 +24,7 @@ export default class Play extends Phaser.Scene {
 			D: [],
 			Ctrl: [],
 		};
-		this.map = new Map("map", "./maps/root.ts");
+		this.map = new Map(mapRoot);
 	}
 
 	preload() {
