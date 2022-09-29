@@ -1,4 +1,4 @@
-import { KeyConfig } from "./data/defaultKeyConfig";
+import { KeyConfig } from "./data/keyConfig";
 import { Codec, TypedStorage } from "./utils/typedStorage";
 
 declare global {

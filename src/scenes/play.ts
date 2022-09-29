@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { keysFrom } from "../data/keyConfig";
+import { Map } from "./play/map";
 
 export default class Play extends Phaser.Scene {
 	private keys: {
@@ -10,6 +11,7 @@ export default class Play extends Phaser.Scene {
 		D: Phaser.Input.Keyboard.Key[];
 		Ctrl: Phaser.Input.Keyboard.Key[];
 	};
+	map: Map;
 
 	constructor() {
 		super({ key: "play" });
@@ -21,6 +23,7 @@ export default class Play extends Phaser.Scene {
 			D: [],
 			Ctrl: [],
 		};
+		this.map = new Map("map", "./maps/root.ts");
 	}
 
 	preload() {
