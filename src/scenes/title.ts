@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { justDown, keysFrom } from "../data/keyConfig";
 
 export default class Title extends Phaser.Scene {
 	private keys: {
@@ -19,16 +20,15 @@ export default class Title extends Phaser.Scene {
 	create() {
 		console.log("Title.create");
 
-		this.keys.next = globalThis.keyConfig.Enter.map((k: number) => {
-			return this.input.keyboard.addKey(k);
-		});
+		this.input.keyboard.addKey(3);
+		this.keys.next = keysFrom(this, globalThis.keyConfig.Enter);
 		// if (localStorage.getItem("played") == null) {
 		// 	this.scene.start("game");
 		// }
 	}
 
 	update() {
-		if (Phaser.Input.Keyboard.JustDown(this.keys.next[0])) {
+		if (justDown(this.keys.next)) {
 			console.log("enter");
 			this.scene.start("play");
 		}

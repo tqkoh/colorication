@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { keysFrom } from "../data/keyConfig";
 
 export default class Play extends Phaser.Scene {
 	private keys: {
@@ -24,6 +25,13 @@ export default class Play extends Phaser.Scene {
 
 	preload() {
 		console.log("Play.preload");
+
+		this.keys.Enter = keysFrom(this, globalThis.keyConfig.Enter);
+		this.keys.Ctrl = keysFrom(this, globalThis.keyConfig.Ctrl);
+		this.keys.W = keysFrom(this, globalThis.keyConfig.W);
+		this.keys.A = keysFrom(this, globalThis.keyConfig.A);
+		this.keys.S = keysFrom(this, globalThis.keyConfig.S);
+		this.keys.D = keysFrom(this, globalThis.keyConfig.D);
 	}
 
 	create() {

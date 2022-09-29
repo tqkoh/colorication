@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { defaultKeyConfig } from "./data/defaultKeyConfig";
+import { defaultKeyConfig } from "./data/keyConfig";
 import Play from "./scenes/play";
 import Title from "./scenes/title";
 import { keyConfigCodec } from "./utils/storageCodecs";

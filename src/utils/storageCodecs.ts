@@ -1,5 +1,5 @@
-import { KeyConfig } from "../data/defaultKeyConfig";
-import { Codec } from "./createTypedStorage";
+import { KeyConfig } from "../data/keyConfig";
+import { Codec } from "./typedStorage";
 
 export const stringCodec: Codec<string> = {
 	encode: (s: string) => s,
