@@ -1,4 +1,4 @@
-import Term from "../../utils/subst";
+import Term from "../../utils/term";
 
 export type Block =
 	| "parent"
@@ -7,6 +7,7 @@ export type Block =
 	| "apply"
 	| "equal"
 	| "place"
+	| "down"
 	| "wall";
 
 export type Test = {
@@ -16,7 +17,8 @@ export type Test = {
 
 export type Stage = {
 	tests: Test[];
-	terms: Term[];
+	terms: Square[];
+	name: string;
 };
 
 export type Square = (
@@ -85,6 +87,14 @@ export function squaresFrom(s: Stage): Square[][] {
 	const h = Math.max(8 + s.tests.length, 11),
 		w = 11;
 	let ret = new Array<Square[]>(h).fill(new Array<Square>(w).fill(airSquare));
+	ret[0][0] = {
+		_type: "block",
+		block: "parent",
+		name: "..",
+		movable: false,
+		collidable: true,
+		locked: false,
+	};
 	for (let j = 0; j < w; ++j) {
 		ret[5][j] = {
 			_type: "block",
@@ -100,8 +110,23 @@ export function squaresFrom(s: Stage): Square[][] {
 		block: "submit",
 		name: "submit",
 		movable: false,
+		collidable: true,
+		locked: false,
+	};
+	ret[6][5] = {
+		_type: "block",
+		block: "down",
+		name: "",
+		movable: false,
 		collidable: false,
 		locked: false,
 	};
+
+	for (let k = 0; k < s.terms.length; ++k) {
+		let i = 1 + (k / 2) * 2,
+			j = 2 + (k % 4) * 2;
+		ret[i][j] = s.terms[k];
+	}
+
 	return ret;
 }

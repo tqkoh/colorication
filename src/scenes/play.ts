@@ -40,6 +40,7 @@ export default class Play extends Phaser.Scene {
 
 	create() {
 		console.log("Play.create");
+		console.log(this.map);
 	}
 
 	update() {}
