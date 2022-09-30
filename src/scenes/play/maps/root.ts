@@ -1,20 +1,24 @@
-import { airSquare as air, Map, Square } from "../map";
+import {
+	airSquare as air,
+	GameMap,
+	Square,
+	startSquare as sta,
+} from "../gamemap";
 import { mapWorld0 } from "./worlds/world0";
 
 const w_0: Square = {
 	_type: "map",
-	map: new Map(mapWorld0),
-	name: "",
+	map: new GameMap(mapWorld0),
+	name: "0. welcome",
 	movable: false,
 	collidable: false,
 	locked: false,
 };
 
 export const mapRoot: Square[][] = [
-	[air, air, air, air, air, air, air, air, air, air],
+	[sta, air, air, air, air, air, air, air, air, air],
 	[air, air, air, air, air, air, air, air, air, air],
 	[air, w_0, air, air, air, air, air, air, air, air],
-	[air, air, air, air, air, air, air, air, air, air],
 	[air, air, air, air, air, air, air, air, air, air],
 	[air, air, air, air, air, air, air, air, air, air],
 ];

@@ -1,12 +1,14 @@
-import Term from "../../utils/subst";
+import Term from "../../utils/term";
 
 export type Block =
+	| "start"
 	| "parent"
 	| "reset"
 	| "submit"
 	| "apply"
 	| "equal"
 	| "place"
+	| "down"
 	| "wall";
 
 export type Test = {
@@ -16,14 +18,15 @@ export type Test = {
 
 export type Stage = {
 	tests: Test[];
-	terms: Term[];
+	terms: Square[];
+	name: string;
 };
 
 export type Square = (
 	| { _type: "air" }
 	| { _type: "term"; term: Term }
-	| { _type: "map"; map: Map }
-	| { _type: "stage"; stage: Stage; map?: Map }
+	| { _type: "map"; map: GameMap }
+	| { _type: "stage"; stage: Stage; map?: GameMap }
 	| { _type: "block"; block: Block }
 ) & {
 	name: string;
@@ -44,6 +47,15 @@ export const parentSquare: Square = {
 	_type: "block",
 	block: "parent",
 	name: "..",
+	movable: false,
+	collidable: false,
+	locked: false,
+};
+
+export const startSquare: Square = {
+	_type: "block",
+	block: "start",
+	name: "",
 	movable: false,
 	collidable: false,
 	locked: false,
@@ -74,10 +86,35 @@ export const parentSquare: Square = {
 
 // todo: History
 
-export class Map {
+export class GameMap {
 	squares: Square[][];
+	h: number;
+	w: number;
+	starti: number;
+	startj: number;
 	constructor(squares: Square[][]) {
+		this.starti = -1;
+		this.startj = -1;
 		this.squares = squares;
+		this.h = squares.length;
+		this.w = this.h ? squares[0].length : 0;
+		for (let i = 0; i < squares.length; ++i) {
+			if (squares[i].length != this.w) {
+				throw new Error("width does not match");
+			}
+			for (let j = 0; j < squares[i].length; ++j) {
+				if (
+					squares[i][j]._type === "block" &&
+					(squares[i][j] as { _type: "block"; block: Block })
+						.block === "start"
+				) {
+					this.starti = i;
+					this.startj = j;
+					this.squares[i][j] = airSquare;
+				}
+			}
+		}
+		if (this.starti === -1) throw new Error("start does not exist");
 	}
 }
 
@@ -85,6 +122,15 @@ export function squaresFrom(s: Stage): Square[][] {
 	const h = Math.max(8 + s.tests.length, 11),
 		w = 11;
 	let ret = new Array<Square[]>(h).fill(new Array<Square>(w).fill(airSquare));
+	ret[0][0] = {
+		_type: "block",
+		block: "parent",
+		name: "..",
+		movable: false,
+		collidable: true,
+		locked: false,
+	};
+	ret[0][1] = startSquare;
 	for (let j = 0; j < w; ++j) {
 		ret[5][j] = {
 			_type: "block",
@@ -100,8 +146,23 @@ export function squaresFrom(s: Stage): Square[][] {
 		block: "submit",
 		name: "submit",
 		movable: false,
+		collidable: true,
+		locked: false,
+	};
+	ret[6][5] = {
+		_type: "block",
+		block: "down",
+		name: "",
+		movable: false,
 		collidable: false,
 		locked: false,
 	};
+
+	for (let k = 0; k < s.terms.length; ++k) {
+		let i = 1 + (k / 2) * 2,
+			j = 2 + (k % 4) * 2;
+		ret[i][j] = s.terms[k];
+	}
+
 	return ret;
 }
