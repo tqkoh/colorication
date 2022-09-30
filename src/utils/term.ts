@@ -1,13 +1,12 @@
 import { match, P } from "ts-pattern";
 import { v4 as uuid } from "uuid";
-uuid();
 
 type Term =
 	| { _type: "var"; var: string }
 	| { _type: "app"; lam: Term; param: Term }
 	| { _type: "lam"; var: string; ret: Term };
 
-export const t: Term = randomized({
+export const _term_example: Term = randomized({
 	_type: "app",
 	lam: {
 		_type: "lam",
@@ -130,8 +129,6 @@ function freeValue(t: Term): string[] {
 		})
 		.exhaustive();
 }
-
-export const fv = freeValue(t);
 
 export function subst(
 	acc: Term[], // ref

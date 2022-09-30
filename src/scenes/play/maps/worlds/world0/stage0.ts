@@ -1,5 +1,5 @@
 import { randomized } from "../../../../../utils/term";
-import { Stage } from "../../../map";
+import { Stage } from "../../../gamemap";
 
 export const stage0: Stage = {
 	name: "0. place it",

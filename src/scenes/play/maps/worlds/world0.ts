@@ -2,12 +2,9 @@ import {
 	airSquare as air,
 	parentSquare as par,
 	Square,
-	squaresFrom,
-} from "../../map";
+	startSquare as sta,
+} from "../../gamemap";
 import { stage0 } from "./world0/stage0";
-
-const t = squaresFrom(stage0);
-console.log(t);
 
 const s_0: Square = {
 	_type: "stage",
@@ -19,7 +16,7 @@ const s_0: Square = {
 };
 
 export const mapWorld0: Square[][] = [
-	[par, air, air, air, air, air, air, air, air, air],
+	[par, sta, air, air, air, air, air, air, air, air],
 	[air, air, air, air, air, air, air, air, air, air],
 	[air, s_0, air, air, air, air, air, air, air, air],
 	[air, air, air, air, air, air, air, air, air, air],
