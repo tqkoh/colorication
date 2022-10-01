@@ -21,13 +21,16 @@ export default class Play extends Phaser.Scene {
 	playerj: number;
 	playerdirection: Direction;
 	keepingPressingFrame: number;
-	keepingPressingKey: string;
+	lastPressedMovementKey: string;
 
 	uy: number;
 	ux: number;
 
 	gGroupMap: Phaser.GameObjects.Group | undefined;
 	gImagePlayer: Phaser.GameObjects.Image | undefined;
+	gImageFocus: Phaser.GameObjects.Image | undefined;
+
+	sCollide: Phaser.Sound.BaseSound | undefined;
 
 	constructor() {
 		super({ key: "play" });
@@ -53,7 +56,7 @@ export default class Play extends Phaser.Scene {
 		this.ux = W / 2 - w / 2;
 
 		this.keepingPressingFrame = 0;
-		this.keepingPressingKey = "";
+		this.lastPressedMovementKey = "";
 	}
 
 	moveToDirectionI(d: Direction) {
@@ -72,18 +75,18 @@ export default class Play extends Phaser.Scene {
 			nextj < 0 ||
 			this.currentMap.w <= nextj
 		) {
+			this.sCollide?.play();
 			return;
 		}
 		const next = this.currentMap.squares[nexti][nextj];
-		if (next.locked) return;
+		if (next.collidable) {
+			this.sCollide?.play();
+			return;
+		}
 
 		this.playeri = nexti;
 		this.playerj = nextj;
 		console.log(this.playeri, this.playerj);
-
-		const py = this.uy + this.playeri * 16,
-			px = this.ux + this.playerj * 16;
-		this.gImagePlayer?.setY(py).setX(px);
 	}
 
 	moveToDirection(d: Direction, rotation: number) {
@@ -95,15 +98,17 @@ export default class Play extends Phaser.Scene {
 				this.gImagePlayer.rotation = rotation;
 			}
 		}
-	}
 
-	processMovementKey(k: string) {
-		if (this.keepingPressingKey === k) {
-			++this.keepingPressingFrame;
-		} else {
-			this.keepingPressingKey = k;
-			this.keepingPressingFrame = 1;
-		}
+		const py = this.uy + this.playeri * 16,
+			px = this.ux + this.playerj * 16;
+		this.gImagePlayer?.setY(py).setX(px);
+		let fy = py,
+			fx = px;
+		if (this.playerdirection == "right") fx += 16;
+		if (this.playerdirection == "down") fy += 16;
+		if (this.playerdirection == "left") fx -= 16;
+		if (this.playerdirection == "up") fy -= 16;
+		this.gImageFocus?.setY(fy).setX(fx);
 	}
 
 	handleMovement() {
@@ -125,20 +130,30 @@ export default class Play extends Phaser.Scene {
 			jd = false;
 		}
 
-		if (w) this.processMovementKey("w");
-		else if (a) this.processMovementKey("a");
-		else if (s) this.processMovementKey("s");
-		else if (d) this.processMovementKey("d");
+		if (jw)
+			(this.lastPressedMovementKey = "w"),
+				(this.keepingPressingFrame = 1);
+		if (ja)
+			(this.lastPressedMovementKey = "a"),
+				(this.keepingPressingFrame = 1);
+		if (js)
+			(this.lastPressedMovementKey = "s"),
+				(this.keepingPressingFrame = 1);
+		if (jd)
+			(this.lastPressedMovementKey = "d"),
+				(this.keepingPressingFrame = 1);
+
+		if (w || a || s || d) ++this.keepingPressingFrame;
 		else {
 			this.keepingPressingFrame = -1;
-			this.keepingPressingKey = "";
 		}
 
 		const T = 30;
 
 		if (
 			jd ||
-			(this.keepingPressingKey === "d" &&
+			(d &&
+				this.lastPressedMovementKey === "d" &&
 				this.keepingPressingFrame % T === 0 &&
 				this.keepingPressingFrame > T)
 		) {
@@ -146,7 +161,8 @@ export default class Play extends Phaser.Scene {
 		}
 		if (
 			js ||
-			(this.keepingPressingKey === "s" &&
+			(s &&
+				this.lastPressedMovementKey === "s" &&
 				this.keepingPressingFrame % T === 0 &&
 				this.keepingPressingFrame > T)
 		) {
@@ -154,7 +170,8 @@ export default class Play extends Phaser.Scene {
 		}
 		if (
 			ja ||
-			(this.keepingPressingKey === "a" &&
+			(a &&
+				this.lastPressedMovementKey === "a" &&
 				this.keepingPressingFrame % T === 0 &&
 				this.keepingPressingFrame > T)
 		) {
@@ -162,7 +179,8 @@ export default class Play extends Phaser.Scene {
 		}
 		if (
 			jw ||
-			(this.keepingPressingKey === "w" &&
+			(w &&
+				this.lastPressedMovementKey === "w" &&
 				this.keepingPressingFrame % T === 0 &&
 				this.keepingPressingFrame > T)
 		) {
@@ -201,6 +219,7 @@ export default class Play extends Phaser.Scene {
 		const py = this.uy + this.playeri * 16,
 			px = this.ux + this.playerj * 16;
 		this.gImagePlayer = this.add.image(px, py, "player");
+		this.gImageFocus = this.add.image(px + 16, py, "focus");
 	}
 
 	preload() {
@@ -216,6 +235,9 @@ export default class Play extends Phaser.Scene {
 		this.load.image("lam", "assets/images/lam.png"); // todo: matomeru
 		this.load.image("air", "assets/images/air.png");
 		this.load.image("player", "assets/images/player.png");
+		this.load.image("focus", "assets/images/focus.png");
+
+		this.load.audio("collide", "assets/sounds/collide.mp3");
 	}
 
 	create() {
@@ -223,6 +245,7 @@ export default class Play extends Phaser.Scene {
 		console.log(this.map);
 		this.gGroupMap = this.add.group();
 		this.initDrawing();
+		this.sCollide = this.sound.add("collide");
 	}
 
 	update() {

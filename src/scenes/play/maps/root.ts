@@ -11,7 +11,7 @@ const w_0: Square = {
 	map: new GameMap(mapWorld0),
 	name: "0. welcome",
 	movable: false,
-	collidable: false,
+	collidable: true,
 	locked: false,
 };
 
