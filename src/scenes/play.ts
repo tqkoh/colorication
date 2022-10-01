@@ -1,7 +1,7 @@
 import Phaser from "phaser";
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 import { justDown, keysFrom } from "../data/keyConfig";
-import { GameMap } from "./play/gamemap";
+import { GameMap, Square } from "./play/gamemap";
 import { mapRoot } from "./play/maps/root";
 
 type Direction = "right" | "down" | "left" | "up";
@@ -20,6 +20,8 @@ export default class Play extends Phaser.Scene {
 	playeri: number;
 	playerj: number;
 	playerdirection: Direction;
+
+	gGroupMap: Phaser.GameObjects.Group | undefined;
 
 	constructor() {
 		super({ key: "play" });
@@ -101,6 +103,36 @@ export default class Play extends Phaser.Scene {
 		}
 	}
 
+	imageTagFromSquare(s: Square): string {
+		return match(s)
+			.with({ _type: "air" }, () => "air")
+			.with({ _type: "term", term: { _type: "lam" } }, () => "lam")
+			.with({ _type: P._ }, () => "air")
+			.exhaustive();
+	}
+
+	initDrawingMap() {
+		const H = globalThis.screenh - 31,
+			W = globalThis.screenw,
+			h = this.currentMap.h * 16,
+			w = this.currentMap.w * 16;
+		const uy = 31 + H / 2 - h / 2,
+			ux = W / 2 - w / 2;
+		this.gGroupMap?.setY(uy).setX(ux);
+
+		for (let i = 0; i < this.currentMap.h; ++i) {
+			for (let j = 0; j < this.currentMap.w; ++j) {
+				const y = 16 * i,
+					x = 16 * j;
+				this.gGroupMap?.create(
+					ux + x,
+					uy + y,
+					this.imageTagFromSquare(this.currentMap.squares[i][j])
+				);
+			}
+		}
+	}
+
 	preload() {
 		console.log("Play.preload");
 
@@ -110,11 +142,16 @@ export default class Play extends Phaser.Scene {
 		this.keys.A = keysFrom(this, globalThis.keyConfig.A);
 		this.keys.S = keysFrom(this, globalThis.keyConfig.S);
 		this.keys.D = keysFrom(this, globalThis.keyConfig.D);
+
+		this.load.image("lam", "assets/images/lam.png"); // todo: matomeru
+		this.load.image("air", "assets/images/air.png");
 	}
 
 	create() {
 		console.log("Play.create");
 		console.log(this.map);
+		this.gGroupMap = this.add.group();
+		this.initDrawingMap();
 	}
 
 	update() {

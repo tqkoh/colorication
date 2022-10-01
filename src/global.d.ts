@@ -6,4 +6,6 @@ declare global {
 		keyConfig: Codec<KeyConfig>;
 	}>;
 	var keyConfig: KeyConfig;
+	var screenh: number;
+	var screenw: number;
 }
