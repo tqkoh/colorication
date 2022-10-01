@@ -11,7 +11,7 @@ const s_0: Square = {
 	stage: stage0,
 	name: stage0.name,
 	movable: false,
-	collidable: false,
+	collidable: true,
 	locked: false,
 };
 
