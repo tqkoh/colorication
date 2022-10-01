@@ -232,15 +232,12 @@ export default class Play extends Phaser.Scene {
 		this.keys.S = keysFrom(this, globalThis.keyConfig.S);
 		this.keys.D = keysFrom(this, globalThis.keyConfig.D);
 
-		console.log(import.meta.env.DEV);
-		const root = import.meta.env.DEV ? "" : "lambbox/";
+		this.load.image("lam", "assets/images/lam.png"); // todo: matomeru
+		this.load.image("air", "assets/images/air.png");
+		this.load.image("player", "assets/images/player.png");
+		this.load.image("focus", "assets/images/focus.png");
 
-		this.load.image("lam", root + "assets/images/lam.png"); // todo: matomeru
-		this.load.image("air", root + "assets/images/air.png");
-		this.load.image("player", root + "assets/images/player.png");
-		this.load.image("focus", root + "assets/images/focus.png");
-
-		this.load.audio("collide", root + "assets/sounds/collide.mp3");
+		this.load.audio("collide", "assets/sounds/collide.mp3");
 	}
 
 	create() {
