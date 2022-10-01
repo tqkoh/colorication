@@ -34,3 +34,8 @@ export function justDown(keys: Phaser.Input.Keyboard.Key[]): boolean {
 		)
 		.reduce((acc: boolean, e: boolean) => acc || e);
 }
+export function isDown(keys: Phaser.Input.Keyboard.Key[]): boolean {
+	return keys
+		.map((k: Phaser.Input.Keyboard.Key) => k.isDown)
+		.reduce((acc: boolean, e: boolean) => acc || e);
+}

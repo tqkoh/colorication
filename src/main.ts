@@ -28,15 +28,19 @@ globalThis.keyConfig = defaultKeyConfig;
 	}
 }
 
+globalThis.screenh = 255;
+globalThis.screenw = 340;
+
 let config: Phaser.Types.Core.GameConfig = {
 	type: Phaser.AUTO,
-	width: 800,
-	height: 600,
+	height: globalThis.screenh,
+	width: globalThis.screenw,
 	scale: {
 		mode: Phaser.Scale.FIT,
 		autoCenter: Phaser.Scale.CENTER_BOTH,
 	},
 	scene: [Title, Play],
+	pixelArt: true,
 };
 
 new Phaser.Game(config);
