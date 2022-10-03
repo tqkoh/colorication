@@ -188,9 +188,30 @@ export default class Play extends Phaser.Scene {
 		}
 	}
 
-	imageTagFromSquare(s: Square): string {
+	imageTagFromSquare(
+		s: Square,
+		i: number,
+		j: number,
+		h: number,
+		w: number
+	): string {
 		return match(s)
-			.with({ _type: "air" }, () => "air")
+			.with({ _type: "air" }, () => {
+				let ret = "air";
+				if (j == 0) {
+					ret += "l";
+				}
+				if (j == w - 1) {
+					ret += "r";
+				}
+				if (i == 0) {
+					ret += "t";
+				}
+				if (i == h - 1) {
+					ret += "b";
+				}
+				return ret;
+			})
 			.with({ _type: "map" }, () => "lam")
 			.with({ _type: "stage" }, () => "lam")
 			.with({ _type: "block" }, () => "lam")
@@ -200,6 +221,16 @@ export default class Play extends Phaser.Scene {
 	}
 
 	initDrawing() {
+		{
+			let y = 31,
+				x = -14,
+				h = 224,
+				w = 368;
+			y = y + (globalThis.screenh - y) / 2;
+			x = globalThis.screenw / 2;
+			this.add.tileSprite(x, y, w, h, "out");
+		}
+
 		// map
 		this.gGroupMap?.setY(this.uy).setX(this.ux);
 
@@ -210,7 +241,13 @@ export default class Play extends Phaser.Scene {
 				this.gGroupMap?.create(
 					this.ux + x,
 					this.uy + y,
-					this.imageTagFromSquare(this.currentMap.squares[i][j])
+					this.imageTagFromSquare(
+						this.currentMap.squares[i][j],
+						i,
+						j,
+						this.currentMap.h,
+						this.currentMap.w
+					)
 				);
 			}
 		}
@@ -234,8 +271,17 @@ export default class Play extends Phaser.Scene {
 
 		this.load.image("lam", "assets/images/lam.png"); // todo: matomeru
 		this.load.image("air", "assets/images/air.png");
+		this.load.image("airr", "assets/images/airr.png");
+		this.load.image("airb", "assets/images/airb.png");
+		this.load.image("airl", "assets/images/airl.png");
+		this.load.image("airt", "assets/images/airt.png");
+		this.load.image("airrb", "assets/images/airrb.png");
+		this.load.image("airlb", "assets/images/airlb.png");
+		this.load.image("airlt", "assets/images/airlt.png");
+		this.load.image("airrt", "assets/images/airrt.png");
 		this.load.image("player", "assets/images/player.png");
 		this.load.image("focus", "assets/images/focus.png");
+		this.load.image("out", "assets/images/out.png");
 
 		this.load.audio("collide", "assets/sounds/collide.mp3");
 	}
