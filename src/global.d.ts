@@ -8,4 +8,6 @@ declare global {
 	var keyConfig: KeyConfig;
 	var screenh: number;
 	var screenw: number;
+	var game: Phaser.Game;
+	var start: () => void;
 }
