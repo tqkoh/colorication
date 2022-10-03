@@ -555,8 +555,16 @@ video {
   margin: 3rem;
 }
 
+.block {
+  display: block;
+}
+
 .flex {
   display: flex;
+}
+
+.hidden {
+  display: none;
 }
 
 .justify-center {
