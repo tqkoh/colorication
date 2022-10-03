@@ -52,12 +52,6 @@ let config: Phaser.Types.Core.GameConfig = {
 // 	}
 // }
 
-new Phaser.Game(config);
-
-{
-	let e = document.querySelector("canvas");
-	if (e) {
-		console.log("a");
-		e.style.display = "none";
-	}
-}
+globalThis.start = () => {
+	globalThis.game = new Phaser.Game(config);
+};
