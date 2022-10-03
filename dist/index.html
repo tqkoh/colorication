@@ -7,22 +7,20 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>lambbox</title>
 	
-  <link rel="stylesheet" href="/lambbox/assets/index.7ca7e6c7.css">
+  <script type="module" crossorigin src="/lambbox/assets/index.5673ff84.js"></script>
+  <link rel="stylesheet" href="/lambbox/assets/index.ab7e5318.css">
 </head>
 
 <body>
-	<div id="app"></div>
+	<div id="app" class="hidden"></div>
 	<div class="flex justify-center">
-		<button type="button" class="border-2 m-12 p-2 pb-3 text-4xl font-medium outline-0 shadow-md hover:ring-1" id="play"
-			onclick="
-			document.getElementById('play').style.display = 'none';
-			let e = document.createElement('script');
-			e.src = '/lambbox/src/main.ts';
-			e.type='module';
-			document.body.appendChild(e);
-		">play</button>
+		<button type="button" class="border-2 m-12 p-2 pb-3 text-4xl font-medium outline-0 shadow-md hover:ring-1"
+			id="playbutton" onclick="
+			document.getElementById('playbutton').style.display = 'none';
+			document.querySelector('canvas').style.display = 'block';
+		">load game</button>
 	</div>
-	<!-- <script type="module" src="/src/main.ts"></script> -->
+	
 </body>
 
 </html>

@@ -43,4 +43,21 @@ let config: Phaser.Types.Core.GameConfig = {
 	pixelArt: true,
 };
 
+// new Phaser.Game(config);
+// {
+// 	let e = document.querySelector("canvas");
+// 	if (e) {
+// 		console.log("a");
+// 		e.style.display = "none";
+// 	}
+// }
+
 new Phaser.Game(config);
+
+{
+	let e = document.querySelector("canvas");
+	if (e) {
+		console.log("a");
+		e.style.display = "none";
+	}
+}
