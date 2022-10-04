@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { match, P } from "ts-pattern";
 import { isDown, justDown, keysFrom } from "../data/keyConfig";
+import { deb } from "../utils/deb";
 import { GameMap, Square } from "./play/gamemap";
 import { mapRoot } from "./play/maps/root";
 
@@ -86,7 +87,7 @@ export default class Play extends Phaser.Scene {
 
 		this.playeri = nexti;
 		this.playerj = nextj;
-		console.log(this.playeri, this.playerj);
+		deb(this.playeri, this.playerj);
 	}
 
 	moveToDirection(d: Direction, rotation: number) {
@@ -125,7 +126,7 @@ export default class Play extends Phaser.Scene {
 			js = false;
 		}
 		if (ja && jd) {
-			console.log(this.keys);
+			deb(this.keys);
 			ja = false;
 			jd = false;
 		}
@@ -260,7 +261,7 @@ export default class Play extends Phaser.Scene {
 	}
 
 	preload() {
-		console.log("Play.preload");
+		deb("Play.preload");
 
 		this.keys.Enter = keysFrom(this, globalThis.keyConfig.Enter);
 		this.keys.Ctrl = keysFrom(this, globalThis.keyConfig.Ctrl);
@@ -287,8 +288,8 @@ export default class Play extends Phaser.Scene {
 	}
 
 	create() {
-		console.log("Play.create");
-		console.log(this.map);
+		deb("Play.create");
+		deb(this.map);
 		this.gGroupMap = this.add.group();
 		this.initDrawing();
 		this.sCollide = this.sound.add("collide");
