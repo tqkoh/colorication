@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { defaultKeyConfig } from "./data/keyConfig";
+import Load from "./scenes/load";
 import Play from "./scenes/play";
 import Title from "./scenes/title";
 import { keyConfigCodec } from "./utils/storageCodecs";
@@ -39,7 +40,7 @@ let config: Phaser.Types.Core.GameConfig = {
 		mode: Phaser.Scale.FIT,
 		autoCenter: Phaser.Scale.CENTER_BOTH,
 	},
-	scene: [Title, Play],
+	scene: [Load, Title, Play],
 	pixelArt: true,
 };
 
@@ -52,6 +53,4 @@ let config: Phaser.Types.Core.GameConfig = {
 // 	}
 // }
 
-globalThis.start = () => {
-	globalThis.game = new Phaser.Game(config);
-};
+new Phaser.Game(config);
