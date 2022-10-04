@@ -2,7 +2,11 @@
 module.exports = {
   content: ["index.html"],
   theme: {
-    extend: {},
+		fontFamily: {
+			sans: ['"Noto Sans"', 'sans-serif'],
+      serif: ['Merriweather', 'serif'],
+    },
+		extend: {},
   },
   plugins: [],
 }
