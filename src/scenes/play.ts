@@ -7,6 +7,9 @@ import { mapRoot } from "./play/maps/root";
 
 type Direction = "right" | "down" | "left" | "up";
 
+const FADEIN_LENGTH = 200;
+const WHITE = [250, 247, 240];
+
 export default class Play extends Phaser.Scene {
 	private keys: {
 		Enter: Phaser.Input.Keyboard.Key[];
@@ -262,6 +265,9 @@ export default class Play extends Phaser.Scene {
 
 	preload() {
 		deb("Play.preload");
+		this.cameras.main.setBackgroundColor(
+			"rgba(" + WHITE[0] + "," + WHITE[1] + "," + WHITE[2] + "," + "1)"
+		);
 
 		this.keys.Enter = keysFrom(this, globalThis.keyConfig.Enter);
 		this.keys.Ctrl = keysFrom(this, globalThis.keyConfig.Ctrl);
@@ -293,6 +299,16 @@ export default class Play extends Phaser.Scene {
 		this.gGroupMap = this.add.group();
 		this.initDrawing();
 		this.sCollide = this.sound.add("collide");
+
+		this.cameras.main.fadeIn(
+			FADEIN_LENGTH / 2,
+			WHITE[0],
+			WHITE[1],
+			WHITE[2]
+		);
+		this.cameras.main.setBackgroundColor(
+			"rgba(" + WHITE[0] + "," + WHITE[1] + "," + WHITE[2] + "," + "1)"
+		);
 	}
 
 	update() {
