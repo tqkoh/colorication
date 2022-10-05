@@ -54,3 +54,6 @@ let config: Phaser.Types.Core.GameConfig = {
 // }
 
 new Phaser.Game(config);
+
+// const e = document.querySelector("canvas")?.getContext("2d");
+// if (e) e.fillStyle = "rgb(255, 165, 0)";
