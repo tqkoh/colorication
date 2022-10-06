@@ -1,3 +1,4 @@
+import { Howl } from "howler";
 import Phaser from "phaser";
 import { match, P } from "ts-pattern";
 import { isDown, justDown, keysFrom } from "../data/keyConfig";
@@ -34,7 +35,9 @@ export default class Play extends Phaser.Scene {
 	gImagePlayer: Phaser.GameObjects.Image | undefined;
 	gImageFocus: Phaser.GameObjects.Image | undefined;
 
-	sCollide: Phaser.Sound.BaseSound | undefined;
+	sCollide: Howl;
+	sPoint: Howl;
+	sEnter: Howl;
 
 	constructor() {
 		super({ key: "play" });
@@ -61,6 +64,16 @@ export default class Play extends Phaser.Scene {
 
 		this.keepingPressingFrame = 0;
 		this.lastPressedMovementKey = "";
+
+		this.sCollide = new Howl({
+			src: ["assets/sounds/collide.mp3"],
+		});
+		this.sPoint = new Howl({
+			src: ["assets/sounds/point.mp3"],
+		});
+		this.sEnter = new Howl({
+			src: ["assets/sounds/enter.mp3"],
+		});
 	}
 
 	moveToDirectionI(d: Direction) {
@@ -79,12 +92,12 @@ export default class Play extends Phaser.Scene {
 			nextj < 0 ||
 			this.currentMap.w <= nextj
 		) {
-			this.sCollide?.play();
+			this.sCollide.play();
 			return;
 		}
 		const next = this.currentMap.squares[nexti][nextj];
 		if (next.collidable) {
-			this.sCollide?.play();
+			this.sCollide.play();
 			return;
 		}
 
@@ -298,7 +311,6 @@ export default class Play extends Phaser.Scene {
 		deb(this.map);
 		this.gGroupMap = this.add.group();
 		this.initDrawing();
-		this.sCollide = this.sound.add("collide");
 
 		this.cameras.main.fadeIn(
 			FADEIN_LENGTH / 2,
