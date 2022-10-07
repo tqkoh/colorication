@@ -10,6 +10,7 @@ import { mapRoot } from "./play/maps/root";
 type Direction = "right" | "down" | "left" | "up";
 
 const FADEIN_LENGTH = 200;
+const BLACK = [84, 75, 64];
 const WHITE = [250, 247, 240];
 
 export default class Play extends Phaser.Scene {
@@ -304,13 +305,6 @@ export default class Play extends Phaser.Scene {
 		this.load.image("player", "assets/images/player.png");
 		this.load.image("focus", "assets/images/focus.png");
 		this.load.image("out", "assets/images/out.png");
-		// this.load.image("menu_enter", "assets/images/menu_enter.png");
-		this.load.image("menu_pastet", "assets/images/menu_paste.png");
-		// this.load.image("menu_new", "assets/images/menu_new.png");
-		// this.load.image("menu_close", "assets/images/menu_close.png");
-		// this.load.image("menu_memo", "assets/images/menu_memo.png");
-		// this.load.image("menu_copy", "assets/images/menu_copy.png");
-		// this.load.image("menu_delete", "assets/images/menu_delete.png");
 		this.load.image("font", "assets/images/font.png");
 
 		this.load.audio("collide", "assets/sounds/collide.mp3");
@@ -320,7 +314,7 @@ export default class Play extends Phaser.Scene {
 		deb("Play.create");
 		deb(this.map);
 		this.gGroupMap = this.add.group();
-		this.initDrawing();
+		// this.initDrawing();
 
 		this.cameras.main.fadeIn(
 			FADEIN_LENGTH / 2,
@@ -333,15 +327,26 @@ export default class Play extends Phaser.Scene {
 		);
 
 		this.font = new FontForPhaser(this.textures, "font", 31);
-		this.font.loadImageFrom("menu_enter", "menu_enter");
-		this.font.loadImageFrom("menu_paste", "menu_paste");
-		this.font.loadImageFrom("menu_new", "menu_new");
-		this.font.loadImageFrom("menu_close", "menu_close");
-		this.font.loadImageFrom("menu_memo", "menu_memo");
-		this.font.loadImageFrom("menu_copy", "menu_copy");
-		this.font.loadImageFrom("menu_delete", "menu_delete");
+		this.font.loadImageFrom("menu_enter", "menu_enter", ...BLACK);
+		this.font.loadImageFrom("menu_paste", "menu_paste", ...BLACK);
+		this.font.loadImageFrom("menu_new", "menu_new", ...BLACK);
+		this.font.loadImageFrom("menu_close", "menu_close", ...BLACK);
+		this.font.loadImageFrom("menu_memo", "menu_memo", ...BLACK);
+		this.font.loadImageFrom("menu_copy", "menu_copy", ...BLACK);
+		this.font.loadImageFrom("menu_delete", "menu_delete", ...BLACK);
+		this.font.loadImageFrom(
+			"font tsukuruno muzusoude wakarazu dakedo dot no font de",
+			"ff1",
+			...BLACK
+		);
+		this.font.loadImageFrom(
+			"game naide noukin gazou seisei surudake nara ikesou3 (?)",
+			"ff2",
+			...BLACK
+		);
 
-		this.add.image(100, 100, "menu_enter");
+		this.add.image(150, 150, "ff1");
+		this.add.image(150, 170, "ff2");
 	}
 
 	update() {
