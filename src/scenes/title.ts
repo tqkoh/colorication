@@ -14,6 +14,8 @@ const TITLE_ARROW_H = 14;
 const TITLE_ARROW_W = 14;
 const TITLE_ARROW_POS = [127 + TITLE_ARROW_H / 2, 212 + TITLE_ARROW_W / 2];
 
+const BGM_VOLUME = 0.6;
+
 const Menu = {
 	play: 0,
 	options: 1,
@@ -50,10 +52,12 @@ export default class Title extends Phaser.Scene {
 		this.sTitleIntro = new Howl({
 			src: ["assets/sounds/title_intro.mp3"],
 		});
+		this.sTitleIntro.volume(BGM_VOLUME);
 		this.sTitleLoop = new Howl({
 			src: ["assets/sounds/title_loop.mp3"],
 			loop: true,
 		});
+		this.sTitleLoop.volume(BGM_VOLUME);
 		this.sStart = new Howl({
 			src: ["assets/sounds/start.mp3"],
 		});
@@ -119,26 +123,33 @@ export default class Title extends Phaser.Scene {
 	update() {
 		if (this.fading) {
 			const el = new Date().getTime() - this.fadingStart;
-			const volume = Math.max(0, 0.5 - el / FADEOUT_LENGTH);
-			this.sTitleIntro.volume(volume);
-			this.sTitleLoop.volume(volume);
+			// const volume = Math.max(0, 0.5 - el / FADEOUT_LENGTH);
+			// this.sTitleIntro.volume(volume);
+			// this.sTitleLoop.volume(volume);
 			if (el > FADEOUT_LENGTH) {
 				this.scene.start("play");
 				this.sTitleIntro.stop();
 				this.sTitleLoop.stop();
 			}
 		} else {
-			if (justDown(this.keys.down) && this.selected + 1 < Menu.size) {
-				++this.selected;
-				this.gArrow?.setY(
-					TITLE_ARROW_POS[0] + this.selected * TITLE_ARROW_DIFF
-				);
-			}
-			if (justDown(this.keys.up) && 0 <= this.selected - 1) {
-				--this.selected;
-				this.gArrow?.setY(
-					TITLE_ARROW_POS[0] + this.selected * TITLE_ARROW_DIFF
-				);
+			{
+				let count = 0;
+				if (justDown(this.keys.down) && this.selected + 1 < Menu.size) {
+					++this.selected;
+					this.gArrow?.setY(
+						TITLE_ARROW_POS[0] + this.selected * TITLE_ARROW_DIFF
+					);
+					if (!count) this.sPoint.play();
+					++count;
+				}
+				if (justDown(this.keys.up) && 0 <= this.selected - 1) {
+					--this.selected;
+					this.gArrow?.setY(
+						TITLE_ARROW_POS[0] + this.selected * TITLE_ARROW_DIFF
+					);
+					if (!count) this.sPoint.play();
+					++count;
+				}
 			}
 			if (justDown(this.keys.enter)) {
 				deb("enter");
@@ -151,9 +162,12 @@ export default class Title extends Phaser.Scene {
 					);
 					this.fading = true;
 					this.fadingStart = new Date().getTime();
+					this.sTitleIntro.fade(1, 0, FADEOUT_LENGTH / 2);
+					this.sTitleLoop.fade(1, 0, FADEOUT_LENGTH / 2);
 					this.sStart.play();
 				} else if (this.selected === Menu.options) {
 					console.log("options");
+					this.sEnter.play();
 				}
 			}
 		}

@@ -3,12 +3,14 @@ import Phaser from "phaser";
 import { match, P } from "ts-pattern";
 import { isDown, justDown, keysFrom } from "../data/keyConfig";
 import { deb } from "../utils/deb";
+import { FontForPhaser } from "../utils/fontForPhaser";
 import { GameMap, Square } from "./play/gamemap";
 import { mapRoot } from "./play/maps/root";
 
 type Direction = "right" | "down" | "left" | "up";
 
 const FADEIN_LENGTH = 200;
+const BLACK = [84, 75, 64];
 const WHITE = [250, 247, 240];
 
 export default class Play extends Phaser.Scene {
@@ -27,6 +29,7 @@ export default class Play extends Phaser.Scene {
 	playerdirection: Direction;
 	keepingPressingFrame: number;
 	lastPressedMovementKey: string;
+	font: FontForPhaser | undefined;
 
 	uy: number;
 	ux: number;
@@ -302,6 +305,7 @@ export default class Play extends Phaser.Scene {
 		this.load.image("player", "assets/images/player.png");
 		this.load.image("focus", "assets/images/focus.png");
 		this.load.image("out", "assets/images/out.png");
+		this.load.image("font", "assets/images/font.png");
 
 		this.load.audio("collide", "assets/sounds/collide.mp3");
 	}
@@ -310,7 +314,7 @@ export default class Play extends Phaser.Scene {
 		deb("Play.create");
 		deb(this.map);
 		this.gGroupMap = this.add.group();
-		this.initDrawing();
+		// this.initDrawing();
 
 		this.cameras.main.fadeIn(
 			FADEIN_LENGTH / 2,
@@ -321,6 +325,28 @@ export default class Play extends Phaser.Scene {
 		this.cameras.main.setBackgroundColor(
 			"rgba(" + WHITE[0] + "," + WHITE[1] + "," + WHITE[2] + "," + "1)"
 		);
+
+		this.font = new FontForPhaser(this.textures, "font", 31);
+		this.font.loadImageFrom("menu_enter", "menu_enter", ...BLACK);
+		this.font.loadImageFrom("menu_paste", "menu_paste", ...BLACK);
+		this.font.loadImageFrom("menu_new", "menu_new", ...BLACK);
+		this.font.loadImageFrom("menu_close", "menu_close", ...BLACK);
+		this.font.loadImageFrom("menu_memo", "menu_memo", ...BLACK);
+		this.font.loadImageFrom("menu_copy", "menu_copy", ...BLACK);
+		this.font.loadImageFrom("menu_delete", "menu_delete", ...BLACK);
+		this.font.loadImageFrom(
+			"font tsukuruno muzusoude wakarazu dakedo dot no font de",
+			"ff1",
+			...BLACK
+		);
+		this.font.loadImageFrom(
+			"game naide noukin gazou seisei surudake nara ikesou3 (?)",
+			"ff2",
+			...BLACK
+		);
+
+		this.add.image(150, 150, "ff1");
+		this.add.image(150, 170, "ff2");
 	}
 
 	update() {
