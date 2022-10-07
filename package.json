@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-		"devcss": "npx tailwindcss -i ./src/index.css -o ./index.css --watch",
-		"buildcss": "npx tailwindcss -i ./src/index.css -o ./index.css",
+    "devcss": "npx tailwindcss -i ./src/index.css -o ./index.css --watch",
+    "buildcss": "npx tailwindcss -i ./src/index.css -o ./index.css",
     "dev": "npm run buildcss && vite",
     "build": "npm run buildcss && tsc && vite build && cp assets/images/ dist/assets/ -r && cp assets/sounds/ dist/assets/ -r",
     "preview": "vite preview"

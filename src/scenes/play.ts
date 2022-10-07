@@ -3,6 +3,7 @@ import Phaser from "phaser";
 import { match, P } from "ts-pattern";
 import { isDown, justDown, keysFrom } from "../data/keyConfig";
 import { deb } from "../utils/deb";
+import { FontForPhaser } from "../utils/fontForPhaser";
 import { GameMap, Square } from "./play/gamemap";
 import { mapRoot } from "./play/maps/root";
 
@@ -27,6 +28,7 @@ export default class Play extends Phaser.Scene {
 	playerdirection: Direction;
 	keepingPressingFrame: number;
 	lastPressedMovementKey: string;
+	font: FontForPhaser | undefined;
 
 	uy: number;
 	ux: number;
@@ -302,13 +304,14 @@ export default class Play extends Phaser.Scene {
 		this.load.image("player", "assets/images/player.png");
 		this.load.image("focus", "assets/images/focus.png");
 		this.load.image("out", "assets/images/out.png");
-		this.load.image("menu_enter", "assets/images/menu_enter.png");
-		this.load.image("menu_paste", "assets/images/menu_paste.png");
-		this.load.image("menu_new", "assets/images/menu_new.png");
-		this.load.image("menu_close", "assets/images/menu_close.png");
-		this.load.image("menu_memo", "assets/images/menu_memo.png");
-		this.load.image("menu_copy", "assets/images/menu_copy.png");
-		this.load.image("menu_delete", "assets/images/menu_delete.png");
+		// this.load.image("menu_enter", "assets/images/menu_enter.png");
+		this.load.image("menu_pastet", "assets/images/menu_paste.png");
+		// this.load.image("menu_new", "assets/images/menu_new.png");
+		// this.load.image("menu_close", "assets/images/menu_close.png");
+		// this.load.image("menu_memo", "assets/images/menu_memo.png");
+		// this.load.image("menu_copy", "assets/images/menu_copy.png");
+		// this.load.image("menu_delete", "assets/images/menu_delete.png");
+		this.load.image("font", "assets/images/font.png");
 
 		this.load.audio("collide", "assets/sounds/collide.mp3");
 	}
@@ -328,6 +331,17 @@ export default class Play extends Phaser.Scene {
 		this.cameras.main.setBackgroundColor(
 			"rgba(" + WHITE[0] + "," + WHITE[1] + "," + WHITE[2] + "," + "1)"
 		);
+
+		this.font = new FontForPhaser(this.textures, "font", 31);
+		this.font.loadImageFrom("menu_enter", "menu_enter");
+		this.font.loadImageFrom("menu_paste", "menu_paste");
+		this.font.loadImageFrom("menu_new", "menu_new");
+		this.font.loadImageFrom("menu_close", "menu_close");
+		this.font.loadImageFrom("menu_memo", "menu_memo");
+		this.font.loadImageFrom("menu_copy", "menu_copy");
+		this.font.loadImageFrom("menu_delete", "menu_delete");
+
+		this.add.image(100, 100, "menu_enter");
 	}
 
 	update() {
