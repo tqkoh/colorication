@@ -25,7 +25,7 @@ const Menu = {
 type Selected = 0 | 1;
 
 export default class Title extends Phaser.Scene {
-	private keys: {
+	keys: {
 		enter: Phaser.Input.Keyboard.Key[];
 		up: Phaser.Input.Keyboard.Key[];
 		down: Phaser.Input.Keyboard.Key[];
