@@ -50,7 +50,7 @@ export class FontForPhaser extends Font {
 					pixels.data[4 * (i * w + j) + 0] = r;
 					pixels.data[4 * (i * w + j) + 1] = g;
 					pixels.data[4 * (i * w + j) + 2] = b;
-					pixels.data[4 * (i * w + j) + 3] = image[i][j] ? a : 0;
+					pixels.data[4 * (i * w + j) + 3] = image[i][j] ? a : 0; // a
 				}
 			}
 

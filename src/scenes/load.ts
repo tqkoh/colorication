@@ -58,7 +58,7 @@ export default class Load extends Phaser.Scene {
 		);
 		{
 			const y = globalThis.screenh - 12,
-				x = globalThis.screenw - 703;
+				x = globalThis.screenw - 70;
 			this.add.image(x, y, "loading");
 		}
 	}

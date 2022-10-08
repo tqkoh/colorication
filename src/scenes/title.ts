@@ -16,7 +16,7 @@ const TITLE_ARROW_POS = [127 + TITLE_ARROW_H / 2, 212 + TITLE_ARROW_W / 2];
 
 const BGM_VOLUME = 0.6;
 
-const Menu = {
+const menu = {
 	play: 0,
 	options: 1,
 
@@ -73,7 +73,7 @@ export default class Title extends Phaser.Scene {
 		this.fading = false;
 		this.fadingStart = 0;
 
-		this.selected = Menu.play;
+		this.selected = menu.play;
 	}
 
 	preload() {
@@ -134,7 +134,7 @@ export default class Title extends Phaser.Scene {
 		} else {
 			{
 				let count = 0;
-				if (justDown(this.keys.down) && this.selected + 1 < Menu.size) {
+				if (justDown(this.keys.down) && this.selected + 1 < menu.size) {
 					++this.selected;
 					this.gArrow?.setY(
 						TITLE_ARROW_POS[0] + this.selected * TITLE_ARROW_DIFF
@@ -153,7 +153,7 @@ export default class Title extends Phaser.Scene {
 			}
 			if (justDown(this.keys.enter)) {
 				deb("enter");
-				if (this.selected === Menu.play) {
+				if (this.selected === menu.play) {
 					this.cameras.main.fadeOut(
 						FADEOUT_LENGTH / 2,
 						WHITE[0],
@@ -165,7 +165,7 @@ export default class Title extends Phaser.Scene {
 					this.sTitleIntro.fade(1, 0, FADEOUT_LENGTH / 2);
 					this.sTitleLoop.fade(1, 0, FADEOUT_LENGTH / 2);
 					this.sStart.play();
-				} else if (this.selected === Menu.options) {
+				} else if (this.selected === menu.options) {
 					console.log("options");
 					this.sEnter.play();
 				}
