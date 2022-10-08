@@ -33,6 +33,7 @@ export type Square = (
 	movable: boolean;
 	collidable: boolean;
 	locked: boolean;
+	image?: Phaser.GameObjects.Image;
 };
 
 export const airSquare: Square = {

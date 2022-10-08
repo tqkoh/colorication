@@ -1,6 +1,7 @@
 export interface KeyConfig {
 	Enter: number[];
 	Ctrl: number[];
+	Escape: number[];
 	W: number[];
 	A: number[];
 	S: number[];
@@ -12,6 +13,7 @@ const k = Phaser.Input.Keyboard.KeyCodes;
 export const defaultKeyConfig: KeyConfig = {
 	Enter: [k.ENTER],
 	Ctrl: [k.CTRL],
+	Escape: [k.ESC],
 	W: [k.W, k.UP],
 	A: [k.A, k.LEFT],
 	S: [k.S, k.DOWN],
