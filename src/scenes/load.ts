@@ -50,7 +50,7 @@ export default class Load extends Phaser.Scene {
 
 		this.keys.next = keysFrom(this, globalThis.keyConfig.Enter);
 
-		this.font = new FontForPhaser(this.textures, "font", 31);
+		this.font = new FontForPhaser(this.textures, "font", 10);
 		this.font.loadImageFrom(
 			"press enter to start...",
 			"loading",

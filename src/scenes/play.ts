@@ -9,13 +9,15 @@ import { mapRoot } from "./play/maps/root";
 
 type Direction = "right" | "down" | "left" | "up";
 const menuElement = {
-	close: "menu_close" as MenuElement,
-	copy: "menu_copy" as MenuElement,
-	delete: "menu_delete" as MenuElement,
-	enter: "menu_enter" as MenuElement,
-	memo: "menu_memo" as MenuElement,
-	new: "menu_new" as MenuElement,
-	paste: "menu_paste" as MenuElement,
+	close: 0,
+	copy: 1,
+	delete: 2,
+	enter: 3,
+	memo: 4,
+	new: 5,
+	paste: 6,
+
+	size: 7,
 } as const;
 const menuElementList: MenuElement[] = [
 	menuElement.close,
@@ -26,14 +28,26 @@ const menuElementList: MenuElement[] = [
 	menuElement.new,
 	menuElement.paste,
 ];
-type MenuElement =
-	| "menu_close"
-	| "menu_copy"
-	| "menu_delete"
-	| "menu_enter"
-	| "menu_memo"
-	| "menu_new"
-	| "menu_paste";
+const menuElementIds: string[] = [
+	"menu_close",
+	"menu_copy",
+	"menu_delete",
+	"menu_enter",
+	"menu_memo",
+	"menu_new",
+	"menu_paste",
+];
+const menuElementMessages: string[] = [
+	"close <ESC>",
+	"copy <C-c>",
+	"delete <C-d>",
+	"enter <C-\n>",
+	"memo <F2>",
+	"new <C-e>",
+	"paste <C-v>",
+];
+
+type MenuElement = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 const FADEIN_LENGTH = 200;
 const MENU_ELEMENT_MERGIN = 2;
@@ -60,6 +74,8 @@ export default class Play extends Phaser.Scene {
 	focusj: number;
 	playerDirection: Direction;
 	menuDisplaying: boolean;
+	menu: MenuElement[];
+	selected: number;
 
 	keepingPressingFrame: number;
 	lastPressedMovementKey: string;
@@ -69,7 +85,7 @@ export default class Play extends Phaser.Scene {
 
 	gImagePlayer: Phaser.GameObjects.Image | undefined;
 	gImageFocus: Phaser.GameObjects.Image | undefined;
-	gMenuElements: Map<MenuElement, Phaser.GameObjects.Image>;
+	gMenuElements: Phaser.GameObjects.Image[];
 	gMenuBackgroundShape: Phaser.Geom.Rectangle | undefined;
 	gMenuBackground: Phaser.GameObjects.Graphics | undefined;
 
@@ -88,7 +104,7 @@ export default class Play extends Phaser.Scene {
 			S: [],
 			D: [],
 		};
-		this.gMenuElements = new Map<MenuElement, Phaser.GameObjects.Image>();
+		this.gMenuElements = [];
 		this.map = new GameMap(mapRoot);
 		this.currentMap = this.map; // ref
 		this.playeri = this.map.starti;
@@ -98,6 +114,8 @@ export default class Play extends Phaser.Scene {
 		this.playerDirection = "right";
 		++this.focusj;
 		this.menuDisplaying = false;
+		this.menu = [];
+		this.selected = 0;
 
 		const H = globalThis.screenh - 31,
 			W = globalThis.screenw,
@@ -254,7 +272,6 @@ export default class Play extends Phaser.Scene {
 	}
 
 	openMenu() {
-		let content: MenuElement[] = [];
 		if (
 			this.focusi < 0 ||
 			this.map.h <= this.focusi ||
@@ -265,16 +282,16 @@ export default class Play extends Phaser.Scene {
 		}
 		this.menuDisplaying = true;
 		if (this.map.squares[this.focusi][this.focusj]._type === "air") {
-			content = [menuElement.new, menuElement.paste, menuElement.close];
+			this.menu = [menuElement.new, menuElement.paste, menuElement.close];
 		} else if (this.map.squares[this.focusi][this.focusj].locked) {
-			content = [
+			this.menu = [
 				menuElement.copy,
 				menuElement.delete,
 				menuElement.memo,
 				menuElement.close,
 			];
 		} else {
-			content = [
+			this.menu = [
 				menuElement.enter,
 				menuElement.copy,
 				menuElement.delete,
@@ -298,9 +315,9 @@ export default class Play extends Phaser.Scene {
 			e: MenuElement;
 		}[] = [];
 
-		for (let i = 0; i < content.length; ++i) {
-			let e = content[i];
-			let image = this.textures.get(e).getSourceImage();
+		for (let i = 0; i < this.menu.length; ++i) {
+			let e = this.menu[i];
+			let image = this.textures.get(menuElementIds[e]).getSourceImage();
 
 			elements.push({
 				ey: ey,
@@ -310,7 +327,7 @@ export default class Play extends Phaser.Scene {
 				e: e,
 			});
 
-			if (i != content.length - 1) ey += MENU_ELEMENT_MERGIN;
+			if (i != this.menu.length - 1) ey += MENU_ELEMENT_MERGIN;
 			ey += image.height;
 			w = Math.max(w, MENU_PADDING * 2 + image.width);
 		}
@@ -334,7 +351,7 @@ export default class Play extends Phaser.Scene {
 			let ey = y + MENU_PADDING + e.ey,
 				ex = x + MENU_PADDING + e.ex;
 			{
-				const t = this.gMenuElements.get(e.e);
+				const t = this.gMenuElements[e.e];
 				if (t) {
 					t.setY(ey + e.eh / 2).setX(ex + e.ew / 2);
 					t.visible = true;
@@ -350,7 +367,7 @@ export default class Play extends Phaser.Scene {
 			this.gMenuBackground.visible = false;
 
 			for (let e of menuElementList) {
-				const t = this.gMenuElements.get(e);
+				const t = this.gMenuElements[e];
 				if (t) t.visible = false;
 			}
 		}
@@ -447,21 +464,18 @@ export default class Play extends Phaser.Scene {
 		this.gMenuBackground.visible = false;
 		this.gMenuBackground.clear();
 
-		this.font = new FontForPhaser(this.textures, "font", 31);
-		// font: FontForPhaser
-		this.font.loadImageFrom("close <ESC>", menuElement.close, ...BLACK);
-		this.font.loadImageFrom("copy <C-c>", menuElement.copy, ...BLACK);
-		this.font.loadImageFrom("delete <C-d>", menuElement.delete, ...BLACK);
-		this.font.loadImageFrom("enter <C-e>", menuElement.enter, ...BLACK);
-		this.font.loadImageFrom("memo <F2>", menuElement.memo, ...BLACK);
-		this.font.loadImageFrom("new <C-e>", menuElement.new, ...BLACK);
-		this.font.loadImageFrom("paste <C-v>", menuElement.paste, ...BLACK);
-
+		this.font = new FontForPhaser(this.textures, "font", 10);
+		// font: FontForPhase
 		for (let e of menuElementList) {
-			this.gMenuElements.set(e, this.add.image(0, 0, e));
+			this.font.loadImageFrom(
+				menuElementMessages[e],
+				menuElementIds[e],
+				...BLACK
+			);
+			this.gMenuElements.push(this.add.image(0, 0, menuElementIds[e]));
 		}
 		for (let e of menuElementList) {
-			const t = this.gMenuElements.get(e);
+			const t = this.gMenuElements[e];
 			if (t) t.visible = false;
 		}
 	}
