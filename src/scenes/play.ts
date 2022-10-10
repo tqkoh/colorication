@@ -4,7 +4,13 @@ import { match, P } from "ts-pattern";
 import { isDown, justDown, keysFrom } from "../data/keyConfig";
 import { deb } from "../utils/deb";
 import { FontForPhaser } from "../utils/fontForPhaser";
-import { GameMap, Square } from "./play/gamemap";
+import { korenani } from "../utils/korenani";
+import {
+	GameMap,
+	Square,
+	squaresFromLam,
+	squaresFromStage,
+} from "./play/gamemap";
 import { mapRoot } from "./play/maps/root";
 
 type Direction = "right" | "down" | "left" | "up";
@@ -126,10 +132,10 @@ export default class Play extends Phaser.Scene {
 		this.gMenuElements = [];
 		this.map = new GameMap(mapRoot);
 		this.currentMap = this.map; // ref
-		this.playeri = this.map.starti;
-		this.playerj = this.map.startj;
-		this.focusi = this.map.starti;
-		this.focusj = this.map.startj;
+		this.playeri = this.currentMap.starti;
+		this.playerj = this.currentMap.startj;
+		this.focusi = this.currentMap.starti;
+		this.focusj = this.currentMap.startj;
 		this.playerDirection = "right";
 		++this.focusj;
 		this.menuDisplaying = false;
@@ -293,19 +299,20 @@ export default class Play extends Phaser.Scene {
 	}
 
 	openMenu() {
+		deb(1.5, this.currentMap);
 		if (
 			this.focusi < 0 ||
-			this.map.h <= this.focusi ||
+			this.currentMap.h <= this.focusi ||
 			this.focusj < 0 ||
-			this.map.w <= this.focusj
+			this.currentMap.w <= this.focusj
 		) {
 			return;
 		}
 		this.menuDisplaying = true;
 		this.selected = 0;
-		if (this.map.squares[this.focusi][this.focusj]._type === "air") {
+		if (this.currentMap.squares[this.focusi][this.focusj]._type === "air") {
 			this.menu = [menuElement.new, menuElement.paste, menuElement.close];
-		} else if (this.map.squares[this.focusi][this.focusj].locked) {
+		} else if (this.currentMap.squares[this.focusi][this.focusj].locked) {
 			this.menu = [
 				menuElement.copy,
 				menuElement.delete,
@@ -393,6 +400,7 @@ export default class Play extends Phaser.Scene {
 			}
 		}
 		if (this.gArrow) this.gArrow.visible = true;
+		deb(1.6, this.currentMap);
 	}
 
 	closeMenu() {
@@ -409,9 +417,68 @@ export default class Play extends Phaser.Scene {
 		if (this.gArrow) this.gArrow.visible = false;
 	}
 
+	execCopy() {}
+	execPaste() {}
+	execEnter() {
+		let focus = this.currentMap.squares[this.focusi][this.focusj];
+		let afterMap: GameMap;
+		if (focus._type === "map") {
+			afterMap = focus.map;
+		} else if (focus._type === "stage") {
+			focus.map = new GameMap(squaresFromStage(focus.stage));
+			afterMap = focus.map;
+		} else if (focus._type === "term" && focus.term._type === "lam") {
+			focus.map = new GameMap(squaresFromLam(focus.term));
+			afterMap = focus.map;
+		} else {
+			afterMap = this.currentMap;
+			return;
+		}
+
+		// map
+		for (let i = 0; i < this.currentMap.h; ++i) {
+			for (let j = 0; j < this.currentMap.w; ++j) {
+				deb("b", this.currentMap.squares[i][j].image);
+				this.currentMap.squares[i][j].image?.destroy();
+			}
+		}
+		for (let i = 0; i < this.currentMap.h; ++i) {
+			for (let j = 0; j < this.currentMap.w; ++j) {
+				this.currentMap.squares[i][j].image = undefined;
+				deb("a", this.currentMap.squares[i][j].image);
+			}
+		}
+		this.currentMap = afterMap;
+
+		// map
+		// for (let i = 0; i < this.currentMap.h; ++i) {
+		// 	for (let j = 0; j < this.currentMap.w; ++j) {
+		// 		const y = 16 * i,
+		// 			x = 16 * j;
+		// 		this.currentMap.squares[i][j].image = this.add
+		// 			.image(
+		// 				this.mapOriginx + x + 8,
+		// 				this.mapOriginy + y + 8,
+		// 				this.imageTagFromSquare(
+		// 					this.currentMap.squares[i][j],
+		// 					i,
+		// 					j,
+		// 					this.currentMap.h,
+		// 					this.currentMap.w
+		// 				)
+		// 			)
+		// 		this.currentMap.squares[i][j].image?.setDepth(-10);
+		// 	}
+		// }
+	}
+	execDelete() {}
+	execMemo() {}
+	execNew() {}
+
 	handleMenu() {
 		if (justDown(this.keys.S) && this.selected + 1 < this.menu.length) {
 			++this.selected;
+			this.currentMap.squares[this.focusi][this.focusj].image?.destroy();
 		}
 		if (justDown(this.keys.W) && this.selected - 1 >= 0) {
 			--this.selected;
@@ -426,6 +493,47 @@ export default class Play extends Phaser.Scene {
 				)
 				.setX(this.menuX + MENU_PADDING + ARROW_MERGIN_L);
 		}
+		if (justDown(this.keys.Enter)) {
+			deb(1.8, this.currentMap.squares[0][0].image);
+			match(this.menu[this.selected])
+				.with(menuElement.close, () => {
+					this.closeMenu();
+				})
+				.with(menuElement.copy, () => {
+					this.execCopy();
+					this.closeMenu();
+				})
+				.with(menuElement.delete, () => {
+					this.execDelete();
+					this.closeMenu();
+				})
+				.with(menuElement.enter, () => {
+					deb(2, this.currentMap.squares[0][0].image);
+					{
+						let t = this.currentMap.squares[0][0];
+						deb(t.image);
+						deb(t);
+					}
+					deb(2, this.currentMap.squares[0][0]);
+					deb(2, this.currentMap.squares);
+					deb(2, this.currentMap);
+
+					this.execEnter();
+					this.closeMenu();
+				})
+				.with(menuElement.memo, () => {
+					this.execMemo();
+				})
+				.with(menuElement.new, () => {
+					this.execNew();
+					this.closeMenu();
+				})
+				.with(menuElement.paste, () => {
+					this.execPaste();
+					this.closeMenu();
+				})
+				.exhaustive();
+		}
 	}
 
 	handleMenuShortcut() {
@@ -434,7 +542,7 @@ export default class Play extends Phaser.Scene {
 		}
 	}
 
-	imageTagFromSquare(
+	imageHandleFromSquare(
 		s: Square,
 		i: number,
 		j: number,
@@ -475,7 +583,7 @@ export default class Play extends Phaser.Scene {
 				w = 368;
 			y = y + (globalThis.screenh - y) / 2;
 			x = globalThis.screenw / 2;
-			this.add.tileSprite(x, y, w, h, "out");
+			this.add.tileSprite(x, y, w, h, "out").setDepth(-100);
 		}
 
 		// map
@@ -483,10 +591,10 @@ export default class Play extends Phaser.Scene {
 			for (let j = 0; j < this.currentMap.w; ++j) {
 				const y = 16 * i,
 					x = 16 * j;
-				this.map.squares[i][j].image = this.add.image(
+				this.currentMap.squares[i][j].image = this.add.image(
 					this.mapOriginx + x + 8,
 					this.mapOriginy + y + 8,
-					this.imageTagFromSquare(
+					this.imageHandleFromSquare(
 						this.currentMap.squares[i][j],
 						i,
 						j,
@@ -494,14 +602,18 @@ export default class Play extends Phaser.Scene {
 						this.currentMap.w
 					)
 				);
+				this.currentMap.squares[i][j].image?.setDepth(-10);
 			}
 		}
+		deb(0, this.currentMap);
 
 		// player
 		const py = this.mapOriginy + this.playeri * 16,
 			px = this.mapOriginx + this.playerj * 16;
 		this.gImagePlayer = this.add.image(px + 8, py + 8, "player");
+		this.gImagePlayer.setDepth(10);
 		this.gImageFocus = this.add.image(px + 16 + 8, py + 8, "focus");
+		this.gImageFocus.setDepth(10);
 
 		// menu
 
@@ -548,6 +660,7 @@ export default class Play extends Phaser.Scene {
 			const t = this.gMenuElements[e];
 			if (t) t.visible = false;
 		}
+		deb(1, this.currentMap);
 	}
 
 	preload() {
@@ -603,7 +716,31 @@ export default class Play extends Phaser.Scene {
 		this.cameras.main.setBackgroundColor(
 			"rgba(" + WHITE[0] + "," + WHITE[1] + "," + WHITE[2] + "," + "1)"
 		);
+
+		// this.test = this.add.image(100, 100, "air");
+		// this.test2 = this.add.image(120, 100, "air");
+
+		this.test = this.add.image(100, 100, "lam");
+		this.currentMap.squares[0][0].image = this.test;
+		this.currentMap.squares[0][0].testString = "a";
+
+		this.test2 = this.add.image(120, 100, "lam");
+		this.currentMap.squares[0][1].image = this.test2;
+		this.currentMap.squares[0][1].testString = "b";
+
+		deb(0, this.test2 === this.currentMap.squares[0][1].image);
+
+		this.test3 = this.add.image(140, 100, "lam");
+		deb(1, this.test2 === this.currentMap.squares[0][1].image);
+		this.currentMap.squares[0][2].image = this.test3;
+		this.currentMap.squares[0][2].testString = "c";
+		deb(2, this.test2 === this.currentMap.squares[0][1].image);
+		deb(this.currentMap.squares);
 	}
+
+	test: Phaser.GameObjects.Image | undefined;
+	test2: Phaser.GameObjects.Image | undefined;
+	test3: Phaser.GameObjects.Image | undefined;
 
 	update() {
 		this.handleMenuShortcut();
@@ -614,6 +751,14 @@ export default class Play extends Phaser.Scene {
 			if (justDown(this.keys.Enter)) {
 				this.openMenu();
 			}
+		}
+
+		if (justDown(this.keys.C)) {
+			// this.test?.destroy();
+			// this.test2?.destroy();
+			// this.currentMap.squares[0][1].image = this.test2;
+			this.currentMap.squares[0][1].image?.destroy();
+			korenani();
 		}
 	}
 }
