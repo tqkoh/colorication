@@ -4,7 +4,6 @@ import { match, P } from "ts-pattern";
 import { isDown, justDown, keysFrom } from "../data/keyConfig";
 import { deb } from "../utils/deb";
 import { FontForPhaser } from "../utils/fontForPhaser";
-import { korenani } from "../utils/korenani";
 import {
 	GameMap,
 	Square,
@@ -165,16 +164,24 @@ export default class Play extends Phaser.Scene {
 		});
 	}
 
-	moveToDirectionI(d: Direction) {
-		const diff: number[] = match(d)
-			.with("right", () => [0, 1])
-			.with("down", () => [1, 0])
-			.with("left", () => [0, -1])
-			.with("up", () => [-1, 0])
-			.exhaustive();
+	updatePlayerImage() {
+		this.focusi = this.playeri;
+		this.focusj = this.playerj;
 
-		const nexti = this.playeri + diff[0],
-			nextj = this.playerj + diff[1];
+		if (this.playerDirection == "right") ++this.focusj;
+		if (this.playerDirection == "down") ++this.focusi;
+		if (this.playerDirection == "left") --this.focusj;
+		if (this.playerDirection == "up") --this.focusi;
+
+		const py = this.mapOriginy + this.playeri * 16,
+			px = this.mapOriginx + this.playerj * 16;
+		this.gImagePlayer?.setY(py + 8).setX(px + 8);
+		let fy = this.mapOriginy + this.focusi * 16,
+			fx = this.mapOriginx + this.focusj * 16;
+		this.gImageFocus?.setY(fy + 8).setX(fx + 8);
+	}
+
+	moveToPosition(nexti: number, nextj: number) {
 		if (
 			nexti < 0 ||
 			this.currentMap.h <= nexti ||
@@ -193,6 +200,20 @@ export default class Play extends Phaser.Scene {
 		this.playeri = nexti;
 		this.playerj = nextj;
 		deb(this.playeri, this.playerj);
+		this.updatePlayerImage();
+	}
+
+	moveToDirectionI(d: Direction) {
+		const diff: number[] = match(d)
+			.with("right", () => [0, 1])
+			.with("down", () => [1, 0])
+			.with("left", () => [0, -1])
+			.with("up", () => [-1, 0])
+			.exhaustive();
+
+		const nexti = this.playeri + diff[0],
+			nextj = this.playerj + diff[1];
+		this.moveToPosition(nexti, nextj);
 	}
 
 	moveToDirection(d: Direction, rotation: number) {
@@ -203,22 +224,8 @@ export default class Play extends Phaser.Scene {
 			if (this.gImagePlayer !== undefined) {
 				this.gImagePlayer.rotation = rotation;
 			}
+			this.updatePlayerImage();
 		}
-
-		this.focusi = this.playeri;
-		this.focusj = this.playerj;
-
-		if (this.playerDirection == "right") ++this.focusj;
-		if (this.playerDirection == "down") ++this.focusi;
-		if (this.playerDirection == "left") --this.focusj;
-		if (this.playerDirection == "up") --this.focusi;
-
-		const py = this.mapOriginy + this.playeri * 16,
-			px = this.mapOriginx + this.playerj * 16;
-		this.gImagePlayer?.setY(py + 8).setX(px + 8);
-		let fy = this.mapOriginy + this.focusi * 16,
-			fx = this.mapOriginx + this.focusj * 16;
-		this.gImageFocus?.setY(fy + 8).setX(fx + 8);
 	}
 
 	handleMovement() {
@@ -430,46 +437,51 @@ export default class Play extends Phaser.Scene {
 		} else if (focus._type === "term" && focus.term._type === "lam") {
 			focus.map = new GameMap(squaresFromLam(focus.term));
 			afterMap = focus.map;
+		} else if (focus._type === "block" && focus.block === "parent") {
+			if (this.currentMap.parentMap) {
+				afterMap = this.currentMap.parentMap;
+			} else {
+				return;
+			}
 		} else {
-			afterMap = this.currentMap;
 			return;
 		}
+		afterMap.setParent(this.currentMap);
 
 		// map
 		for (let i = 0; i < this.currentMap.h; ++i) {
 			for (let j = 0; j < this.currentMap.w; ++j) {
-				deb("b", this.currentMap.squares[i][j].image);
 				this.currentMap.squares[i][j].image?.destroy();
-			}
-		}
-		for (let i = 0; i < this.currentMap.h; ++i) {
-			for (let j = 0; j < this.currentMap.w; ++j) {
 				this.currentMap.squares[i][j].image = undefined;
-				deb("a", this.currentMap.squares[i][j].image);
 			}
 		}
 		this.currentMap = afterMap;
 
+		this.playerDirection = "right";
+		if (this.gImagePlayer !== undefined) {
+			this.gImagePlayer.rotation = 0;
+		}
+		this.moveToPosition(this.currentMap.starti, this.currentMap.startj);
+
 		// map
-		// for (let i = 0; i < this.currentMap.h; ++i) {
-		// 	for (let j = 0; j < this.currentMap.w; ++j) {
-		// 		const y = 16 * i,
-		// 			x = 16 * j;
-		// 		this.currentMap.squares[i][j].image = this.add
-		// 			.image(
-		// 				this.mapOriginx + x + 8,
-		// 				this.mapOriginy + y + 8,
-		// 				this.imageTagFromSquare(
-		// 					this.currentMap.squares[i][j],
-		// 					i,
-		// 					j,
-		// 					this.currentMap.h,
-		// 					this.currentMap.w
-		// 				)
-		// 			)
-		// 		this.currentMap.squares[i][j].image?.setDepth(-10);
-		// 	}
-		// }
+		for (let i = 0; i < this.currentMap.h; ++i) {
+			for (let j = 0; j < this.currentMap.w; ++j) {
+				const y = 16 * i,
+					x = 16 * j;
+				this.currentMap.squares[i][j].image = this.add.image(
+					this.mapOriginx + x + 8,
+					this.mapOriginy + y + 8,
+					this.imageHandleFromSquare(
+						this.currentMap.squares[i][j],
+						i,
+						j,
+						this.currentMap.h,
+						this.currentMap.w
+					)
+				);
+				this.currentMap.squares[i][j].image?.setDepth(-10);
+			}
+		}
 	}
 	execDelete() {}
 	execMemo() {}
@@ -478,7 +490,6 @@ export default class Play extends Phaser.Scene {
 	handleMenu() {
 		if (justDown(this.keys.S) && this.selected + 1 < this.menu.length) {
 			++this.selected;
-			this.currentMap.squares[this.focusi][this.focusj].image?.destroy();
 		}
 		if (justDown(this.keys.W) && this.selected - 1 >= 0) {
 			--this.selected;
@@ -716,31 +727,7 @@ export default class Play extends Phaser.Scene {
 		this.cameras.main.setBackgroundColor(
 			"rgba(" + WHITE[0] + "," + WHITE[1] + "," + WHITE[2] + "," + "1)"
 		);
-
-		// this.test = this.add.image(100, 100, "air");
-		// this.test2 = this.add.image(120, 100, "air");
-
-		this.test = this.add.image(100, 100, "lam");
-		this.currentMap.squares[0][0].image = this.test;
-		this.currentMap.squares[0][0].testString = "a";
-
-		this.test2 = this.add.image(120, 100, "lam");
-		this.currentMap.squares[0][1].image = this.test2;
-		this.currentMap.squares[0][1].testString = "b";
-
-		deb(0, this.test2 === this.currentMap.squares[0][1].image);
-
-		this.test3 = this.add.image(140, 100, "lam");
-		deb(1, this.test2 === this.currentMap.squares[0][1].image);
-		this.currentMap.squares[0][2].image = this.test3;
-		this.currentMap.squares[0][2].testString = "c";
-		deb(2, this.test2 === this.currentMap.squares[0][1].image);
-		deb(this.currentMap.squares);
 	}
-
-	test: Phaser.GameObjects.Image | undefined;
-	test2: Phaser.GameObjects.Image | undefined;
-	test3: Phaser.GameObjects.Image | undefined;
 
 	update() {
 		this.handleMenuShortcut();
@@ -751,14 +738,6 @@ export default class Play extends Phaser.Scene {
 			if (justDown(this.keys.Enter)) {
 				this.openMenu();
 			}
-		}
-
-		if (justDown(this.keys.C)) {
-			// this.test?.destroy();
-			// this.test2?.destroy();
-			// this.currentMap.squares[0][1].image = this.test2;
-			this.currentMap.squares[0][1].image?.destroy();
-			korenani();
 		}
 	}
 }

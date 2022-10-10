@@ -56,7 +56,7 @@ export const parentSquareI: Square = {
 	block: "parent",
 	name: "..",
 	movable: false,
-	collidable: false,
+	collidable: true,
 	locked: false,
 };
 
@@ -103,6 +103,7 @@ export function startSquare() {
 // todo: History
 
 export class GameMap {
+	parentMap: GameMap | undefined;
 	squares: Square[][];
 	h: number;
 	w: number;
@@ -131,6 +132,9 @@ export class GameMap {
 			}
 		}
 		if (this.starti === -1) throw new Error("start does not exist");
+	}
+	setParent(parent: GameMap) {
+		this.parentMap = parent;
 	}
 }
 
