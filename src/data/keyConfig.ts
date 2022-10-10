@@ -6,6 +6,12 @@ export interface KeyConfig {
 	A: number[];
 	S: number[];
 	D: number[];
+	N: number[];
+	E: number[];
+	C: number[];
+	V: number[];
+	F2: number[];
+	Del: number[];
 }
 
 const k = Phaser.Input.Keyboard.KeyCodes;
@@ -18,6 +24,12 @@ export const defaultKeyConfig: KeyConfig = {
 	A: [k.A, k.LEFT],
 	S: [k.S, k.DOWN],
 	D: [k.D, k.RIGHT],
+	N: [k.N],
+	E: [k.E],
+	C: [k.C],
+	V: [k.V],
+	F2: [k.F2],
+	Del: [k.DELETE],
 };
 
 export function keysFrom(
