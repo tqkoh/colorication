@@ -1,3 +1,4 @@
+import * as lodash from "lodash";
 import Term from "../../utils/term";
 
 export type Block =
@@ -24,7 +25,7 @@ export type Stage = {
 
 export type Square = (
 	| { _type: "air" }
-	| { _type: "term"; term: Term }
+	| { _type: "term"; term: Term; map?: GameMap }
 	| { _type: "map"; map: GameMap }
 	| { _type: "stage"; stage: Stage; map?: GameMap }
 	| { _type: "block"; block: Block }
@@ -34,9 +35,11 @@ export type Square = (
 	collidable: boolean;
 	locked: boolean;
 	image?: Phaser.GameObjects.Image;
+
+	testString?: string;
 };
 
-export const airSquare: Square = {
+export const airSquareI: Square = {
 	_type: "air",
 	name: "",
 	movable: false,
@@ -44,16 +47,24 @@ export const airSquare: Square = {
 	locked: false,
 };
 
-export const parentSquare: Square = {
+export function airSquare() {
+	return lodash.cloneDeep(airSquareI);
+}
+
+export const parentSquareI: Square = {
 	_type: "block",
 	block: "parent",
 	name: "..",
 	movable: false,
-	collidable: false,
+	collidable: true,
 	locked: false,
 };
 
-export const startSquare: Square = {
+export function parentSquare() {
+	return lodash.cloneDeep(parentSquareI);
+}
+
+export const startSquareI: Square = {
 	_type: "block",
 	block: "start",
 	name: "",
@@ -61,6 +72,10 @@ export const startSquare: Square = {
 	collidable: false,
 	locked: false,
 };
+
+export function startSquare() {
+	return lodash.cloneDeep(startSquareI);
+}
 
 // export function squaresFrom(s: string[]): Square[][] {
 // 	const h = s.length;
@@ -88,6 +103,7 @@ export const startSquare: Square = {
 // todo: History
 
 export class GameMap {
+	parentMap: GameMap | undefined;
 	squares: Square[][];
 	h: number;
 	w: number;
@@ -111,18 +127,23 @@ export class GameMap {
 				) {
 					this.starti = i;
 					this.startj = j;
-					this.squares[i][j] = airSquare;
+					this.squares[i][j] = airSquare();
 				}
 			}
 		}
 		if (this.starti === -1) throw new Error("start does not exist");
 	}
+	setParent(parent: GameMap) {
+		this.parentMap = parent;
+	}
 }
 
-export function squaresFrom(s: Stage): Square[][] {
+export function squaresFromStage(s: Stage): Square[][] {
 	const h = Math.max(8 + s.tests.length, 11),
 		w = 11;
-	let ret = new Array<Square[]>(h).fill(new Array<Square>(w).fill(airSquare));
+	let ret = new Array<Square[]>(h).fill(
+		new Array<Square>(w).fill(airSquare())
+	);
 	ret[0][0] = {
 		_type: "block",
 		block: "parent",
@@ -131,7 +152,7 @@ export function squaresFrom(s: Stage): Square[][] {
 		collidable: true,
 		locked: false,
 	};
-	ret[0][1] = startSquare;
+	ret[0][1] = startSquare();
 	for (let j = 0; j < w; ++j) {
 		ret[5][j] = {
 			_type: "block",
@@ -165,5 +186,12 @@ export function squaresFrom(s: Stage): Square[][] {
 		ret[i][j] = s.terms[k];
 	}
 
+	return ret;
+}
+
+export function squaresFromLam(_t: Term): Square[][] {
+	let ret = new Array<Square[]>(7).fill(
+		new Array<Square>(6).fill(airSquare())
+	);
 	return ret;
 }

@@ -1,9 +1,4 @@
-import {
-	airSquare as air,
-	GameMap,
-	Square,
-	startSquare as sta,
-} from "../gamemap";
+import { airSquare as a, GameMap, Square, startSquare as s } from "../gamemap";
 import { mapWorld0 } from "./worlds/world0";
 
 const w_0: Square = {
@@ -16,10 +11,10 @@ const w_0: Square = {
 };
 
 export const mapRoot: Square[][] = [
-	[sta, air, air, air, air, air, air, air, air, air, air],
-	[air, air, air, air, air, air, air, air, air, air, air],
-	[air, w_0, air, air, air, air, air, air, air, air, air],
-	[air, air, air, air, air, air, air, air, air, air, air],
-	[air, air, air, air, air, air, air, air, air, air, air],
-	[air, air, air, air, air, air, air, air, air, air, air],
+	[s(), a(), a(), a(), a(), a(), a(), a(), a(), a(), a()],
+	[a(), a(), a(), a(), a(), a(), a(), a(), a(), a(), a()],
+	[a(), w_0, a(), a(), a(), a(), a(), a(), a(), a(), a()],
+	[a(), a(), a(), a(), a(), a(), a(), a(), a(), a(), a()],
+	[a(), a(), a(), a(), a(), a(), a(), a(), a(), a(), a()],
+	[a(), a(), a(), a(), a(), a(), a(), a(), a(), a(), a()],
 ];
