@@ -141,9 +141,14 @@ export class GameMap {
 export function squaresFromStage(s: Stage): Square[][] {
 	const h = Math.max(8 + s.tests.length, 11),
 		w = 11;
-	let ret = new Array<Square[]>(h).fill(
-		new Array<Square>(w).fill(airSquare())
-	);
+	let ret: Square[][] = [];
+	for (let i = 0; i < h; ++i) {
+		ret.push([]);
+		for (let j = 0; j < w; ++j) {
+			ret[i].push(airSquare());
+		}
+	}
+
 	ret[0][0] = {
 		_type: "block",
 		block: "parent",
@@ -181,7 +186,7 @@ export function squaresFromStage(s: Stage): Square[][] {
 	};
 
 	for (let k = 0; k < s.terms.length; ++k) {
-		let i = 1 + (k / 2) * 2,
+		let i = 1 + ((k / 4) | 0) * 2,
 			j = 2 + (k % 4) * 2;
 		ret[i][j] = s.terms[k];
 	}

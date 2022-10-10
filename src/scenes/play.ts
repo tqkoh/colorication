@@ -432,6 +432,8 @@ export default class Play extends Phaser.Scene {
 		if (focus._type === "map") {
 			afterMap = focus.map;
 		} else if (focus._type === "stage") {
+			let st = squaresFromStage(focus.stage);
+			deb(st);
 			focus.map = new GameMap(squaresFromStage(focus.stage));
 			afterMap = focus.map;
 		} else if (focus._type === "term" && focus.term._type === "lam") {
