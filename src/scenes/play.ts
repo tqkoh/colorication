@@ -38,20 +38,24 @@ const menuElementIds: string[] = [
 	"menu_paste",
 ];
 const menuElementMessages: string[] = [
-	"close <ESC>",
-	"copy <C-c>",
-	"delete <C-d>",
-	"enter <C-\n>",
-	"memo <F2>",
-	"new <C-e>",
-	"paste <C-v>",
+	"close  <ESC>",
+	"copy     <c>",
+	"delete <Del>",
+	"enter    <e>",
+	"memo    <F2>",
+	"new      <n>",
+	"paste    <v>",
 ];
 
 type MenuElement = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 const FADEIN_LENGTH = 200;
 const MENU_ELEMENT_MERGIN = 2;
+const MENU_ELEMENT_H = 9;
 const MENU_PADDING = 4;
+const ARROW_W = 7;
+const ARROW_MERGIN_T = 4;
+const ARROW_MERGIN_L = 2;
 const BLACK = [84, 75, 64];
 const WHITE = [250, 247, 240];
 const WHITE2 = [255, 239, 215];
@@ -65,6 +69,12 @@ export default class Play extends Phaser.Scene {
 		A: Phaser.Input.Keyboard.Key[];
 		S: Phaser.Input.Keyboard.Key[];
 		D: Phaser.Input.Keyboard.Key[];
+		N: Phaser.Input.Keyboard.Key[];
+		E: Phaser.Input.Keyboard.Key[];
+		C: Phaser.Input.Keyboard.Key[];
+		V: Phaser.Input.Keyboard.Key[];
+		F2: Phaser.Input.Keyboard.Key[];
+		Del: Phaser.Input.Keyboard.Key[];
 	};
 	map: GameMap;
 	currentMap: GameMap;
@@ -75,6 +85,8 @@ export default class Play extends Phaser.Scene {
 	playerDirection: Direction;
 	menuDisplaying: boolean;
 	menu: MenuElement[];
+	menuY: number;
+	menuX: number;
 	selected: number;
 
 	keepingPressingFrame: number;
@@ -88,6 +100,7 @@ export default class Play extends Phaser.Scene {
 	gMenuElements: Phaser.GameObjects.Image[];
 	gMenuBackgroundShape: Phaser.Geom.Rectangle | undefined;
 	gMenuBackground: Phaser.GameObjects.Graphics | undefined;
+	gArrow: Phaser.GameObjects.Image | undefined;
 
 	sCollide: Howl;
 	sPoint: Howl;
@@ -103,6 +116,12 @@ export default class Play extends Phaser.Scene {
 			A: [],
 			S: [],
 			D: [],
+			N: [],
+			E: [],
+			C: [],
+			V: [],
+			F2: [],
+			Del: [],
 		};
 		this.gMenuElements = [];
 		this.map = new GameMap(mapRoot);
@@ -115,6 +134,8 @@ export default class Play extends Phaser.Scene {
 		++this.focusj;
 		this.menuDisplaying = false;
 		this.menu = [];
+		this.menuY = 0;
+		this.menuX = 0;
 		this.selected = 0;
 
 		const H = globalThis.screenh - 31,
@@ -281,6 +302,7 @@ export default class Play extends Phaser.Scene {
 			return;
 		}
 		this.menuDisplaying = true;
+		this.selected = 0;
 		if (this.map.squares[this.focusi][this.focusj]._type === "air") {
 			this.menu = [menuElement.new, menuElement.paste, menuElement.close];
 		} else if (this.map.squares[this.focusi][this.focusj].locked) {
@@ -301,11 +323,9 @@ export default class Play extends Phaser.Scene {
 		}
 
 		let h = 0,
-			w = MENU_PADDING * 2,
-			y = 0,
-			x = 0;
+			w = MENU_PADDING * 2;
 		let ey = 0,
-			ex = 0;
+			ex = ARROW_W + MENU_ELEMENT_MERGIN;
 
 		let elements: {
 			ey: number;
@@ -332,24 +352,31 @@ export default class Play extends Phaser.Scene {
 			w = Math.max(w, MENU_PADDING * 2 + image.width);
 		}
 		h = ey + MENU_PADDING * 2;
+		w += ARROW_W + MENU_ELEMENT_MERGIN;
 
-		y = Math.min(
+		this.menuY = Math.min(
 			globalThis.screenh - h - 16,
 			this.mapOriginy + 16 * this.focusi
 		);
-		x = this.mapOriginx + 16 * this.focusj + 16 + 8;
-		if (this.playerDirection === "left" || globalThis.screenw < x + w) {
-			x = this.mapOriginx + 16 * this.focusj - w - 8;
+		this.menuX = this.mapOriginx + 16 * this.focusj + 16 + 8;
+		if (
+			this.playerDirection === "left" ||
+			globalThis.screenw < this.menuX + w
+		) {
+			this.menuX = this.mapOriginx + 16 * this.focusj - w - 8;
 		}
 
 		if (this.gMenuBackgroundShape && this.gMenuBackground) {
-			this.gMenuBackgroundShape.setPosition(x, y).setSize(w, h);
+			this.gMenuBackgroundShape
+				.setPosition(this.menuX, this.menuY)
+				.setSize(w, h);
 			this.gMenuBackground.fillRectShape(this.gMenuBackgroundShape);
 			this.gMenuBackground.visible = true;
 		}
-		for (let e of elements) {
-			let ey = y + MENU_PADDING + e.ey,
-				ex = x + MENU_PADDING + e.ex;
+		for (let i = 0; i < elements.length; ++i) {
+			let e = elements[i];
+			let ey = this.menuY + MENU_PADDING + e.ey,
+				ex = this.menuX + MENU_PADDING + e.ex;
 			{
 				const t = this.gMenuElements[e.e];
 				if (t) {
@@ -357,7 +384,15 @@ export default class Play extends Phaser.Scene {
 					t.visible = true;
 				}
 			}
+
+			if (this.selected === i) {
+				let e = elements[i];
+				let ay = this.menuY + MENU_PADDING + e.ey,
+					ax = this.menuX + MENU_PADDING;
+				this.gArrow?.setY(ay + e.eh / 2).setX(ax + ARROW_W / 2);
+			}
 		}
+		if (this.gArrow) this.gArrow.visible = true;
 	}
 
 	closeMenu() {
@@ -371,9 +406,29 @@ export default class Play extends Phaser.Scene {
 				if (t) t.visible = false;
 			}
 		}
+		if (this.gArrow) this.gArrow.visible = false;
 	}
 
 	handleMenu() {
+		if (justDown(this.keys.S) && this.selected + 1 < this.menu.length) {
+			++this.selected;
+		}
+		if (justDown(this.keys.W) && this.selected - 1 >= 0) {
+			--this.selected;
+		}
+		if (this.gArrow) {
+			this.gArrow
+				.setY(
+					this.menuY +
+						MENU_PADDING +
+						ARROW_MERGIN_T +
+						(MENU_ELEMENT_H + MENU_ELEMENT_MERGIN) * this.selected
+				)
+				.setX(this.menuX + MENU_PADDING + ARROW_MERGIN_L);
+		}
+	}
+
+	handleMenuShortcut() {
 		if (justDown(this.keys.Escape)) {
 			this.closeMenu();
 		}
@@ -452,6 +507,13 @@ export default class Play extends Phaser.Scene {
 
 		this.gMenuBackgroundShape = new Phaser.Geom.Rectangle(0, 0, 0, 0);
 		this.gMenuBackground = this.add.graphics({
+			lineStyle: {
+				color: Phaser.Display.Color.GetColor(
+					BLACK[0],
+					BLACK[1],
+					BLACK[2]
+				),
+			},
 			fillStyle: {
 				color: Phaser.Display.Color.GetColor(
 					WHITE2[0],
@@ -461,8 +523,16 @@ export default class Play extends Phaser.Scene {
 			},
 		});
 		this.gMenuBackground.fillRectShape(this.gMenuBackgroundShape);
+		this.gMenuBackground.lineStyle(
+			2,
+			Phaser.Display.Color.GetColor(BLACK[0], BLACK[1], BLACK[2]),
+			255
+		);
+		this.gMenuBackground.strokeRectShape(this.gMenuBackgroundShape);
 		this.gMenuBackground.visible = false;
 		this.gMenuBackground.clear();
+		this.gArrow = this.add.image(0, 0, "arrow");
+		this.gArrow.visible = false;
 
 		this.font = new FontForPhaser(this.textures, "font", 10);
 		// font: FontForPhase
@@ -493,6 +563,12 @@ export default class Play extends Phaser.Scene {
 		this.keys.A = keysFrom(this, globalThis.keyConfig.A);
 		this.keys.S = keysFrom(this, globalThis.keyConfig.S);
 		this.keys.D = keysFrom(this, globalThis.keyConfig.D);
+		this.keys.N = keysFrom(this, globalThis.keyConfig.N);
+		this.keys.E = keysFrom(this, globalThis.keyConfig.E);
+		this.keys.C = keysFrom(this, globalThis.keyConfig.C);
+		this.keys.V = keysFrom(this, globalThis.keyConfig.V);
+		this.keys.F2 = keysFrom(this, globalThis.keyConfig.F2);
+		this.keys.Del = keysFrom(this, globalThis.keyConfig.Del);
 
 		this.load.image("lam", "assets/images/lam.png"); // todo: matomeru
 		this.load.image("air", "assets/images/air.png");
@@ -530,6 +606,7 @@ export default class Play extends Phaser.Scene {
 	}
 
 	update() {
+		this.handleMenuShortcut();
 		if (this.menuDisplaying) {
 			this.handleMenu();
 		} else {

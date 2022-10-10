@@ -16,9 +16,10 @@ const w_0: Square = {
 };
 
 export const mapRoot: Square[][] = [
-	[sta, air, air, air, air, air, air, air, air, air],
-	[air, air, air, air, air, air, air, air, air, air],
-	[air, w_0, air, air, air, air, air, air, air, air],
-	[air, air, air, air, air, air, air, air, air, air],
-	[air, air, air, air, air, air, air, air, air, air],
+	[sta, air, air, air, air, air, air, air, air, air, air],
+	[air, air, air, air, air, air, air, air, air, air, air],
+	[air, w_0, air, air, air, air, air, air, air, air, air],
+	[air, air, air, air, air, air, air, air, air, air, air],
+	[air, air, air, air, air, air, air, air, air, air, air],
+	[air, air, air, air, air, air, air, air, air, air, air],
 ];
