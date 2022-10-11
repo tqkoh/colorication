@@ -4,6 +4,8 @@ import { match, P } from "ts-pattern";
 import { isDown, justDown, keysFrom } from "../data/keyConfig";
 import { deb } from "../utils/deb";
 import { FontForPhaser } from "../utils/fontForPhaser";
+import Term from "../utils/term";
+import { coloredHandleFrom, deltaHFrom, squareHash } from "../utils/termColor";
 import {
 	GameMap,
 	Square,
@@ -309,24 +311,6 @@ export default class Play extends Phaser.Scene {
 	}
 
 	menuFromSquare(s: Square): MenuElement[] {
-		if (this.currentMap.squares[this.focusi][this.focusj]._type === "air") {
-			this.menu = [menuElement.new, menuElement.paste, menuElement.close];
-		} else if (this.currentMap.squares[this.focusi][this.focusj].locked) {
-			this.menu = [
-				menuElement.copy,
-				menuElement.delete,
-				menuElement.memo,
-				menuElement.close,
-			];
-		} else {
-			this.menu = [
-				menuElement.enter,
-				menuElement.copy,
-				menuElement.delete,
-				menuElement.memo,
-				menuElement.close,
-			];
-		}
 		return match(s)
 			.with({ _type: "air" }, () => [
 				menuElement.new,
@@ -358,6 +342,10 @@ export default class Play extends Phaser.Scene {
 				menuElement.close,
 			])
 			.with({ _type: "block", block: "wall" }, () => [])
+			.with({ _type: "block", block: "submit" }, () => [
+				menuElement.enter,
+				menuElement.close,
+			])
 			.with({ _type: "block" }, () => [
 				menuElement.new,
 				menuElement.paste,
@@ -602,6 +590,52 @@ export default class Play extends Phaser.Scene {
 		}
 	}
 
+	createColoredTermImage(t: Term, hash: string, handle: string) {
+		const deltaH = deltaHFrom(hash);
+		const originalTexture = this.textures.get(t._type);
+		const originalTextureImage = originalTexture.getSourceImage();
+		const h = originalTextureImage.height,
+			w = originalTextureImage.width;
+		let newTexture = this.textures.createCanvas(handle, w, h);
+		const context = newTexture.getContext();
+
+		deb(deltaH, originalTexture, h, w);
+
+		let pixels: ImageData = context.getImageData(0, 0, w, h);
+		// const n = pixels.data.length / 4;
+		for (let i = 0; i < h; ++i) {
+			for (let j = 0; j < w; ++j) {
+				const rgb = this.textures.getPixel(j, i, t._type);
+				const r = rgb.red,
+					g = rgb.green,
+					b = rgb.blue;
+				let hsv = Phaser.Display.Color.RGBToHSV(r, g, b);
+				let afterRgb = Phaser.Display.Color.HSVToRGB(
+					hsv.h + deltaH,
+					hsv.s,
+					hsv.v
+				);
+				if ("r" in afterRgb) {
+					pixels.data[(i * w + j) * 4 + 0] = afterRgb.r;
+				}
+				if ("g" in afterRgb) {
+					pixels.data[(i * w + j) * 4 + 1] = afterRgb.g;
+				}
+				if ("b" in afterRgb) {
+					pixels.data[(i * w + j) * 4 + 2] = afterRgb.b;
+				}
+				pixels.data[(i * w + j) * 4 + 3] = this.textures.getPixelAlpha(
+					j,
+					i,
+					t._type
+				);
+			}
+		}
+		context.putImageData(pixels, 0, 0);
+		newTexture.refresh();
+		deb(this.textures.exists(handle));
+	}
+
 	imageHandleFromSquare(
 		s: Square,
 		i: number,
@@ -635,7 +669,18 @@ export default class Play extends Phaser.Scene {
 			.with({ _type: "block", block: "submit" }, () => "submit")
 			.with({ _type: "block", block: "wall" }, () => "wall") // reset, parent
 			.with({ _type: "block" }, () => "lam")
-			.with({ _type: "term", term: { _type: "lam" } }, () => "lam")
+			.with({ _type: "term" }, () => {
+				if (s._type !== "term") {
+					return "";
+				}
+				const hash: string = squareHash(s);
+				const handle = coloredHandleFrom(s.term, hash);
+				deb(handle);
+				if (!this.textures.exists(handle)) {
+					this.createColoredTermImage(s.term, hash, handle);
+				}
+				return handle;
+			})
 			.with({ _type: P._ }, () => "air")
 			.exhaustive();
 	}
