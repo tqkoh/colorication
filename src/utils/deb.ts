@@ -1,5 +1,8 @@
-export function deb(...s: any[]) {
-	if (import.meta.env.DEV) {
-		console.log(s);
-	}
+function deb(...s: any[]) {
+  if (import.meta.env.DEV) {
+    // eslint-disable-next-line no-console
+    console.log(s)
+  }
 }
+
+export default deb

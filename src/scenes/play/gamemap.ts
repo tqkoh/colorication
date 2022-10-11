@@ -1,80 +1,126 @@
-import * as lodash from "lodash";
-import Term from "../../utils/term";
+/* eslint-disable no-use-before-define */
+import * as lodash from 'lodash';
+import Phaser from 'phaser';
+import deb from '../../utils/deb';
+import Term from '../../utils/term';
 
 export type Block =
-	| "start"
-	| "parent"
-	| "reset"
-	| "submit"
-	| "apply"
-	| "equal"
-	| "place"
-	| "down"
-	| "wall";
+  | 'start'
+  | 'parent'
+  | 'reset'
+  | 'submit'
+  | 'apply'
+  | 'equal'
+  | 'place'
+  | 'down'
+  | 'wall';
 
 export type Test = {
-	input: Term[];
-	output: Term;
+  input: Term[];
+  output: Term;
 };
 
 export type Stage = {
-	tests: Test[];
-	terms: Square[];
-	name: string;
+  tests: Test[];
+  terms: Square[];
+  name: string;
 };
 
 export type Square = (
-	| { _type: "air" }
-	| { _type: "term"; term: Term; map?: GameMap }
-	| { _type: "map"; map: GameMap }
-	| { _type: "stage"; stage: Stage; map?: GameMap }
-	| { _type: "block"; block: Block }
+  | { type: 'air' }
+  | { type: 'term'; term: Term; map?: GameMap }
+  | { type: 'map'; map: GameMap }
+  | { type: 'stage'; stage: Stage; map?: GameMap }
+  | { type: 'block'; block: Block }
 ) & {
-	name: string;
-	movable: boolean;
-	collidable: boolean;
-	locked: boolean;
-	image?: Phaser.GameObjects.Image;
+  name: string;
+  movable: boolean;
+  collidable: boolean;
+  locked: boolean;
+  image?: Phaser.GameObjects.Image;
 
-	testString?: string;
+  testString?: string;
 };
 
+export class GameMap {
+  // eslint-disable-next-line no-use-before-define
+  parentMap: GameMap | undefined;
+
+  squares: Square[][];
+
+  h: number;
+
+  w: number;
+
+  starti: number;
+
+  startj: number;
+
+  constructor(squares: Square[][]) {
+    this.starti = -1;
+    this.startj = -1;
+    this.squares = squares;
+    this.h = squares.length;
+    this.w = this.h ? squares[0].length : 0;
+    for (let i = 0; i < squares.length; i += 1) {
+      if (squares[i].length !== this.w) {
+        throw new Error('width does not match');
+      }
+      for (let j = 0; j < squares[i].length; j += 1) {
+        if (
+          squares[i][j].type === 'block' &&
+          (squares[i][j] as { type: 'block'; block: Block }).block === 'start'
+        ) {
+          this.starti = i;
+          this.startj = j;
+          this.squares[i][j] = airSquare();
+        }
+      }
+    }
+    if (this.starti === -1) throw new Error('start does not exist');
+  }
+
+  setParent(parent: GameMap) {
+    this.parentMap = parent;
+  }
+}
+
 export const airSquareI: Square = {
-	_type: "air",
-	name: "",
-	movable: false,
-	collidable: false,
-	locked: false,
+  type: 'air',
+  name: '',
+  movable: false,
+  collidable: false,
+  locked: false
 };
 
 export function airSquare() {
-	return lodash.cloneDeep(airSquareI);
+  return lodash.cloneDeep(airSquareI);
 }
 
 export const parentSquareI: Square = {
-	_type: "block",
-	block: "parent",
-	name: "..",
-	movable: false,
-	collidable: true,
-	locked: false,
+  type: 'block',
+  block: 'parent',
+  name: '..',
+  movable: false,
+  collidable: true,
+  locked: false
 };
 
 export function parentSquare() {
-	return lodash.cloneDeep(parentSquareI);
+  return lodash.cloneDeep(parentSquareI);
 }
 
 export const startSquareI: Square = {
-	_type: "block",
-	block: "start",
-	name: "",
-	movable: false,
-	collidable: false,
-	locked: false,
+  type: 'block',
+  block: 'start',
+  name: '',
+  movable: false,
+  collidable: false,
+  locked: false
 };
 
 export function startSquare() {
-	return lodash.cloneDeep(startSquareI);
+  return lodash.cloneDeep(startSquareI);
 }
 
 // export function squaresFrom(s: string[]): Square[][] {
@@ -85,7 +131,7 @@ export function startSquare() {
 // 		new Array<Square>(w).fill(airSquare)
 // 	);
 // 	for (let i = 0; i < h; ++i){
-// 		if (s[i].length != w) throw new Error("not same width");
+// 		if (s[i].length !== w) throw new Error("not same width");
 // 		for (let j = 0; j < w; ++j){
 // 			switch (s[i][j]) {
 // 				case '.':
@@ -102,101 +148,67 @@ export function startSquare() {
 
 // todo: History
 
-export class GameMap {
-	parentMap: GameMap | undefined;
-	squares: Square[][];
-	h: number;
-	w: number;
-	starti: number;
-	startj: number;
-	constructor(squares: Square[][]) {
-		this.starti = -1;
-		this.startj = -1;
-		this.squares = squares;
-		this.h = squares.length;
-		this.w = this.h ? squares[0].length : 0;
-		for (let i = 0; i < squares.length; ++i) {
-			if (squares[i].length != this.w) {
-				throw new Error("width does not match");
-			}
-			for (let j = 0; j < squares[i].length; ++j) {
-				if (
-					squares[i][j]._type === "block" &&
-					(squares[i][j] as { _type: "block"; block: Block })
-						.block === "start"
-				) {
-					this.starti = i;
-					this.startj = j;
-					this.squares[i][j] = airSquare();
-				}
-			}
-		}
-		if (this.starti === -1) throw new Error("start does not exist");
-	}
-	setParent(parent: GameMap) {
-		this.parentMap = parent;
-	}
-}
-
 export function squaresFromStage(s: Stage): Square[][] {
-	const h = Math.max(8 + s.tests.length, 11),
-		w = 11;
-	let ret: Square[][] = [];
-	for (let i = 0; i < h; ++i) {
-		ret.push([]);
-		for (let j = 0; j < w; ++j) {
-			ret[i].push(airSquare());
-		}
-	}
+  const h = Math.max(8 + s.tests.length, 11);
+  const w = 11;
+  const ret: Square[][] = [];
+  for (let i = 0; i < h; i += 1) {
+    ret.push([]);
+    for (let j = 0; j < w; j += 1) {
+      ret[i].push(airSquare());
+    }
+  }
 
-	ret[0][0] = {
-		_type: "block",
-		block: "parent",
-		name: "..",
-		movable: false,
-		collidable: true,
-		locked: false,
-	};
-	ret[0][1] = startSquare();
-	for (let j = 0; j < w; ++j) {
-		ret[5][j] = {
-			_type: "block",
-			block: "wall",
-			name: "",
-			movable: false,
-			collidable: true,
-			locked: false,
-		};
-	}
-	ret[5][5] = {
-		_type: "block",
-		block: "submit",
-		name: "submit",
-		movable: false,
-		collidable: true,
-		locked: false,
-	};
-	ret[6][5] = {
-		_type: "block",
-		block: "down",
-		name: "",
-		movable: false,
-		collidable: false,
-		locked: false,
-	};
+  ret[0][0] = {
+    type: 'block',
+    block: 'parent',
+    name: '..',
+    movable: false,
+    collidable: true,
+    locked: false
+  };
+  ret[0][1] = startSquare();
+  for (let j = 0; j < w; j += 1) {
+    ret[5][j] = {
+      type: 'block',
+      block: 'wall',
+      name: '',
+      movable: false,
+      collidable: true,
+      locked: false
+    };
+  }
+  ret[5][5] = {
+    type: 'block',
+    block: 'submit',
+    name: 'submit',
+    movable: false,
+    collidable: true,
+    locked: false
+  };
+  ret[6][5] = {
+    type: 'block',
+    block: 'down',
+    name: '',
+    movable: false,
+    collidable: false,
+    locked: false
+  };
 
-	for (let k = 0; k < s.terms.length; ++k) {
-		let i = 1 + ((k / 4) | 0) * 2,
-			j = 2 + (k % 4) * 2;
-		ret[i][j] = s.terms[k];
-	}
+  for (let k = 0; k < s.terms.length; k += 1) {
+    // eslint-disable-next-line no-bitwise
+    const i = 1 + ((k / 4) | 0) * 2;
+    const j = 2 + (k % 4) * 2;
+    ret[i][j] = s.terms[k];
+  }
 
-	return ret;
+  return ret;
 }
 
-export function squaresFromLam(_t: Term): Square[][] {
-	let ret = new Array<Square[]>(7).fill(
-		new Array<Square>(6).fill(airSquare())
-	);
-	return ret;
+export function squaresFromLam(t: Term): Square[][] {
+  deb(t);
+  const ret = new Array<Square[]>(7).fill(
+    new Array<Square>(6).fill(airSquare())
+  );
+  return ret;
 }

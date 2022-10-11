@@ -1,23 +1,23 @@
 {
-	"compilerOptions": {
-		"target": "ESNext",
-		"useDefineForClassFields": true,
-		"module": "ESNext",
-		"lib": ["ESNext", "DOM"],
-		"moduleResolution": "Node",
-		"strict": true,
-		"sourceMap": true,
-		"resolveJsonModule": true,
-		"isolatedModules": true,
-		"esModuleInterop": true,
-		"noEmit": true,
-		"noUnusedLocals": true,
-		"noUnusedParameters": true,
-		"noImplicitReturns": true,
-		"noImplicitThis": true,
-		"skipLibCheck": true,
-		"typeRoots": ["node_modules/@types", "node_module/phaser/types"],
-		"types": ["phaser"]
-	},
-	"include": ["src", "vite.config.ts", "vite.config.ts"]
+  "compilerOptions": {
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ESNext", "DOM"],
+    "moduleResolution": "Node",
+    "strict": true,
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "noEmit": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "skipLibCheck": true,
+    "typeRoots": ["node_modules/@types", "node_module/phaser/types"],
+    "types": ["phaser"]
+  },
+  "include": ["src", "vite.config.ts", "vite.config.ts"]
 }
