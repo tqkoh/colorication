@@ -23,10 +23,9 @@ export const _term_example: Term = randomized({
 });
 
 export function normalized(
-	t: Term,
+	t: Term, // ref
 	m: Map<string, number> = new Map<string, number>()
 ): Term {
-	// ref
 	return match(t)
 		.with({ _type: "var" }, (v) => {
 			const id: number | undefined = m.get(v.var);
@@ -68,10 +67,9 @@ export function normalized(
 }
 
 export function randomized(
-	t: Term,
+	t: Term, // ref
 	m: Map<string, string> = new Map<string, string>()
 ): Term {
-	// ref
 	return match(t)
 		.with({ _type: "var" }, (v) => {
 			const id: string | undefined = m.get(v.var);

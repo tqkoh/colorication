@@ -1,8 +1,15 @@
 import hash from "object-hash";
 import { Square } from "../scenes/play/gamemap";
-import Term from "./term";
+import Term, { normalized } from "./term";
 
 export function squareHash(s: Square): string {
+	if (s._type === "term") {
+		const ns: Square = {
+			...s,
+			term: normalized(s.term),
+		};
+		return hash(ns);
+	}
 	return hash(s);
 }
 
