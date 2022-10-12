@@ -524,7 +524,7 @@ export default class Play extends Phaser.Scene {
       afterMap.setParent(this.currentMap);
     }
 
-    // map
+    // destroy previous map
     for (let i = 0; i < this.currentMap.h; i += 1) {
       for (let j = 0; j < this.currentMap.w; j += 1) {
         this.currentMap.squares[i][j].image?.destroy();
@@ -532,6 +532,14 @@ export default class Play extends Phaser.Scene {
       }
     }
     this.currentMap = afterMap;
+    {
+      const H = globalThis.screenh - 31;
+      const W = globalThis.screenw;
+      const h = this.currentMap.h * 16;
+      const w = this.currentMap.w * 16;
+      this.mapOriginy = 31 + H / 2 - h / 2;
+      this.mapOriginx = W / 2 - w / 2;
+    }
 
     this.playerDirection = 'right';
     if (this.gImagePlayer !== undefined) {
@@ -539,7 +547,23 @@ export default class Play extends Phaser.Scene {
     }
     this.moveToPosition(this.currentMap.starti, this.currentMap.startj);
 
-    // map
+    // background
+    {
+      let y = 31;
+      let x = -14;
+      if (this.currentMap.h % 2) {
+        y -= 8;
+      }
+      const h = 240;
+      // const w = 368;
+      y += h / 2;
+      x = globalThis.screenw / 2;
+      if (this.mapBack) {
+        this.mapBack.setY(y).setX(x);
+      }
+    }
+
+    // add next map
     for (let i = 0; i < this.currentMap.h; i += 1) {
       for (let j = 0; j < this.currentMap.w; j += 1) {
         const y = 16 * i;
@@ -724,16 +748,32 @@ export default class Play extends Phaser.Scene {
       .exhaustive();
   }
 
+  mapBack: Phaser.GameObjects.TileSprite | undefined;
+
   initDrawing() {
-    // map background
+    // background
     {
       let y = 31;
       let x = -14;
-      const h = 224;
+      const h = 240;
       const w = 368;
-      y += (globalThis.screenh - y) / 2;
+      y += h / 2;
       x = globalThis.screenw / 2;
-      this.add.tileSprite(x, y, w, h, 'out').setDepth(-100);
+      this.mapBack = this.add.tileSprite(x, y, w, h, 'out').setDepth(-100);
+    }
+    {
+      const y = 0;
+      const x = 0;
+      const h = 31;
+      const w = globalThis.screenw;
+
+      this.add.rectangle(
+        x + w / 2,
+        y + h / 2,
+        w,
+        h,
+        Phaser.Display.Color.GetColor(WHITE[0], WHITE[1], WHITE[2])
+      );
     }
 
     // map
