@@ -29,12 +29,13 @@ class FontForPhaser extends Font {
   loadImageFrom(
     from: string,
     handle: string = uuid(),
-    r = 0,
-    g = 0,
-    b = 0,
-    a = 255
+    scale: number = 1,
+    r: number = 0,
+    g: number = 0,
+    b: number = 0,
+    a: number = 255
   ) {
-    const image = this.getImage(from);
+    const image = this.getImage(from, scale);
     if (image.length) {
       const h = image.length;
       const w = image[0].length;
