@@ -7,10 +7,12 @@ import FontForPhaser from '../utils/fontForPhaser';
 import Term from '../utils/term';
 import { coloredHandleFrom, deltaHFrom, squareHash } from '../utils/termColor';
 import {
+  airSquare,
   GameMap,
   Square,
   squaresFromLam,
-  squaresFromStage
+  squaresFromStage,
+  wallSquare
 } from './play/gamemap';
 import mapRoot from './play/maps/root';
 
@@ -148,6 +150,10 @@ export default class Play extends Phaser.Scene {
 
   focusj: number;
 
+  focusnexti: number;
+
+  focusnextj: number;
+
   playerDirection: Direction;
 
   menuDisplaying: boolean;
@@ -212,8 +218,11 @@ export default class Play extends Phaser.Scene {
     this.playerj = this.currentMap.startj;
     this.focusi = this.currentMap.starti;
     this.focusj = this.currentMap.startj;
+    this.focusnexti = this.currentMap.starti;
+    this.focusnextj = this.currentMap.startj;
     this.playerDirection = 'right';
     this.focusj += 1;
+    this.focusnextj += 2;
     this.menuDisplaying = false;
     this.menu = [];
     this.menuY = 0;
@@ -245,10 +254,22 @@ export default class Play extends Phaser.Scene {
     this.focusi = this.playeri;
     this.focusj = this.playerj;
 
-    if (this.playerDirection === 'right') this.focusj += 1;
-    if (this.playerDirection === 'down') this.focusi += 1;
-    if (this.playerDirection === 'left') this.focusj -= 1;
-    if (this.playerDirection === 'up') this.focusi -= 1;
+    if (this.playerDirection === 'right') {
+      this.focusj += 1;
+      this.focusnextj += 2;
+    }
+    if (this.playerDirection === 'down') {
+      this.focusi += 1;
+      this.focusnexti += 2;
+    }
+    if (this.playerDirection === 'left') {
+      this.focusj -= 1;
+      this.focusnextj -= 2;
+    }
+    if (this.playerDirection === 'up') {
+      this.focusi -= 1;
+      this.focusnexti -= 2;
+    }
 
     const py = this.mapOriginy + this.playeri * 16;
     const px = this.mapOriginx + this.playerj * 16;
@@ -259,43 +280,59 @@ export default class Play extends Phaser.Scene {
   }
 
   moveToPosition(nexti: number, nextj: number) {
-    if (
-      nexti < 0 ||
-      this.currentMap.h <= nexti ||
-      nextj < 0 ||
-      this.currentMap.w <= nextj
-    ) {
-      this.sCollide.play();
-      return;
-    }
-    const next = this.currentMap.squares[nexti][nextj];
-    if (next.collidable) {
-      this.sCollide.play();
-      return;
-    }
-
     this.playeri = nexti;
     this.playerj = nextj;
     deb(this.playeri, this.playerj);
     this.updatePlayerImage();
   }
 
-  moveToDirectionI(d: Direction) {
-    const diff: number[] = match(d)
-      .with('right', () => [0, 1])
-      .with('down', () => [1, 0])
-      .with('left', () => [0, -1])
-      .with('up', () => [-1, 0])
-      .exhaustive();
+  moveOn() {
+    const front = [wallSquare(), wallSquare()];
+    if (
+      this.focusi >= 0 &&
+      this.focusi < this.currentMap.h &&
+      this.focusj >= 0 &&
+      this.focusj < this.currentMap.w
+    ) {
+      front[0] = this.currentMap.squares[this.focusi][this.focusj];
+    }
+    if (
+      this.focusnexti >= 0 &&
+      this.focusnexti < this.currentMap.h &&
+      this.focusnextj >= 0 &&
+      this.focusnextj < this.currentMap.w
+    ) {
+      front[1] = this.currentMap.squares[this.focusnexti][this.focusnextj];
+    }
+    if (front[0].type === 'term' && front[1].type === 'term') {
+      front[1] = {
+        ...front[1],
+        type: 'term',
+        term: {
+          type: 'app',
+          lam: front[1].term,
+          param: front[0].term
+        }
+      };
+      front[0] = airSquare();
 
-    const nexti = this.playeri + diff[0];
-    const nextj = this.playerj + diff[1];
-    this.moveToPosition(nexti, nextj);
+      this.moveToPosition(this.focusi, this.focusj);
+    } else if (front[0].movable && front[1].type === 'air') {
+      const t = front[0];
+      front[1] = t;
+      front[0] = airSquare();
+
+      this.moveToPosition(this.focusi, this.focusj);
+    } else if (front[0].collidable) {
+      this.sCollide.play();
+    } else {
+      this.moveToPosition(this.focusi, this.focusj);
+    }
   }
 
   moveToDirection(d: Direction, rotation: number) {
     if (this.playerDirection === d) {
-      this.moveToDirectionI(this.playerDirection);
+      this.moveOn();
     } else {
       this.playerDirection = d;
       if (this.gImagePlayer !== undefined) {
@@ -835,6 +872,7 @@ export default class Play extends Phaser.Scene {
       this.font.loadImageFrom(
         menuElementMessages[e],
         menuElementIds[e],
+        1,
         ...BLACK
       );
       this.gMenuElements.push(this.add.image(0, 0, menuElementIds[e]));

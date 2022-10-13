@@ -110,6 +110,19 @@ export function parentSquare() {
   return lodash.cloneDeep(parentSquareI);
 }
 
+export const wallSquareI: Square = {
+  type: 'block',
+  block: 'wall',
+  name: '',
+  movable: false,
+  collidable: true,
+  locked: true
+};
+
+export function wallSquare() {
+  return lodash.cloneDeep(wallSquareI);
+}
+
 export const startSquareI: Square = {
   type: 'block',
   block: 'start',
