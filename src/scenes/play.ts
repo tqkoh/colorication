@@ -306,7 +306,13 @@ export default class Play extends Phaser.Scene {
     ) {
       front[1] = this.currentMap.squares[this.focusnexti][this.focusnextj];
     }
-    deb(this.focusi, this.focusj, this.focusnexti, this.focusnextj);
+    deb(
+      this.focusi,
+      this.focusj,
+      this.focusnexti,
+      this.focusnextj,
+      front[0].collidable
+    );
     if (front[0].type === 'term' && front[1].type === 'term') {
       deb('apply');
       front[1] = {
@@ -323,10 +329,12 @@ export default class Play extends Phaser.Scene {
       this.moveToPosition(this.focusi, this.focusj);
     } else if (front[0].movable && front[1].type === 'air') {
       deb('moveblock');
-      const t0 = front[0];
-      const t1 = front[1];
-      front[1] = t0;
-      front[0] = t1;
+      [
+        this.currentMap.squares[this.focusnexti][this.focusnextj],
+        this.currentMap.squares[this.focusi][this.focusj]
+      ] = front;
+      front[0] = this.currentMap.squares[this.focusi][this.focusj];
+      front[1] = this.currentMap.squares[this.focusnexti][this.focusnextj];
       if (front[0].image) {
         const y = 16 * this.focusi + 8;
         const x = 16 * this.focusj + 8;
