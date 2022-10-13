@@ -3,7 +3,6 @@ import { defaultKeyConfig } from './data/keyConfig';
 import Load from './scenes/load';
 import Play from './scenes/play';
 import Title from './scenes/title';
-import deb from './utils/deb';
 import { keyConfigCodec } from './utils/storageCodecs';
 import { BaseStorage, createTypedStorage } from './utils/typedStorage';
 
@@ -54,9 +53,8 @@ const config: Phaser.Types.Core.GameConfig = {
 // 	}
 // }
 
-// eslint-disable-next-line no-unused-vars
-const game = new Phaser.Game(config);
-deb(game);
+// eslint-disable-next-line no-unused-vars, no-new
+new Phaser.Game(config);
 
 // const e = document.querySelector("canvas")?.getContext("2d");
 // if (e) e.fillStyle = "rgb(255, 165, 0)";

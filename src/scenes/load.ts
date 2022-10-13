@@ -51,7 +51,7 @@ export default class Load extends Phaser.Scene {
     this.keys.next = keysFrom(this, globalThis.keyConfig.Enter);
 
     this.font = new FontForPhaser(this.textures, 'font', 10);
-    this.font.loadImageFrom('press enter to start...', 'loading', ...WHITE2);
+    this.font.loadImageFrom('press enter to start...', 'loading', 1, ...WHITE2);
     {
       const y = globalThis.screenh - 12;
       const x = globalThis.screenw - 70;

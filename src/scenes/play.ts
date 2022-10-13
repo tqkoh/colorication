@@ -7,10 +7,12 @@ import FontForPhaser from '../utils/fontForPhaser';
 import Term from '../utils/term';
 import { coloredHandleFrom, deltaHFrom, squareHash } from '../utils/termColor';
 import {
+  airSquare,
   GameMap,
   Square,
   squaresFromLam,
-  squaresFromStage
+  squaresFromStage,
+  wallSquare
 } from './play/gamemap';
 import mapRoot from './play/maps/root';
 
@@ -148,6 +150,10 @@ export default class Play extends Phaser.Scene {
 
   focusj: number;
 
+  focusnexti: number;
+
+  focusnextj: number;
+
   playerDirection: Direction;
 
   menuDisplaying: boolean;
@@ -212,8 +218,11 @@ export default class Play extends Phaser.Scene {
     this.playerj = this.currentMap.startj;
     this.focusi = this.currentMap.starti;
     this.focusj = this.currentMap.startj;
+    this.focusnexti = this.currentMap.starti;
+    this.focusnextj = this.currentMap.startj;
     this.playerDirection = 'right';
     this.focusj += 1;
+    this.focusnextj += 2;
     this.menuDisplaying = false;
     this.menu = [];
     this.menuY = 0;
@@ -244,11 +253,25 @@ export default class Play extends Phaser.Scene {
   updatePlayerImage() {
     this.focusi = this.playeri;
     this.focusj = this.playerj;
+    this.focusnexti = this.playeri;
+    this.focusnextj = this.playerj;
 
-    if (this.playerDirection === 'right') this.focusj += 1;
-    if (this.playerDirection === 'down') this.focusi += 1;
-    if (this.playerDirection === 'left') this.focusj -= 1;
-    if (this.playerDirection === 'up') this.focusi -= 1;
+    if (this.playerDirection === 'right') {
+      this.focusj += 1;
+      this.focusnextj += 2;
+    }
+    if (this.playerDirection === 'down') {
+      this.focusi += 1;
+      this.focusnexti += 2;
+    }
+    if (this.playerDirection === 'left') {
+      this.focusj -= 1;
+      this.focusnextj -= 2;
+    }
+    if (this.playerDirection === 'up') {
+      this.focusi -= 1;
+      this.focusnexti -= 2;
+    }
 
     const py = this.mapOriginy + this.playeri * 16;
     const px = this.mapOriginx + this.playerj * 16;
@@ -259,43 +282,138 @@ export default class Play extends Phaser.Scene {
   }
 
   moveToPosition(nexti: number, nextj: number) {
-    if (
-      nexti < 0 ||
-      this.currentMap.h <= nexti ||
-      nextj < 0 ||
-      this.currentMap.w <= nextj
-    ) {
-      this.sCollide.play();
-      return;
-    }
-    const next = this.currentMap.squares[nexti][nextj];
-    if (next.collidable) {
-      this.sCollide.play();
-      return;
-    }
-
     this.playeri = nexti;
     this.playerj = nextj;
     deb(this.playeri, this.playerj);
     this.updatePlayerImage();
   }
 
-  moveToDirectionI(d: Direction) {
-    const diff: number[] = match(d)
-      .with('right', () => [0, 1])
-      .with('down', () => [1, 0])
-      .with('left', () => [0, -1])
-      .with('up', () => [-1, 0])
-      .exhaustive();
+  moveOn() {
+    const front = [wallSquare(), wallSquare()];
+    if (
+      this.focusi >= 0 &&
+      this.focusi < this.currentMap.h &&
+      this.focusj >= 0 &&
+      this.focusj < this.currentMap.w
+    ) {
+      front[0] = this.currentMap.squares[this.focusi][this.focusj];
+    }
+    if (
+      this.focusnexti >= 0 &&
+      this.focusnexti < this.currentMap.h &&
+      this.focusnextj >= 0 &&
+      this.focusnextj < this.currentMap.w
+    ) {
+      front[1] = this.currentMap.squares[this.focusnexti][this.focusnextj];
+    }
+    deb(
+      this.focusi,
+      this.focusj,
+      this.focusnexti,
+      this.focusnextj,
+      front[0].collidable
+    );
+    if (front[0].type === 'term' && front[1].type === 'term') {
+      deb('apply');
+      if (front[0].image) {
+        front[0].image.destroy();
+      }
+      if (front[1].image) {
+        front[1].image.destroy();
+      }
 
-    const nexti = this.playeri + diff[0];
-    const nextj = this.playerj + diff[1];
-    this.moveToPosition(nexti, nextj);
+      this.currentMap.squares[this.focusnexti][this.focusnextj] = {
+        ...front[1],
+        type: 'term',
+        term: {
+          type: 'app',
+          lam: front[1].term,
+          param: front[0].term
+        }
+      };
+      this.currentMap.squares[this.focusi][this.focusj] = airSquare();
+
+      front[0] = this.currentMap.squares[this.focusi][this.focusj];
+      front[1] = this.currentMap.squares[this.focusnexti][this.focusnextj];
+
+      {
+        const y = 16 * this.focusi;
+        const x = 16 * this.focusj;
+        front[0].image = this.add.image(
+          this.mapOriginx + x + 8,
+          this.mapOriginy + y + 8,
+          this.imageHandleFromSquare(
+            front[0],
+            this.focusi,
+            this.focusj,
+            this.currentMap.h,
+            this.currentMap.w
+          )
+        );
+      }
+      {
+        const y = 16 * this.focusnexti;
+        const x = 16 * this.focusnextj;
+        front[1].image = this.add.image(
+          this.mapOriginx + x + 8,
+          this.mapOriginy + y + 8,
+          this.imageHandleFromSquare(
+            front[1],
+            this.focusnexti,
+            this.focusnextj,
+            this.currentMap.h,
+            this.currentMap.w
+          )
+        );
+      }
+
+      this.moveToPosition(this.focusi, this.focusj);
+    } else if (front[0].movable && front[1].type === 'air') {
+      deb('moveblock');
+      if (front[1].image) {
+        front[1].image.destroy();
+      }
+      this.currentMap.squares[this.focusi][this.focusj] = airSquare();
+      [this.currentMap.squares[this.focusnexti][this.focusnextj]] = front;
+      front[0] = this.currentMap.squares[this.focusi][this.focusj];
+      front[1] = this.currentMap.squares[this.focusnexti][this.focusnextj];
+      {
+        const y = 16 * this.focusi;
+        const x = 16 * this.focusj;
+        front[0].image = this.add.image(
+          this.mapOriginx + x + 8,
+          this.mapOriginy + y + 8,
+          this.imageHandleFromSquare(
+            front[0],
+            this.focusi,
+            this.focusj,
+            this.currentMap.h,
+            this.currentMap.w
+          )
+        );
+      }
+      if (front[1].image) {
+        const y = 16 * this.focusnexti;
+        const x = 16 * this.focusnextj;
+        front[1].image
+          .setY(this.mapOriginy + y + 8)
+          .setX(this.mapOriginx + x + 8);
+      }
+
+      this.moveToPosition(this.focusi, this.focusj);
+      deb(this.currentMap);
+    } else if (front[0].collidable) {
+      deb('collide');
+      this.sCollide.play();
+    } else {
+      deb('move');
+      this.moveToPosition(this.focusi, this.focusj);
+    }
   }
 
   moveToDirection(d: Direction, rotation: number) {
     if (this.playerDirection === d) {
-      this.moveToDirectionI(this.playerDirection);
+      this.moveOn();
     } else {
       this.playerDirection = d;
       if (this.gImagePlayer !== undefined) {
@@ -524,7 +642,7 @@ export default class Play extends Phaser.Scene {
       afterMap.setParent(this.currentMap);
     }
 
-    // map
+    // destroy previous map
     for (let i = 0; i < this.currentMap.h; i += 1) {
       for (let j = 0; j < this.currentMap.w; j += 1) {
         this.currentMap.squares[i][j].image?.destroy();
@@ -532,6 +650,14 @@ export default class Play extends Phaser.Scene {
       }
     }
     this.currentMap = afterMap;
+    {
+      const H = globalThis.screenh - 31;
+      const W = globalThis.screenw;
+      const h = this.currentMap.h * 16;
+      const w = this.currentMap.w * 16;
+      this.mapOriginy = 31 + H / 2 - h / 2;
+      this.mapOriginx = W / 2 - w / 2;
+    }
 
     this.playerDirection = 'right';
     if (this.gImagePlayer !== undefined) {
@@ -539,7 +665,23 @@ export default class Play extends Phaser.Scene {
     }
     this.moveToPosition(this.currentMap.starti, this.currentMap.startj);
 
-    // map
+    // background
+    {
+      let y = 31;
+      let x = -14;
+      if (this.currentMap.h % 2) {
+        y -= 8;
+      }
+      const h = 240;
+      // const w = 368;
+      y += h / 2;
+      x = globalThis.screenw / 2;
+      if (this.mapBack) {
+        this.mapBack.setY(y).setX(x);
+      }
+    }
+
+    // add next map
     for (let i = 0; i < this.currentMap.h; i += 1) {
       for (let j = 0; j < this.currentMap.w; j += 1) {
         const y = 16 * i;
@@ -724,16 +866,32 @@ export default class Play extends Phaser.Scene {
       .exhaustive();
   }
 
+  mapBack: Phaser.GameObjects.TileSprite | undefined;
+
   initDrawing() {
-    // map background
+    // background
     {
       let y = 31;
       let x = -14;
-      const h = 224;
+      const h = 240;
       const w = 368;
-      y += (globalThis.screenh - y) / 2;
+      y += h / 2;
       x = globalThis.screenw / 2;
-      this.add.tileSprite(x, y, w, h, 'out').setDepth(-100);
+      this.mapBack = this.add.tileSprite(x, y, w, h, 'out').setDepth(-100);
+    }
+    {
+      const y = 0;
+      const x = 0;
+      const h = 31;
+      const w = globalThis.screenw;
+
+      this.add.rectangle(
+        x + w / 2,
+        y + h / 2,
+        w,
+        h,
+        Phaser.Display.Color.GetColor(WHITE[0], WHITE[1], WHITE[2])
+      );
     }
 
     // map
@@ -761,9 +919,9 @@ export default class Play extends Phaser.Scene {
     const py = this.mapOriginy + this.playeri * 16;
     const px = this.mapOriginx + this.playerj * 16;
     this.gImagePlayer = this.add.image(px + 8, py + 8, 'player');
-    this.gImagePlayer.setDepth(10);
+    this.gImagePlayer.setDepth(100);
     this.gImageFocus = this.add.image(px + 16 + 8, py + 8, 'focus');
-    this.gImageFocus.setDepth(10);
+    this.gImageFocus.setDepth(100);
 
     // menu
 
@@ -782,10 +940,10 @@ export default class Play extends Phaser.Scene {
       Phaser.Display.Color.GetColor(BLACK[0], BLACK[1], BLACK[2]),
       255
     );
-    this.gMenuBackground.strokeRectShape(this.gMenuBackgroundShape);
+    this.gMenuBackground.strokeRectShape(this.gMenuBackgroundShape).setDepth(5);
     this.gMenuBackground.visible = false;
     this.gMenuBackground.clear();
-    this.gArrow = this.add.image(0, 0, 'arrow');
+    this.gArrow = this.add.image(0, 0, 'arrow').setDepth(6);
     this.gArrow.visible = false;
 
     this.font = new FontForPhaser(this.textures, 'font', 10);
@@ -795,9 +953,12 @@ export default class Play extends Phaser.Scene {
       this.font.loadImageFrom(
         menuElementMessages[e],
         menuElementIds[e],
+        1,
         ...BLACK
       );
-      this.gMenuElements.push(this.add.image(0, 0, menuElementIds[e]));
+      this.gMenuElements.push(
+        this.add.image(0, 0, menuElementIds[e]).setDepth(6)
+      );
     }
     // eslint-disable-next-line no-restricted-syntax
     for (const e of menuElementList) {
