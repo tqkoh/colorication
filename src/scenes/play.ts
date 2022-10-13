@@ -253,6 +253,8 @@ export default class Play extends Phaser.Scene {
   updatePlayerImage() {
     this.focusi = this.playeri;
     this.focusj = this.playerj;
+    this.focusnexti = this.playeri;
+    this.focusnextj = this.playerj;
 
     if (this.playerDirection === 'right') {
       this.focusj += 1;
@@ -304,7 +306,9 @@ export default class Play extends Phaser.Scene {
     ) {
       front[1] = this.currentMap.squares[this.focusnexti][this.focusnextj];
     }
+    deb(this.focusi, this.focusj, this.focusnexti, this.focusnextj);
     if (front[0].type === 'term' && front[1].type === 'term') {
+      deb('apply');
       front[1] = {
         ...front[1],
         type: 'term',
@@ -318,14 +322,29 @@ export default class Play extends Phaser.Scene {
 
       this.moveToPosition(this.focusi, this.focusj);
     } else if (front[0].movable && front[1].type === 'air') {
-      const t = front[0];
-      front[1] = t;
-      front[0] = airSquare();
+      deb('moveblock');
+      const t0 = front[0];
+      const t1 = front[1];
+      front[1] = t0;
+      front[0] = t1;
+      if (front[0].image) {
+        const y = 16 * this.focusi + 8;
+        const x = 16 * this.focusj + 8;
+        front[0].image.setY(this.mapOriginy + y).setX(this.mapOriginx + x);
+      }
+      if (front[1].image) {
+        const y = 16 * this.focusnexti + 8;
+        const x = 16 * this.focusnextj + 8;
+        front[1].image.setY(this.mapOriginy + y).setX(this.mapOriginx + x);
+      }
 
       this.moveToPosition(this.focusi, this.focusj);
+      deb(this.currentMap);
     } else if (front[0].collidable) {
+      deb('collide');
       this.sCollide.play();
     } else {
+      deb('move');
       this.moveToPosition(this.focusi, this.focusj);
     }
   }
