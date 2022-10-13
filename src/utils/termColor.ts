@@ -4,11 +4,11 @@ import Term, { normalized } from './term';
 
 export function squareHash(s: Square): string {
   if (s.type === 'term') {
-    const ns: Square = {
-      ...s,
-      term: normalized(s.term)
-    };
-    return hash(ns);
+    // const ns: Square = {
+    //   ...s,
+    //   term: normalized(s.term)
+    // };
+    return hash(normalized(s.term));
   }
   return hash(s);
 }

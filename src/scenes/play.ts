@@ -315,7 +315,14 @@ export default class Play extends Phaser.Scene {
     );
     if (front[0].type === 'term' && front[1].type === 'term') {
       deb('apply');
-      front[1] = {
+      if (front[0].image) {
+        front[0].image.destroy();
+      }
+      if (front[1].image) {
+        front[1].image.destroy();
+      }
+
+      this.currentMap.squares[this.focusnexti][this.focusnextj] = {
         ...front[1],
         type: 'term',
         term: {
@@ -324,7 +331,41 @@ export default class Play extends Phaser.Scene {
           param: front[0].term
         }
       };
-      front[0] = airSquare();
+      this.currentMap.squares[this.focusi][this.focusj] = airSquare();
+
+      front[0] = this.currentMap.squares[this.focusi][this.focusj];
+      front[1] = this.currentMap.squares[this.focusnexti][this.focusnextj];
+
+      {
+        const y = 16 * this.focusi;
+        const x = 16 * this.focusj;
+        front[0].image = this.add.image(
+          this.mapOriginx + x + 8,
+          this.mapOriginy + y + 8,
+          this.imageHandleFromSquare(
+            front[0],
+            this.focusi,
+            this.focusj,
+            this.currentMap.h,
+            this.currentMap.w
+          )
+        );
+      }
+      {
+        const y = 16 * this.focusnexti;
+        const x = 16 * this.focusnextj;
+        front[1].image = this.add.image(
+          this.mapOriginx + x + 8,
+          this.mapOriginy + y + 8,
+          this.imageHandleFromSquare(
+            front[1],
+            this.focusnexti,
+            this.focusnextj,
+            this.currentMap.h,
+            this.currentMap.w
+          )
+        );
+      }
 
       this.moveToPosition(this.focusi, this.focusj);
     } else if (front[0].movable && front[1].type === 'air') {
@@ -336,14 +377,18 @@ export default class Play extends Phaser.Scene {
       front[0] = this.currentMap.squares[this.focusi][this.focusj];
       front[1] = this.currentMap.squares[this.focusnexti][this.focusnextj];
       if (front[0].image) {
-        const y = 16 * this.focusi + 8;
-        const x = 16 * this.focusj + 8;
-        front[0].image.setY(this.mapOriginy + y).setX(this.mapOriginx + x);
+        const y = 16 * this.focusi;
+        const x = 16 * this.focusj;
+        front[0].image
+          .setY(this.mapOriginy + y + 8)
+          .setX(this.mapOriginx + x + 8);
       }
       if (front[1].image) {
-        const y = 16 * this.focusnexti + 8;
-        const x = 16 * this.focusnextj + 8;
-        front[1].image.setY(this.mapOriginy + y).setX(this.mapOriginx + x);
+        const y = 16 * this.focusnexti;
+        const x = 16 * this.focusnextj;
+        front[1].image
+          .setY(this.mapOriginy + y + 8)
+          .setX(this.mapOriginx + x + 8);
       }
 
       this.moveToPosition(this.focusi, this.focusj);
@@ -865,9 +910,9 @@ export default class Play extends Phaser.Scene {
     const py = this.mapOriginy + this.playeri * 16;
     const px = this.mapOriginx + this.playerj * 16;
     this.gImagePlayer = this.add.image(px + 8, py + 8, 'player');
-    this.gImagePlayer.setDepth(10);
+    this.gImagePlayer.setDepth(100);
     this.gImageFocus = this.add.image(px + 16 + 8, py + 8, 'focus');
-    this.gImageFocus.setDepth(10);
+    this.gImageFocus.setDepth(100);
 
     // menu
 
@@ -886,10 +931,10 @@ export default class Play extends Phaser.Scene {
       Phaser.Display.Color.GetColor(BLACK[0], BLACK[1], BLACK[2]),
       255
     );
-    this.gMenuBackground.strokeRectShape(this.gMenuBackgroundShape);
+    this.gMenuBackground.strokeRectShape(this.gMenuBackgroundShape).setDepth(5);
     this.gMenuBackground.visible = false;
     this.gMenuBackground.clear();
-    this.gArrow = this.add.image(0, 0, 'arrow');
+    this.gArrow = this.add.image(0, 0, 'arrow').setDepth(6);
     this.gArrow.visible = false;
 
     this.font = new FontForPhaser(this.textures, 'font', 10);
