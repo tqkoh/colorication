@@ -370,18 +370,27 @@ export default class Play extends Phaser.Scene {
       this.moveToPosition(this.focusi, this.focusj);
     } else if (front[0].movable && front[1].type === 'air') {
       deb('moveblock');
-      [
-        this.currentMap.squares[this.focusnexti][this.focusnextj],
-        this.currentMap.squares[this.focusi][this.focusj]
-      ] = front;
+      if (front[1].image) {
+        front[1].image.destroy();
+      }
+      this.currentMap.squares[this.focusi][this.focusj] = airSquare();
+      [this.currentMap.squares[this.focusnexti][this.focusnextj]] = front;
       front[0] = this.currentMap.squares[this.focusi][this.focusj];
       front[1] = this.currentMap.squares[this.focusnexti][this.focusnextj];
-      if (front[0].image) {
+      {
         const y = 16 * this.focusi;
         const x = 16 * this.focusj;
-        front[0].image
-          .setY(this.mapOriginy + y + 8)
-          .setX(this.mapOriginx + x + 8);
+        front[0].image = this.add.image(
+          this.mapOriginx + x + 8,
+          this.mapOriginy + y + 8,
+          this.imageHandleFromSquare(
+            front[0],
+            this.focusi,
+            this.focusj,
+            this.currentMap.h,
+            this.currentMap.w
+          )
+        );
       }
       if (front[1].image) {
         const y = 16 * this.focusnexti;
@@ -947,7 +956,9 @@ export default class Play extends Phaser.Scene {
         1,
         ...BLACK
       );
-      this.gMenuElements.push(this.add.image(0, 0, menuElementIds[e]));
+      this.gMenuElements.push(
+        this.add.image(0, 0, menuElementIds[e]).setDepth(6)
+      );
     }
     // eslint-disable-next-line no-restricted-syntax
     for (const e of menuElementList) {

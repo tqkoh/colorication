@@ -8,7 +8,7 @@ export function squareHash(s: Square): string {
     //   ...s,
     //   term: normalized(s.term)
     // };
-    return hash(normalized(s.term));
+    return hash({ term: normalized(s.term) });
   }
   return hash(s);
 }
