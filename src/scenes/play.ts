@@ -123,6 +123,7 @@ const ARROW_MERGIN_L = 2;
 const BLACK = [84, 75, 64];
 const WHITE = [250, 247, 240];
 const WHITE2 = [255, 239, 215];
+const ANIMATION_APPLY_PER = 30;
 
 export default class Play extends Phaser.Scene {
   keys: {
@@ -183,9 +184,13 @@ export default class Play extends Phaser.Scene {
 
   substProgress: Term[];
 
+  animationApplyFrame: number;
+
   gImagePlayer: Phaser.GameObjects.Image | undefined;
 
   gImageFocus: Phaser.GameObjects.Image | undefined;
+
+  gAnimationApply: Phaser.GameObjects.Image[];
 
   gMenuElements: Phaser.GameObjects.Image[];
 
@@ -237,6 +242,8 @@ export default class Play extends Phaser.Scene {
     this.menuX = 0;
     this.selected = 0;
     this.substProgress = [];
+    this.gAnimationApply = [];
+    this.animationApplyFrame = 0;
 
     const H = globalThis.screenh - 31;
     const W = globalThis.screenw;
@@ -338,13 +345,40 @@ export default class Play extends Phaser.Scene {
         param: front[0].term
       };
 
-      this.substProgress = subst([app]);
-      log(8, this.substProgress.slice(-1)[0]);
+      this.substProgress = subst([app]).reverse();
+      this.substProgress.push(front[1].term);
+      log(8, this.substProgress[0]);
+      {
+        const y = 16 * this.focusnexti;
+        const x = 16 * this.focusnextj;
+        this.gAnimationApply = this.substProgress.map((e, i) =>
+          this.add
+            .image(
+              this.mapOriginx + x + 8,
+              this.mapOriginy + y + 8,
+              this.imageHandleFromSquare(
+                {
+                  Atype: 'term',
+                  term: e,
+                  name: '',
+                  movable: false,
+                  locked: false,
+                  collidable: false
+                },
+                this.focusnexti,
+                this.focusnextj,
+                this.currentMap.h,
+                this.currentMap.w
+              )
+            )
+            .setDepth(10 + i)
+        );
+      }
 
       this.currentMap.squares[this.focusnexti][this.focusnextj] = {
         ...front[1],
         Atype: 'term',
-        term: cloneDeep(this.substProgress.slice(-1)[0])
+        term: cloneDeep(this.substProgress[0])
       };
       this.currentMap.squares[this.focusi][this.focusj] = airSquare();
 
@@ -384,7 +418,8 @@ export default class Play extends Phaser.Scene {
 
       this.moveToPosition(this.focusi, this.focusj);
 
-      // this.mainState = 'applyAnimating';
+      this.animationApplyFrame = 0;
+      this.mainState = 'applyAnimating';
     } else if (front[0].movable && front[1].Atype === 'air') {
       log(10, 'moveblock');
       if (front[1].image) {
@@ -1053,6 +1088,33 @@ export default class Play extends Phaser.Scene {
     );
   }
 
+  updateAnimationApply() {
+    if (!this.gAnimationApply.length) {
+      this.mainState = 'operating';
+      return;
+    }
+    this.animationApplyFrame += 1;
+
+    log(
+      1,
+      (255 *
+        (ANIMATION_APPLY_PER -
+          (this.animationApplyFrame % ANIMATION_APPLY_PER))) /
+        ANIMATION_APPLY_PER
+    );
+    this.gAnimationApply
+      .slice(-1)[0]
+      .setAlpha(
+        (ANIMATION_APPLY_PER -
+          (this.animationApplyFrame % ANIMATION_APPLY_PER)) /
+          ANIMATION_APPLY_PER
+      );
+    if (this.animationApplyFrame % ANIMATION_APPLY_PER === 0) {
+      this.gAnimationApply.slice(-1)[0].destroy();
+      this.gAnimationApply.pop();
+    }
+  }
+
   update() {
     switch (this.mainState) {
       case 'operating': {
@@ -1068,6 +1130,7 @@ export default class Play extends Phaser.Scene {
         break;
       }
       case 'applyAnimating': {
+        this.updateAnimationApply();
         break;
       }
       default: {
