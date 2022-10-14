@@ -1,10 +1,11 @@
 import { Howl } from 'howler';
+import { cloneDeep } from 'lodash';
 import Phaser from 'phaser';
 import { match, P } from 'ts-pattern';
 import { isDown, justDown, keysFrom } from '../data/keyConfig';
 import deb from '../utils/deb';
 import FontForPhaser from '../utils/fontForPhaser';
-import Term from '../utils/term';
+import Term, { subst } from '../utils/term';
 import { coloredHandleFrom, deltaHFrom, squareHash } from '../utils/termColor';
 import {
   airSquare,
@@ -15,6 +16,8 @@ import {
   wallSquare
 } from './play/gamemap';
 import mapRoot from './play/maps/root';
+
+type MainState = 'operating' | 'applyAnimating' | 'submitAnimating';
 
 type Direction = 'right' | 'down' | 'left' | 'up';
 const menuElement = {
@@ -138,6 +141,8 @@ export default class Play extends Phaser.Scene {
     Del: Phaser.Input.Keyboard.Key[];
   };
 
+  mainState: MainState;
+
   map: GameMap;
 
   currentMap: GameMap;
@@ -176,6 +181,8 @@ export default class Play extends Phaser.Scene {
 
   mapOriginx: number;
 
+  substProgress: Term[];
+
   gImagePlayer: Phaser.GameObjects.Image | undefined;
 
   gImageFocus: Phaser.GameObjects.Image | undefined;
@@ -211,6 +218,7 @@ export default class Play extends Phaser.Scene {
       F2: [],
       Del: []
     };
+    this.mainState = 'operating';
     this.gMenuElements = [];
     this.map = new GameMap(mapRoot);
     this.currentMap = this.map; // ref
@@ -228,6 +236,7 @@ export default class Play extends Phaser.Scene {
     this.menuY = 0;
     this.menuX = 0;
     this.selected = 0;
+    this.substProgress = [];
 
     const H = globalThis.screenh - 31;
     const W = globalThis.screenw;
@@ -322,14 +331,18 @@ export default class Play extends Phaser.Scene {
         front[1].image.destroy();
       }
 
+      const app: Term = {
+        type: 'app',
+        lam: front[1].term,
+        param: front[0].term
+      };
+
+      this.substProgress = subst([app]);
+
       this.currentMap.squares[this.focusnexti][this.focusnextj] = {
         ...front[1],
         type: 'term',
-        term: {
-          type: 'app',
-          lam: front[1].term,
-          param: front[0].term
-        }
+        term: cloneDeep(this.substProgress.slice(-1)[0])
       };
       this.currentMap.squares[this.focusi][this.focusj] = airSquare();
 
@@ -368,6 +381,8 @@ export default class Play extends Phaser.Scene {
       }
 
       this.moveToPosition(this.focusi, this.focusj);
+
+      // this.mainState = 'applyAnimating';
     } else if (front[0].movable && front[1].type === 'air') {
       deb('moveblock');
       if (front[1].image) {
@@ -848,7 +863,11 @@ export default class Play extends Phaser.Scene {
       .with({ type: 'block', block: 'equal' }, () => 'equal')
       .with({ type: 'block', block: 'place' }, () => 'place')
       .with({ type: 'block', block: 'submit' }, () => 'submit')
-      .with({ type: 'block', block: 'wall' }, () => 'wall') // reset, parent
+      .with({ type: 'block', block: 'wall' }, () => {
+        if (j === 0) return 'walll';
+        if (j === w - 1) return 'wallr';
+        return 'wall';
+      }) // reset, parent
       .with({ type: 'block' }, () => 'lam')
       .with({ type: 'term' }, () => {
         if (s.type !== 'term') {
@@ -992,7 +1011,10 @@ export default class Play extends Phaser.Scene {
     this.load.image('app', 'assets/images/app.png');
     this.load.image('var', 'assets/images/var.png');
     this.load.image('equal', 'assets/images/equal.png');
+    this.load.image('place', 'assets/images/place.png');
     this.load.image('wall', 'assets/images/wall.png');
+    this.load.image('walll', 'assets/images/walll.png');
+    this.load.image('wallr', 'assets/images/wallr.png');
     this.load.image('not_equal', 'assets/images/not_equal.png');
     this.load.image('equal_green', 'assets/images/equal_green.png');
     this.load.image('not_equal_red', 'assets/images/not_equal_red.png');
@@ -1030,13 +1052,24 @@ export default class Play extends Phaser.Scene {
   }
 
   update() {
-    this.handleMenuShortcut();
-    if (this.menuDisplaying) {
-      this.handleMenu();
-    } else {
-      this.handleMovement();
-      if (justDown(this.keys.Enter)) {
-        this.openMenu();
+    switch (this.mainState) {
+      case 'operating': {
+        this.handleMenuShortcut();
+        if (this.menuDisplaying) {
+          this.handleMenu();
+        } else {
+          this.handleMovement();
+          if (justDown(this.keys.Enter)) {
+            this.openMenu();
+          }
+        }
+        break;
+      }
+      case 'applyAnimating': {
+        break;
+      }
+      default: {
+        break;
       }
     }
   }

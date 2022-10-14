@@ -1,5 +1,5 @@
-import { randomized } from '../../../../../utils/term'
-import { Stage } from '../../../gamemap'
+import { randomized } from '../../../../../utils/term';
+import { Stage } from '../../../gamemap';
 
 const stage0: Stage = {
   name: '0. place it',
@@ -7,9 +7,16 @@ const stage0: Stage = {
     {
       input: [],
       output: {
-        type: 'lam',
-        var: '0',
-        ret: { type: 'var', var: '0' }
+        type: 'term',
+        term: {
+          type: 'lam',
+          var: '0',
+          ret: { type: 'var', var: '0' }
+        },
+        name: '',
+        movable: false,
+        collidable: true,
+        locked: true
       }
     }
   ],
@@ -63,6 +70,6 @@ const stage0: Stage = {
       locked: true
     }
   ]
-}
+};
 
-export default stage0
+export default stage0;

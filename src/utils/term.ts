@@ -126,12 +126,16 @@ function freeValue(t: Term): string[] {
 
 export function subst(
   acc: Term[], // ref
-  before: string,
-  after: Term
+  before: string = '',
+  after: Term = {
+    type: 'var',
+    var: before
+  }
 ): Term[] {
   const ret = match<[Term, Term], Term[]>([acc.slice(-1)[0], after])
     // app の場合、subst した後適用する。(lam の返り値の中の引数を、適用するものでさらに subst する)
     .with(
+      // before と after が同じな場合、適用だけする
       [
         { type: 'app', lam: { type: 'lam' } },
         { type: 'var', var: before }

@@ -16,8 +16,8 @@ export type Block =
   | 'wall';
 
 export type Test = {
-  input: Term[];
-  output: Term;
+  input: Square[];
+  output: Square;
 };
 
 export type Stage = {
@@ -215,6 +215,25 @@ export function squaresFromStage(s: Stage): Square[][] {
     ret[i][j] = s.terms[k];
   }
 
+  for (let k = 0; k < s.tests.length; k += 1) {
+    ret[7 + k][3] = s.tests[k].output;
+    ret[7 + k][4] = {
+      type: 'block',
+      block: 'equal',
+      name: '',
+      movable: false,
+      collidable: false,
+      locked: false
+    };
+    ret[7 + k][5] = {
+      type: 'block',
+      block: 'place',
+      name: '',
+      movable: false,
+      collidable: true,
+      locked: false
+    };
+  }
   return ret;
 }
 
