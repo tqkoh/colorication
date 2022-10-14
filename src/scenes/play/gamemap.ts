@@ -1,7 +1,7 @@
 /* eslint-disable no-use-before-define */
 import * as lodash from 'lodash';
 import Phaser from 'phaser';
-import deb from '../../utils/deb';
+import { log } from '../../utils/deb';
 import Term from '../../utils/term';
 
 export type Block =
@@ -238,7 +238,7 @@ export function squaresFromStage(s: Stage): Square[][] {
 }
 
 export function squaresFromLam(t: Term): Square[][] {
-  deb(t);
+  log(10, t);
   const ret = new Array<Square[]>(7).fill(
     new Array<Square>(6).fill(airSquare())
   );

@@ -3,7 +3,7 @@ import { cloneDeep } from 'lodash';
 import Phaser from 'phaser';
 import { match, P } from 'ts-pattern';
 import { isDown, justDown, keysFrom } from '../data/keyConfig';
-import deb from '../utils/deb';
+import { log } from '../utils/deb';
 import FontForPhaser from '../utils/fontForPhaser';
 import Term, { subst } from '../utils/term';
 import { coloredHandleFrom, deltaHFrom, squareHash } from '../utils/termColor';
@@ -293,7 +293,7 @@ export default class Play extends Phaser.Scene {
   moveToPosition(nexti: number, nextj: number) {
     this.playeri = nexti;
     this.playerj = nextj;
-    deb(this.playeri, this.playerj);
+    log(10, this.playeri, this.playerj);
     this.updatePlayerImage();
   }
 
@@ -315,7 +315,8 @@ export default class Play extends Phaser.Scene {
     ) {
       front[1] = this.currentMap.squares[this.focusnexti][this.focusnextj];
     }
-    deb(
+    log(
+      10,
       this.focusi,
       this.focusj,
       this.focusnexti,
@@ -323,7 +324,7 @@ export default class Play extends Phaser.Scene {
       front[0].collidable
     );
     if (front[0].type === 'term' && front[1].type === 'term') {
-      deb('apply');
+      log(10, 'apply');
       if (front[0].image) {
         front[0].image.destroy();
       }
@@ -337,11 +338,8 @@ export default class Play extends Phaser.Scene {
         param: front[0].term
       };
 
-      deb([app].slice(-1)[0]);
       this.substProgress = subst([app]);
-      deb(this.substProgress.length);
-      deb(this.substProgress);
-      deb('aaa');
+      log(8, this.substProgress.slice(-1)[0]);
 
       this.currentMap.squares[this.focusnexti][this.focusnextj] = {
         ...front[1],
@@ -388,7 +386,7 @@ export default class Play extends Phaser.Scene {
 
       // this.mainState = 'applyAnimating';
     } else if (front[0].movable && front[1].type === 'air') {
-      deb('moveblock');
+      log(10, 'moveblock');
       if (front[1].image) {
         front[1].image.destroy();
       }
@@ -420,12 +418,12 @@ export default class Play extends Phaser.Scene {
       }
 
       this.moveToPosition(this.focusi, this.focusj);
-      deb(this.currentMap);
+      log(10, this.currentMap);
     } else if (front[0].collidable) {
-      deb('collide');
+      log(10, 'collide');
       this.sCollide.play();
     } else {
-      deb('move');
+      log(10, 'move');
       this.moveToPosition(this.focusi, this.focusj);
     }
   }
@@ -456,7 +454,7 @@ export default class Play extends Phaser.Scene {
       js = false;
     }
     if (ja && jd) {
-      deb(this.keys);
+      log(10, this.keys);
       ja = false;
       jd = false;
     }
@@ -524,7 +522,7 @@ export default class Play extends Phaser.Scene {
   }
 
   openMenu() {
-    deb(1.5, this.currentMap);
+    log(10, 1.5, this.currentMap);
     if (
       this.focusi < 0 ||
       this.currentMap.h <= this.focusi ||
@@ -611,7 +609,7 @@ export default class Play extends Phaser.Scene {
       }
     }
     if (this.gArrow) this.gArrow.visible = true;
-    deb(1.6, this.currentMap);
+    log(10, 1.6, this.currentMap);
   }
 
   closeMenu() {
@@ -642,7 +640,7 @@ export default class Play extends Phaser.Scene {
       afterMap = focus.map;
     } else if (focus.type === 'stage') {
       const st = squaresFromStage(focus.stage);
-      deb(st);
+      log(10, st);
       focus.map = new GameMap(squaresFromStage(focus.stage));
       afterMap = focus.map;
     } else if (focus.type === 'term' && focus.term.type === 'lam') {
@@ -748,7 +746,7 @@ export default class Play extends Phaser.Scene {
         .setX(this.menuX + MENU_PADDING + ARROW_MERGIN_L);
     }
     if (justDown(this.keys.Enter)) {
-      deb(1.8, this.currentMap.squares[0][0].image);
+      log(10, 1.8, this.currentMap.squares[0][0].image);
       match(this.menu[this.selected])
         .with(menuElement.close, () => {
           this.closeMenu();
@@ -799,7 +797,7 @@ export default class Play extends Phaser.Scene {
     const newTexture = this.textures.createCanvas(handle, w, h);
     const context = newTexture.getContext();
 
-    deb(deltaH, originalTexture, h, w);
+    log(10, deltaH, originalTexture, h, w);
 
     const pixels: ImageData = context.getImageData(0, 0, w, h);
     // const n = pixels.data.length / 4;
@@ -833,7 +831,7 @@ export default class Play extends Phaser.Scene {
     }
     context.putImageData(pixels, 0, 0);
     newTexture.refresh();
-    deb(this.textures.exists(handle));
+    log(10, this.textures.exists(handle));
   }
 
   imageHandleFromSquare(
@@ -879,7 +877,7 @@ export default class Play extends Phaser.Scene {
         }
         const hash: string = squareHash(s);
         const handle = coloredHandleFrom(s.term, hash);
-        deb(handle);
+        log(10, handle);
         if (!this.textures.exists(handle)) {
           this.createColoredTermImage(s.term, hash, handle);
         }
@@ -936,7 +934,7 @@ export default class Play extends Phaser.Scene {
         this.currentMap.squares[i][j].image?.setDepth(-10);
       }
     }
-    deb(0, this.currentMap);
+    log(10, 0, this.currentMap);
 
     // player
     const py = this.mapOriginy + this.playeri * 16;
@@ -988,11 +986,11 @@ export default class Play extends Phaser.Scene {
       const t = this.gMenuElements[e];
       if (t) t.visible = false;
     }
-    deb(1, this.currentMap);
+    log(10, 1, this.currentMap);
   }
 
   preload() {
-    deb('Play.preload');
+    log(10, 'Play.preload');
     this.cameras.main.setBackgroundColor(
       `rgba(${WHITE[0]},${WHITE[1]},${WHITE[2]},1)`
     );
@@ -1044,8 +1042,8 @@ export default class Play extends Phaser.Scene {
   }
 
   create() {
-    deb('Play.create');
-    deb(this.map);
+    log(10, 'Play.create');
+    log(10, this.map);
 
     this.initDrawing();
 

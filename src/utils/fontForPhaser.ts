@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { v4 as uuid } from 'uuid';
-import deb from './deb';
+import { log } from './deb';
 import Font from './font';
 
 class FontForPhaser extends Font {
@@ -36,7 +36,7 @@ class FontForPhaser extends Font {
     b: number = 0,
     a: number = 255
   ) {
-    deb(scale);
+    log(10, scale);
     const image = this.getImage(from, scale);
     if (image.length) {
       const h = image.length;
