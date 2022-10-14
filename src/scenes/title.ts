@@ -1,7 +1,7 @@
 import { Howl } from 'howler';
 import Phaser from 'phaser';
 import { justDown, keysFrom } from '../data/keyConfig';
-import deb from '../utils/deb';
+import { log } from '../utils/deb';
 import FontForPhaser from '../utils/fontForPhaser';
 
 const FADEIN_LENGTH = 200;
@@ -87,7 +87,7 @@ export default class Title extends Phaser.Scene {
   }
 
   preload() {
-    deb('Title.preload');
+    log(10, 'Title.preload');
     this.cameras.main.setBackgroundColor(
       `rgba(${BLACK[0]},${BLACK[1]},${BLACK[2]},1)`
     );
@@ -97,7 +97,7 @@ export default class Title extends Phaser.Scene {
   }
 
   create() {
-    deb('Title.create');
+    log(10, 'Title.create');
 
     this.keys.enter = keysFrom(this, globalThis.keyConfig.Enter);
     this.keys.up = keysFrom(this, globalThis.keyConfig.W);
@@ -163,7 +163,7 @@ export default class Title extends Phaser.Scene {
         }
       }
       if (justDown(this.keys.enter)) {
-        deb('enter');
+        log(10, 'enter');
         if (this.selected === menu.play) {
           this.cameras.main.fadeOut(
             FADEOUT_LENGTH / 2,
@@ -177,7 +177,7 @@ export default class Title extends Phaser.Scene {
           this.sTitleLoop.fade(1, 0, FADEOUT_LENGTH / 2);
           this.sStart.play();
         } else if (this.selected === menu.options) {
-          deb('options');
+          log(10, 'options');
           this.sEnter.play();
         }
       }

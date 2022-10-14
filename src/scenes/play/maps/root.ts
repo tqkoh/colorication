@@ -2,7 +2,7 @@ import { airSquare as a, GameMap, Square, startSquare as s } from '../gamemap';
 import mapWorld0 from './worlds/world0';
 
 const wo0: Square = {
-  type: 'map',
+  Atype: 'map',
   map: new GameMap(mapWorld0),
   name: '0. welcome',
   movable: false,

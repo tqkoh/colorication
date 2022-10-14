@@ -1,5 +1,14 @@
-import { randomized } from '../../../../../utils/term'
-import { Stage } from '../../../gamemap'
+import { randomized } from '../../../../../utils/term';
+import { Stage } from '../../../gamemap';
+
+/*
+1 コメを置くだけ。中身は見れない
+(locked) Lam 0 (Var 0)
+--
+(locked) Lam 0 (Var 0)
+(locked) Lam 1 (Lam 0 (Var 0))
+(locked) Lam 2 (Lam 1 (Lam 0 (Var 0)))
+*/
 
 const stage0: Stage = {
   name: '0. place it',
@@ -7,19 +16,26 @@ const stage0: Stage = {
     {
       input: [],
       output: {
-        type: 'lam',
-        var: '0',
-        ret: { type: 'var', var: '0' }
+        Atype: 'term',
+        term: {
+          Atype: 'lam',
+          var: '0',
+          ret: { Atype: 'var', var: '0' }
+        },
+        name: '',
+        movable: false,
+        collidable: true,
+        locked: true
       }
     }
   ],
   terms: [
     {
-      type: 'term',
+      Atype: 'term',
       term: randomized({
-        type: 'lam',
+        Atype: 'lam',
         var: '0',
-        ret: { type: 'var', var: '0' }
+        ret: { Atype: 'var', var: '0' }
       }),
       name: '',
       movable: true,
@@ -27,14 +43,14 @@ const stage0: Stage = {
       locked: true
     },
     {
-      type: 'term',
+      Atype: 'term',
       term: randomized({
-        type: 'lam',
+        Atype: 'lam',
         var: '1',
         ret: {
-          type: 'lam',
+          Atype: 'lam',
           var: '0',
-          ret: { type: 'var', var: '0' }
+          ret: { Atype: 'var', var: '0' }
         }
       }),
       name: '',
@@ -43,17 +59,17 @@ const stage0: Stage = {
       locked: true
     },
     {
-      type: 'term',
+      Atype: 'term',
       term: randomized({
-        type: 'lam',
+        Atype: 'lam',
         var: '2',
         ret: {
-          type: 'lam',
+          Atype: 'lam',
           var: '1',
           ret: {
-            type: 'lam',
+            Atype: 'lam',
             var: '0',
-            ret: { type: 'var', var: '0' }
+            ret: { Atype: 'var', var: '0' }
           }
         }
       }),
@@ -63,6 +79,6 @@ const stage0: Stage = {
       locked: true
     }
   ]
-}
+};
 
-export default stage0
+export default stage0;

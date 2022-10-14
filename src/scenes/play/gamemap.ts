@@ -1,7 +1,7 @@
 /* eslint-disable no-use-before-define */
 import * as lodash from 'lodash';
 import Phaser from 'phaser';
-import deb from '../../utils/deb';
+import { log } from '../../utils/deb';
 import Term from '../../utils/term';
 
 export type Block =
@@ -16,8 +16,8 @@ export type Block =
   | 'wall';
 
 export type Test = {
-  input: Term[];
-  output: Term;
+  input: Square[];
+  output: Square;
 };
 
 export type Stage = {
@@ -27,11 +27,11 @@ export type Stage = {
 };
 
 export type Square = (
-  | { type: 'air' }
-  | { type: 'term'; term: Term; map?: GameMap }
-  | { type: 'map'; map: GameMap }
-  | { type: 'stage'; stage: Stage; map?: GameMap }
-  | { type: 'block'; block: Block }
+  | { Atype: 'air' }
+  | { Atype: 'term'; term: Term; map?: GameMap }
+  | { Atype: 'map'; map: GameMap }
+  | { Atype: 'stage'; stage: Stage; map?: GameMap }
+  | { Atype: 'block'; block: Block }
 ) & {
   name: string;
   movable: boolean;
@@ -68,8 +68,8 @@ export class GameMap {
       }
       for (let j = 0; j < squares[i].length; j += 1) {
         if (
-          squares[i][j].type === 'block' &&
-          (squares[i][j] as { type: 'block'; block: Block }).block === 'start'
+          squares[i][j].Atype === 'block' &&
+          (squares[i][j] as { Atype: 'block'; block: Block }).block === 'start'
         ) {
           this.starti = i;
           this.startj = j;
@@ -86,7 +86,7 @@ export class GameMap {
 }
 
 export const airSquareI: Square = {
-  type: 'air',
+  Atype: 'air',
   name: '',
   movable: false,
   collidable: false,
@@ -98,7 +98,7 @@ export function airSquare() {
 }
 
 export const parentSquareI: Square = {
-  type: 'block',
+  Atype: 'block',
   block: 'parent',
   name: '..',
   movable: false,
@@ -111,7 +111,7 @@ export function parentSquare() {
 }
 
 export const wallSquareI: Square = {
-  type: 'block',
+  Atype: 'block',
   block: 'wall',
   name: '',
   movable: false,
@@ -124,7 +124,7 @@ export function wallSquare() {
 }
 
 export const startSquareI: Square = {
-  type: 'block',
+  Atype: 'block',
   block: 'start',
   name: '',
   movable: false,
@@ -173,7 +173,7 @@ export function squaresFromStage(s: Stage): Square[][] {
   }
 
   ret[0][0] = {
-    type: 'block',
+    Atype: 'block',
     block: 'parent',
     name: '..',
     movable: false,
@@ -183,7 +183,7 @@ export function squaresFromStage(s: Stage): Square[][] {
   ret[0][1] = startSquare();
   for (let j = 0; j < w; j += 1) {
     ret[5][j] = {
-      type: 'block',
+      Atype: 'block',
       block: 'wall',
       name: '',
       movable: false,
@@ -192,7 +192,7 @@ export function squaresFromStage(s: Stage): Square[][] {
     };
   }
   ret[5][5] = {
-    type: 'block',
+    Atype: 'block',
     block: 'submit',
     name: 'submit',
     movable: false,
@@ -200,7 +200,7 @@ export function squaresFromStage(s: Stage): Square[][] {
     locked: false
   };
   ret[6][5] = {
-    type: 'block',
+    Atype: 'block',
     block: 'down',
     name: '',
     movable: false,
@@ -215,13 +215,125 @@ export function squaresFromStage(s: Stage): Square[][] {
     ret[i][j] = s.terms[k];
   }
 
+  for (let k = 0; k < s.tests.length; k += 1) {
+    ret[7 + k][3] = s.tests[k].output;
+    ret[7 + k][4] = {
+      Atype: 'block',
+      block: 'equal',
+      name: '',
+      movable: false,
+      collidable: false,
+      locked: false
+    };
+    ret[7 + k][5] = {
+      Atype: 'block',
+      block: 'place',
+      name: '',
+      movable: false,
+      collidable: true,
+      locked: false
+    };
+  }
   return ret;
 }
 
-export function squaresFromLam(t: Term): Square[][] {
-  deb(t);
-  const ret = new Array<Square[]>(7).fill(
-    new Array<Square>(6).fill(airSquare())
-  );
+function squaresFromLam(v: string, r: Term) {
+  const h = 5;
+  const w = 11;
+  const ret: Square[][] = [];
+  for (let i = 0; i < h; i += 1) {
+    ret.push([]);
+    for (let j = 0; j < w; j += 1) {
+      ret[i].push(airSquare());
+    }
+  }
+  ret[0][0] = {
+    Atype: 'block',
+    block: 'parent',
+    name: '..',
+    movable: false,
+    collidable: true,
+    locked: false
+  };
+  ret[0][1] = startSquare();
+
+  ret[2][1] = {
+    Atype: 'term',
+    term: {
+      Atype: 'var',
+      var: v
+    },
+    name: '',
+    movable: false,
+    collidable: true,
+    locked: false
+  };
+
+  ret[2][9] = {
+    Atype: 'term',
+    term: r,
+    name: '',
+    movable: true,
+    collidable: true,
+    locked: false
+  };
+
   return ret;
+}
+
+function squaresFromApp(l: Term, p: Term) {
+  const h = 5;
+  const w = 5;
+  const ret: Square[][] = [];
+  for (let i = 0; i < h; i += 1) {
+    ret.push([]);
+    for (let j = 0; j < w; j += 1) {
+      ret[i].push(airSquare());
+    }
+  }
+  ret[0][0] = {
+    Atype: 'block',
+    block: 'parent',
+    name: '..',
+    movable: false,
+    collidable: true,
+    locked: false
+  };
+  ret[0][1] = startSquare();
+  ret[2][1] = {
+    Atype: 'term',
+    term: l,
+    name: '',
+    movable: false,
+    collidable: true,
+    locked: false
+  };
+  ret[2][2] = {
+    Atype: 'block',
+    block: 'apply',
+    name: '',
+    movable: false,
+    collidable: false,
+    locked: false
+  };
+  ret[2][3] = {
+    Atype: 'term',
+    term: p,
+    name: '',
+    movable: false,
+    collidable: true,
+    locked: false
+  };
+
+  return ret;
+}
+export function squaresFromTerm(t: Term): Square[][] {
+  log(10, t);
+  if (t.Atype === 'lam') {
+    return squaresFromLam(t.var, t.ret);
+  }
+  if (t.Atype === 'app') {
+    return squaresFromApp(t.lam, t.param);
+  }
+  throw new Error('var cant become map');
 }

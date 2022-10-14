@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { justDown, keysFrom } from '../data/keyConfig';
-import deb from '../utils/deb';
+import { log } from '../utils/deb';
 import FontForPhaser from '../utils/fontForPhaser';
 
 const WHITE2 = [255, 239, 215];
@@ -21,7 +21,7 @@ export default class Load extends Phaser.Scene {
   }
 
   preload() {
-    deb('Load.preload');
+    log(10, 'Load.preload');
     this.cameras.main.setBackgroundColor(
       `rgba(${BLACK[0]},${BLACK[1]},${BLACK[2]},1)`
     );
@@ -30,7 +30,7 @@ export default class Load extends Phaser.Scene {
   }
 
   create() {
-    deb('Load.create');
+    log(10, 'Load.create');
 
     // {
     // 	let y = 0,
@@ -61,7 +61,7 @@ export default class Load extends Phaser.Scene {
 
   update() {
     if (justDown(this.keys.next)) {
-      deb('enter');
+      log(10, 'enter');
       this.scene.start('title');
     }
   }
