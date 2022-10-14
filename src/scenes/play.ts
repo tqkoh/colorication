@@ -5,14 +5,14 @@ import { match, P } from 'ts-pattern';
 import { isDown, justDown, keysFrom } from '../data/keyConfig';
 import { log } from '../utils/deb';
 import FontForPhaser from '../utils/fontForPhaser';
-import Term, { subst } from '../utils/term';
+import Term, { randomized, subst } from '../utils/term';
 import { coloredHandleFrom, deltaHFrom, squareHash } from '../utils/termColor';
 import {
   airSquare,
   GameMap,
   Square,
-  squaresFromLam,
   squaresFromStage,
+  squaresFromTerm,
   wallSquare
 } from './play/gamemap';
 import mapRoot from './play/maps/root';
@@ -297,6 +297,24 @@ export default class Play extends Phaser.Scene {
     this.gImageFocus?.setY(fy + 8).setX(fx + 8);
   }
 
+  addSquareImage(i: number, j: number) {
+    const y = 16 * i;
+    const x = 16 * j;
+    this.currentMap.squares[i][j].image = this.add
+      .image(
+        this.mapOriginx + x + 8,
+        this.mapOriginy + y + 8,
+        this.imageHandleFromSquare(
+          this.currentMap.squares[i][j],
+          i,
+          j,
+          this.currentMap.h,
+          this.currentMap.w
+        )
+      )
+      .setDepth(-10);
+  }
+
   moveToPosition(nexti: number, nextj: number) {
     this.playeri = nexti;
     this.playerj = nextj;
@@ -385,36 +403,8 @@ export default class Play extends Phaser.Scene {
       front[0] = this.currentMap.squares[this.focusi][this.focusj];
       front[1] = this.currentMap.squares[this.focusnexti][this.focusnextj];
 
-      {
-        const y = 16 * this.focusi;
-        const x = 16 * this.focusj;
-        front[0].image = this.add.image(
-          this.mapOriginx + x + 8,
-          this.mapOriginy + y + 8,
-          this.imageHandleFromSquare(
-            front[0],
-            this.focusi,
-            this.focusj,
-            this.currentMap.h,
-            this.currentMap.w
-          )
-        );
-      }
-      {
-        const y = 16 * this.focusnexti;
-        const x = 16 * this.focusnextj;
-        front[1].image = this.add.image(
-          this.mapOriginx + x + 8,
-          this.mapOriginy + y + 8,
-          this.imageHandleFromSquare(
-            front[1],
-            this.focusnexti,
-            this.focusnextj,
-            this.currentMap.h,
-            this.currentMap.w
-          )
-        );
-      }
+      this.addSquareImage(this.focusi, this.focusj);
+      this.addSquareImage(this.focusnexti, this.focusnextj);
 
       this.moveToPosition(this.focusi, this.focusj);
 
@@ -429,21 +419,8 @@ export default class Play extends Phaser.Scene {
       [this.currentMap.squares[this.focusnexti][this.focusnextj]] = front;
       front[0] = this.currentMap.squares[this.focusi][this.focusj];
       front[1] = this.currentMap.squares[this.focusnexti][this.focusnextj];
-      {
-        const y = 16 * this.focusi;
-        const x = 16 * this.focusj;
-        front[0].image = this.add.image(
-          this.mapOriginx + x + 8,
-          this.mapOriginy + y + 8,
-          this.imageHandleFromSquare(
-            front[0],
-            this.focusi,
-            this.focusj,
-            this.currentMap.h,
-            this.currentMap.w
-          )
-        );
-      }
+
+      this.addSquareImage(this.focusi, this.focusj);
       if (front[1].image) {
         const y = 16 * this.focusnexti;
         const x = 16 * this.focusnextj;
@@ -678,8 +655,11 @@ export default class Play extends Phaser.Scene {
       log(10, st);
       focus.map = new GameMap(squaresFromStage(focus.stage));
       afterMap = focus.map;
-    } else if (focus.Atype === 'term' && focus.term.Atype === 'lam') {
-      focus.map = new GameMap(squaresFromLam(focus.term));
+    } else if (
+      focus.Atype === 'term' &&
+      (focus.term.Atype === 'lam' || focus.term.Atype === 'app')
+    ) {
+      focus.map = new GameMap(squaresFromTerm(focus.term));
       afterMap = focus.map;
     } else if (focus.Atype === 'block' && focus.block === 'parent') {
       if (this.currentMap.parentMap) {
@@ -736,20 +716,7 @@ export default class Play extends Phaser.Scene {
     // add next map
     for (let i = 0; i < this.currentMap.h; i += 1) {
       for (let j = 0; j < this.currentMap.w; j += 1) {
-        const y = 16 * i;
-        const x = 16 * j;
-        this.currentMap.squares[i][j].image = this.add.image(
-          this.mapOriginx + x + 8,
-          this.mapOriginy + y + 8,
-          this.imageHandleFromSquare(
-            this.currentMap.squares[i][j],
-            i,
-            j,
-            this.currentMap.h,
-            this.currentMap.w
-          )
-        );
-        this.currentMap.squares[i][j].image?.setDepth(-10);
+        this.addSquareImage(i, j);
       }
     }
   }
@@ -761,7 +728,26 @@ export default class Play extends Phaser.Scene {
   execMemo() {}
 
   // eslint-disable-next-line class-methods-use-this
-  execNew() {}
+  execNew() {
+    const focus = this.currentMap.squares[this.focusi][this.focusj];
+    if (focus.image) {
+      focus.image.destroy();
+    }
+    const newSquare: Square = {
+      Atype: 'term',
+      term: randomized({
+        Atype: 'lam',
+        var: '0',
+        ret: { Atype: 'var', var: '0' }
+      }),
+      name: '',
+      movable: true,
+      collidable: true,
+      locked: false
+    };
+    this.currentMap.squares[this.focusi][this.focusj] = newSquare;
+    this.addSquareImage(this.focusi, this.focusj);
+  }
 
   handleMenu() {
     if (justDown(this.keys.S) && this.selected + 1 < this.menu.length) {
@@ -895,7 +881,7 @@ export default class Play extends Phaser.Scene {
       })
       .with({ Atype: 'map' }, () => 'lam')
       .with({ Atype: 'stage' }, () => 'lam')
-      .with({ Atype: 'block', block: 'apply' }, () => 'app')
+      .with({ Atype: 'block', block: 'apply' }, () => 'apply')
       .with({ Atype: 'block', block: 'down' }, () => 'down')
       .with({ Atype: 'block', block: 'equal' }, () => 'equal')
       .with({ Atype: 'block', block: 'place' }, () => 'place')
@@ -1095,13 +1081,6 @@ export default class Play extends Phaser.Scene {
     }
     this.animationApplyFrame += 1;
 
-    log(
-      1,
-      (255 *
-        (ANIMATION_APPLY_PER -
-          (this.animationApplyFrame % ANIMATION_APPLY_PER))) /
-        ANIMATION_APPLY_PER
-    );
     this.gAnimationApply
       .slice(-1)[0]
       .setAlpha(

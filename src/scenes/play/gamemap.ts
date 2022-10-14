@@ -237,10 +237,103 @@ export function squaresFromStage(s: Stage): Square[][] {
   return ret;
 }
 
-export function squaresFromLam(t: Term): Square[][] {
-  log(10, t);
-  const ret = new Array<Square[]>(7).fill(
-    new Array<Square>(6).fill(airSquare())
-  );
+function squaresFromLam(v: string, r: Term) {
+  const h = 5;
+  const w = 11;
+  const ret: Square[][] = [];
+  for (let i = 0; i < h; i += 1) {
+    ret.push([]);
+    for (let j = 0; j < w; j += 1) {
+      ret[i].push(airSquare());
+    }
+  }
+  ret[0][0] = {
+    Atype: 'block',
+    block: 'parent',
+    name: '..',
+    movable: false,
+    collidable: true,
+    locked: false
+  };
+  ret[0][1] = startSquare();
+
+  ret[2][1] = {
+    Atype: 'term',
+    term: {
+      Atype: 'var',
+      var: v
+    },
+    name: '',
+    movable: false,
+    collidable: true,
+    locked: false
+  };
+
+  ret[2][9] = {
+    Atype: 'term',
+    term: r,
+    name: '',
+    movable: true,
+    collidable: true,
+    locked: false
+  };
+
   return ret;
+}
+
+function squaresFromApp(l: Term, p: Term) {
+  const h = 5;
+  const w = 5;
+  const ret: Square[][] = [];
+  for (let i = 0; i < h; i += 1) {
+    ret.push([]);
+    for (let j = 0; j < w; j += 1) {
+      ret[i].push(airSquare());
+    }
+  }
+  ret[0][0] = {
+    Atype: 'block',
+    block: 'parent',
+    name: '..',
+    movable: false,
+    collidable: true,
+    locked: false
+  };
+  ret[0][1] = startSquare();
+  ret[2][1] = {
+    Atype: 'term',
+    term: l,
+    name: '',
+    movable: false,
+    collidable: true,
+    locked: false
+  };
+  ret[2][2] = {
+    Atype: 'block',
+    block: 'apply',
+    name: '',
+    movable: false,
+    collidable: false,
+    locked: false
+  };
+  ret[2][3] = {
+    Atype: 'term',
+    term: p,
+    name: '',
+    movable: false,
+    collidable: true,
+    locked: false
+  };
+
+  return ret;
+}
+export function squaresFromTerm(t: Term): Square[][] {
+  log(10, t);
+  if (t.Atype === 'lam') {
+    return squaresFromLam(t.var, t.ret);
+  }
+  if (t.Atype === 'app') {
+    return squaresFromApp(t.lam, t.param);
+  }
+  throw new Error('var cant become map');
 }
