@@ -66,7 +66,7 @@ const menuElementMessages: string[] = [
 
 function menuFromSquare(s: Square): MenuElement[] {
   return match(s)
-    .with({ type: 'air' }, () => [
+    .with({ Atype: 'air' }, () => [
       menuElement.new,
       menuElement.paste,
       menuElement.close
@@ -77,35 +77,35 @@ function menuFromSquare(s: Square): MenuElement[] {
       menuElement.memo,
       menuElement.close
     ])
-    .with({ type: 'term', term: { type: 'var' } }, () => [
+    .with({ Atype: 'term', term: { Atype: 'var' } }, () => [
       menuElement.copy,
       menuElement.delete,
       menuElement.memo,
       menuElement.close
     ])
-    .with({ type: 'term' }, () => [
+    .with({ Atype: 'term' }, () => [
       menuElement.enter,
       menuElement.copy,
       menuElement.delete,
       menuElement.memo,
       menuElement.close
     ])
-    .with({ type: 'block', block: 'parent' }, () => [
+    .with({ Atype: 'block', block: 'parent' }, () => [
       menuElement.leave,
       menuElement.memo,
       menuElement.close
     ])
-    .with({ type: 'block', block: 'wall' }, () => [])
-    .with({ type: 'block', block: 'submit' }, () => [
+    .with({ Atype: 'block', block: 'wall' }, () => [])
+    .with({ Atype: 'block', block: 'submit' }, () => [
       menuElement.enter,
       menuElement.close
     ])
-    .with({ type: 'block' }, () => [
+    .with({ Atype: 'block' }, () => [
       menuElement.new,
       menuElement.paste,
       menuElement.close
     ])
-    .with({ type: P._ }, () => [
+    .with({ Atype: P._ }, () => [
       menuElement.enter,
       menuElement.memo,
       menuElement.close
@@ -323,7 +323,7 @@ export default class Play extends Phaser.Scene {
       this.focusnextj,
       front[0].collidable
     );
-    if (front[0].type === 'term' && front[1].type === 'term') {
+    if (front[0].Atype === 'term' && front[1].Atype === 'term') {
       log(10, 'apply');
       if (front[0].image) {
         front[0].image.destroy();
@@ -333,7 +333,7 @@ export default class Play extends Phaser.Scene {
       }
 
       const app: Term = {
-        type: 'app',
+        Atype: 'app',
         lam: front[1].term,
         param: front[0].term
       };
@@ -343,7 +343,7 @@ export default class Play extends Phaser.Scene {
 
       this.currentMap.squares[this.focusnexti][this.focusnextj] = {
         ...front[1],
-        type: 'term',
+        Atype: 'term',
         term: cloneDeep(this.substProgress.slice(-1)[0])
       };
       this.currentMap.squares[this.focusi][this.focusj] = airSquare();
@@ -385,7 +385,7 @@ export default class Play extends Phaser.Scene {
       this.moveToPosition(this.focusi, this.focusj);
 
       // this.mainState = 'applyAnimating';
-    } else if (front[0].movable && front[1].type === 'air') {
+    } else if (front[0].movable && front[1].Atype === 'air') {
       log(10, 'moveblock');
       if (front[1].image) {
         front[1].image.destroy();
@@ -636,17 +636,17 @@ export default class Play extends Phaser.Scene {
   execEnter() {
     const focus = this.currentMap.squares[this.focusi][this.focusj];
     let afterMap: GameMap;
-    if (focus.type === 'map') {
+    if (focus.Atype === 'map') {
       afterMap = focus.map;
-    } else if (focus.type === 'stage') {
+    } else if (focus.Atype === 'stage') {
       const st = squaresFromStage(focus.stage);
       log(10, st);
       focus.map = new GameMap(squaresFromStage(focus.stage));
       afterMap = focus.map;
-    } else if (focus.type === 'term' && focus.term.type === 'lam') {
+    } else if (focus.Atype === 'term' && focus.term.Atype === 'lam') {
       focus.map = new GameMap(squaresFromLam(focus.term));
       afterMap = focus.map;
-    } else if (focus.type === 'block' && focus.block === 'parent') {
+    } else if (focus.Atype === 'block' && focus.block === 'parent') {
       if (this.currentMap.parentMap) {
         afterMap = this.currentMap.parentMap;
       } else {
@@ -655,7 +655,7 @@ export default class Play extends Phaser.Scene {
     } else {
       return;
     }
-    if (focus.type !== 'block' || focus.block !== 'parent') {
+    if (focus.Atype !== 'block' || focus.block !== 'parent') {
       afterMap.setParent(this.currentMap);
     }
 
@@ -790,7 +790,7 @@ export default class Play extends Phaser.Scene {
 
   createColoredTermImage(t: Term, hash: string, handle: string) {
     const deltaH = deltaHFrom(hash);
-    const originalTexture = this.textures.get(t.type);
+    const originalTexture = this.textures.get(t.Atype);
     const originalTextureImage = originalTexture.getSourceImage();
     const h = originalTextureImage.height;
     const w = originalTextureImage.width;
@@ -803,7 +803,7 @@ export default class Play extends Phaser.Scene {
     // const n = pixels.data.length / 4;
     for (let i = 0; i < h; i += 1) {
       for (let j = 0; j < w; j += 1) {
-        const rgb = this.textures.getPixel(j, i, t.type);
+        const rgb = this.textures.getPixel(j, i, t.Atype);
         const r = rgb.red;
         const g = rgb.green;
         const b = rgb.blue;
@@ -825,7 +825,7 @@ export default class Play extends Phaser.Scene {
         pixels.data[(i * w + j) * 4 + 3] = this.textures.getPixelAlpha(
           j,
           i,
-          t.type
+          t.Atype
         );
       }
     }
@@ -842,7 +842,7 @@ export default class Play extends Phaser.Scene {
     w: number
   ): string {
     return match(s)
-      .with({ type: 'air' }, () => {
+      .with({ Atype: 'air' }, () => {
         let ret = 'air';
         if (j === 0) {
           ret += 'l';
@@ -858,21 +858,21 @@ export default class Play extends Phaser.Scene {
         }
         return ret;
       })
-      .with({ type: 'map' }, () => 'lam')
-      .with({ type: 'stage' }, () => 'lam')
-      .with({ type: 'block', block: 'apply' }, () => 'app')
-      .with({ type: 'block', block: 'down' }, () => 'down')
-      .with({ type: 'block', block: 'equal' }, () => 'equal')
-      .with({ type: 'block', block: 'place' }, () => 'place')
-      .with({ type: 'block', block: 'submit' }, () => 'submit')
-      .with({ type: 'block', block: 'wall' }, () => {
+      .with({ Atype: 'map' }, () => 'lam')
+      .with({ Atype: 'stage' }, () => 'lam')
+      .with({ Atype: 'block', block: 'apply' }, () => 'app')
+      .with({ Atype: 'block', block: 'down' }, () => 'down')
+      .with({ Atype: 'block', block: 'equal' }, () => 'equal')
+      .with({ Atype: 'block', block: 'place' }, () => 'place')
+      .with({ Atype: 'block', block: 'submit' }, () => 'submit')
+      .with({ Atype: 'block', block: 'wall' }, () => {
         if (j === 0) return 'walll';
         if (j === w - 1) return 'wallr';
         return 'wall';
       }) // reset, parent
-      .with({ type: 'block' }, () => 'lam')
-      .with({ type: 'term' }, () => {
-        if (s.type !== 'term') {
+      .with({ Atype: 'block' }, () => 'lam')
+      .with({ Atype: 'term' }, () => {
+        if (s.Atype !== 'term') {
           return '';
         }
         const hash: string = squareHash(s);
@@ -883,7 +883,7 @@ export default class Play extends Phaser.Scene {
         }
         return handle;
       })
-      .with({ type: P._ }, () => 'air')
+      .with({ Atype: P._ }, () => 'air')
       .exhaustive();
   }
 

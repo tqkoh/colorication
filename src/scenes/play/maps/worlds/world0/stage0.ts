@@ -16,11 +16,11 @@ const stage0: Stage = {
     {
       input: [],
       output: {
-        type: 'term',
+        Atype: 'term',
         term: {
-          type: 'lam',
+          Atype: 'lam',
           var: '0',
-          ret: { type: 'var', var: '0' }
+          ret: { Atype: 'var', var: '0' }
         },
         name: '',
         movable: false,
@@ -31,11 +31,11 @@ const stage0: Stage = {
   ],
   terms: [
     {
-      type: 'term',
+      Atype: 'term',
       term: randomized({
-        type: 'lam',
+        Atype: 'lam',
         var: '0',
-        ret: { type: 'var', var: '0' }
+        ret: { Atype: 'var', var: '0' }
       }),
       name: '',
       movable: true,
@@ -43,14 +43,14 @@ const stage0: Stage = {
       locked: true
     },
     {
-      type: 'term',
+      Atype: 'term',
       term: randomized({
-        type: 'lam',
+        Atype: 'lam',
         var: '1',
         ret: {
-          type: 'lam',
+          Atype: 'lam',
           var: '0',
-          ret: { type: 'var', var: '0' }
+          ret: { Atype: 'var', var: '0' }
         }
       }),
       name: '',
@@ -59,17 +59,17 @@ const stage0: Stage = {
       locked: true
     },
     {
-      type: 'term',
+      Atype: 'term',
       term: randomized({
-        type: 'lam',
+        Atype: 'lam',
         var: '2',
         ret: {
-          type: 'lam',
+          Atype: 'lam',
           var: '1',
           ret: {
-            type: 'lam',
+            Atype: 'lam',
             var: '0',
-            ret: { type: 'var', var: '0' }
+            ret: { Atype: 'var', var: '0' }
           }
         }
       }),

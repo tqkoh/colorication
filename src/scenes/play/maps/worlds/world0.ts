@@ -3,17 +3,17 @@ import {
   parentSquare as p,
   Square,
   startSquare as s
-} from '../../gamemap'
-import stage0 from './world0/stage0'
+} from '../../gamemap';
+import stage0 from './world0/stage0';
 
 const st0: Square = {
-  type: 'stage',
+  Atype: 'stage',
   stage: stage0,
   name: stage0.name,
   movable: false,
   collidable: true,
   locked: false
-}
+};
 
 const mapWorld0: Square[][] = [
   [p(), s(), a(), a(), a(), a(), a(), a(), a(), a(), a()],
@@ -22,5 +22,5 @@ const mapWorld0: Square[][] = [
   [a(), a(), a(), a(), a(), a(), a(), a(), a(), a(), a()],
   [a(), a(), a(), a(), a(), a(), a(), a(), a(), a(), a()],
   [a(), a(), a(), a(), a(), a(), a(), a(), a(), a(), a()]
-]
-export default mapWorld0
+];
+export default mapWorld0;

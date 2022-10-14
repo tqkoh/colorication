@@ -27,11 +27,11 @@ export type Stage = {
 };
 
 export type Square = (
-  | { type: 'air' }
-  | { type: 'term'; term: Term; map?: GameMap }
-  | { type: 'map'; map: GameMap }
-  | { type: 'stage'; stage: Stage; map?: GameMap }
-  | { type: 'block'; block: Block }
+  | { Atype: 'air' }
+  | { Atype: 'term'; term: Term; map?: GameMap }
+  | { Atype: 'map'; map: GameMap }
+  | { Atype: 'stage'; stage: Stage; map?: GameMap }
+  | { Atype: 'block'; block: Block }
 ) & {
   name: string;
   movable: boolean;
@@ -68,8 +68,8 @@ export class GameMap {
       }
       for (let j = 0; j < squares[i].length; j += 1) {
         if (
-          squares[i][j].type === 'block' &&
-          (squares[i][j] as { type: 'block'; block: Block }).block === 'start'
+          squares[i][j].Atype === 'block' &&
+          (squares[i][j] as { Atype: 'block'; block: Block }).block === 'start'
         ) {
           this.starti = i;
           this.startj = j;
@@ -86,7 +86,7 @@ export class GameMap {
 }
 
 export const airSquareI: Square = {
-  type: 'air',
+  Atype: 'air',
   name: '',
   movable: false,
   collidable: false,
@@ -98,7 +98,7 @@ export function airSquare() {
 }
 
 export const parentSquareI: Square = {
-  type: 'block',
+  Atype: 'block',
   block: 'parent',
   name: '..',
   movable: false,
@@ -111,7 +111,7 @@ export function parentSquare() {
 }
 
 export const wallSquareI: Square = {
-  type: 'block',
+  Atype: 'block',
   block: 'wall',
   name: '',
   movable: false,
@@ -124,7 +124,7 @@ export function wallSquare() {
 }
 
 export const startSquareI: Square = {
-  type: 'block',
+  Atype: 'block',
   block: 'start',
   name: '',
   movable: false,
@@ -173,7 +173,7 @@ export function squaresFromStage(s: Stage): Square[][] {
   }
 
   ret[0][0] = {
-    type: 'block',
+    Atype: 'block',
     block: 'parent',
     name: '..',
     movable: false,
@@ -183,7 +183,7 @@ export function squaresFromStage(s: Stage): Square[][] {
   ret[0][1] = startSquare();
   for (let j = 0; j < w; j += 1) {
     ret[5][j] = {
-      type: 'block',
+      Atype: 'block',
       block: 'wall',
       name: '',
       movable: false,
@@ -192,7 +192,7 @@ export function squaresFromStage(s: Stage): Square[][] {
     };
   }
   ret[5][5] = {
-    type: 'block',
+    Atype: 'block',
     block: 'submit',
     name: 'submit',
     movable: false,
@@ -200,7 +200,7 @@ export function squaresFromStage(s: Stage): Square[][] {
     locked: false
   };
   ret[6][5] = {
-    type: 'block',
+    Atype: 'block',
     block: 'down',
     name: '',
     movable: false,
@@ -218,7 +218,7 @@ export function squaresFromStage(s: Stage): Square[][] {
   for (let k = 0; k < s.tests.length; k += 1) {
     ret[7 + k][3] = s.tests[k].output;
     ret[7 + k][4] = {
-      type: 'block',
+      Atype: 'block',
       block: 'equal',
       name: '',
       movable: false,
@@ -226,7 +226,7 @@ export function squaresFromStage(s: Stage): Square[][] {
       locked: false
     };
     ret[7 + k][5] = {
-      type: 'block',
+      Atype: 'block',
       block: 'place',
       name: '',
       movable: false,

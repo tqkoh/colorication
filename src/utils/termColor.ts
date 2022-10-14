@@ -3,7 +3,7 @@ import { Square } from '../scenes/play/gamemap';
 import Term, { normalized } from './term';
 
 export function squareHash(s: Square): string {
-  if (s.type === 'term') {
+  if (s.Atype === 'term') {
     // const ns: Square = {
     //   ...s,
     //   term: normalized(s.term)
@@ -14,7 +14,7 @@ export function squareHash(s: Square): string {
 }
 
 export function coloredHandleFrom(t: Term, hsh: string): string {
-  return `${t.type}#${hsh.substring(0, 2)}`;
+  return `${t.Atype}#${hsh.substring(0, 2)}`;
 }
 
 export function deltaHFrom(hsh: string): number {

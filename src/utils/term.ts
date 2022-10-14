@@ -4,45 +4,45 @@ import { v4 as uuid } from 'uuid';
 import { log } from './deb';
 
 type Term =
-  | { type: 'var'; var: string }
-  | { type: 'app'; lam: Term; param: Term }
-  | { type: 'lam'; var: string; ret: Term };
+  | { Atype: 'var'; var: string }
+  | { Atype: 'app'; lam: Term; param: Term }
+  | { Atype: 'lam'; var: string; ret: Term };
 
 export function normalized(
   t: Term, // ref
   m: Map<string, number> = new Map<string, number>()
 ): Term {
   return match(t)
-    .with({ type: 'var' }, (v) => {
+    .with({ Atype: 'var' }, (v) => {
       const id: number | undefined = m.get(v.var);
       if (id === undefined) {
         const newId: number = m.size;
         m.set(v.var, newId);
         const ret: Term = {
-          type: 'var',
+          Atype: 'var',
           var: newId.toString()
         };
         return ret;
       }
       const ret: Term = {
-        type: 'var',
+        Atype: 'var',
         var: id.toString()
       };
       return ret;
     })
-    .with({ type: 'app' }, (a) => {
+    .with({ Atype: 'app' }, (a) => {
       const ret: Term = {
-        type: 'app',
+        Atype: 'app',
         lam: normalized(a.lam, m),
         param: normalized(a.param, m)
       };
       return ret;
     })
-    .with({ type: 'lam' }, (l) => {
+    .with({ Atype: 'lam' }, (l) => {
       const newId: number = m.size;
       m.set(l.var, newId);
       const ret: Term = {
-        type: 'lam',
+        Atype: 'lam',
         var: newId.toString(),
         ret: normalized(l.ret, m)
       };
@@ -56,36 +56,36 @@ export function randomized(
   m: Map<string, string> = new Map<string, string>()
 ): Term {
   return match(t)
-    .with({ type: 'var' }, (v) => {
+    .with({ Atype: 'var' }, (v) => {
       const id: string | undefined = m.get(v.var);
       if (id === undefined) {
         const newId: string = uuid();
         m.set(v.var, newId);
         const ret: Term = {
-          type: 'var',
+          Atype: 'var',
           var: newId
         };
         return ret;
       }
       const ret: Term = {
-        type: 'var',
+        Atype: 'var',
         var: id
       };
       return ret;
     })
-    .with({ type: 'app' }, (a) => {
+    .with({ Atype: 'app' }, (a) => {
       const ret: Term = {
-        type: 'app',
+        Atype: 'app',
         lam: randomized(a.lam, m),
         param: randomized(a.param, m)
       };
       return ret;
     })
-    .with({ type: 'lam' }, (l) => {
+    .with({ Atype: 'lam' }, (l) => {
       const newId = uuid();
       m.set(l.var, newId);
       const ret: Term = {
-        type: 'lam',
+        Atype: 'lam',
         var: newId,
         ret: randomized(l.ret, m)
       };
@@ -95,28 +95,28 @@ export function randomized(
 }
 
 export const termExample: Term = randomized({
-  type: 'app',
+  Atype: 'app',
   lam: {
-    type: 'lam',
+    Atype: 'lam',
     var: '0',
     ret: {
-      type: 'var',
+      Atype: 'var',
       var: '0'
     }
   },
   param: {
-    type: 'var',
+    Atype: 'var',
     var: '1'
   }
 });
 
 function freeValue(t: Term): string[] {
   return match(t)
-    .with({ type: 'var' }, (v) => [v.var])
-    .with({ type: 'app' }, (a) => [
+    .with({ Atype: 'var' }, (v) => [v.var])
+    .with({ Atype: 'app' }, (a) => [
       ...new Set([...freeValue(a.lam), ...freeValue(a.param)])
     ])
-    .with({ type: 'lam' }, (l) => {
+    .with({ Atype: 'lam' }, (l) => {
       const a = freeValue(l.ret);
       return a.reduce((acc: string[], e: string) => {
         if (e !== l.var) acc.push(e);
@@ -130,7 +130,7 @@ export function subst(
   acc: Term[], // ref
   before: string = '',
   after: Term = {
-    type: 'var',
+    Atype: 'var',
     var: before
   }
 ): Term[] {
@@ -140,8 +140,8 @@ export function subst(
     .with(
       // before と after が同じな場合、適用だけする
       [
-        { type: 'app', lam: { type: 'lam' } },
-        { type: 'var', var: before }
+        { Atype: 'app', lam: { Atype: 'lam' } },
+        { Atype: 'var', var: before }
       ],
       ([ap]) => {
         log(100, 'subst', 0);
@@ -150,13 +150,13 @@ export function subst(
         return acc;
       }
     )
-    .with([{ type: 'app', lam: { type: 'lam' } }, P._], ([ap, a]) => {
+    .with([{ Atype: 'app', lam: { Atype: 'lam' } }, P._], ([ap, a]) => {
       log(100, 'subst', 1);
 
       const substLam = subst([ap.lam], before, a).slice(-1)[0];
       const substParam = subst([ap.param], before, a).slice(-1)[0];
       acc.push({
-        type: 'app',
+        Atype: 'app',
         lam: substLam,
         param: substParam
       });
@@ -170,31 +170,31 @@ export function subst(
       return acc;
     })
     // App の lam が lam 以外のこともあるのでこれはいる
-    .with([{ type: 'app' }, P._], ([ap, a]) => {
+    .with([{ Atype: 'app' }, P._], ([ap, a]) => {
       log(100, 'subst', 2);
 
       const substLam = subst([ap.lam], before, a).slice(-1)[0];
       const substParam = subst([ap.param], before, a).slice(-1)[0];
       acc.push({
-        type: 'app',
+        Atype: 'app',
         lam: substLam,
         param: substParam
       });
       return acc;
     })
     // Var
-    .with([P._, { type: 'var', var: before }], () => {
+    .with([P._, { Atype: 'var', var: before }], () => {
       log(100, 'subst', 3);
 
       return acc;
     })
-    .with([{ type: 'var' }, P._], ([va, a]) => {
+    .with([{ Atype: 'var' }, P._], ([va, a]) => {
       log(100, 'subst', 4);
 
       if (va.var === before) acc.push(a);
       return acc;
     })
-    .with([{ type: 'lam' }, P._], ([la, a]) => {
+    .with([{ Atype: 'lam' }, P._], ([la, a]) => {
       log(100, 'subst', 5);
 
       if (before === la.var) return acc;
@@ -203,11 +203,11 @@ export function subst(
       if (freeValue(a).includes(la.var)) {
         const newId = uuid();
         acc.push({
-          type: 'lam',
+          Atype: 'lam',
           var: newId,
           ret: subst(
             subst([la.ret], la.var, {
-              type: 'var',
+              Atype: 'var',
               var: newId
             }),
             before,
@@ -216,7 +216,7 @@ export function subst(
         });
       } else {
         acc.push({
-          type: 'lam',
+          Atype: 'lam',
           var: la.var,
           ret: subst([la.ret], before, a).slice(-1)[0]
         });
