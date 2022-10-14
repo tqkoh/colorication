@@ -1,5 +1,7 @@
+import { cloneDeep } from 'lodash';
 import { match, P } from 'ts-pattern';
 import { v4 as uuid } from 'uuid';
+import { log } from './deb';
 
 type Term =
   | { type: 'var'; var: string }
@@ -132,6 +134,7 @@ export function subst(
     var: before
   }
 ): Term[] {
+  log(100, 'subst', cloneDeep(acc), before, after);
   const ret = match<[Term, Term], Term[]>([acc.slice(-1)[0], after])
     // app の場合、subst した後適用する。(lam の返り値の中の引数を、適用するものでさらに subst する)
     .with(
@@ -140,12 +143,16 @@ export function subst(
         { type: 'app', lam: { type: 'lam' } },
         { type: 'var', var: before }
       ],
-      ([ap, a]) => {
-        acc.push(subst([ap.lam.ret], ap.lam.var, a).slice(-1)[0]);
+      ([ap]) => {
+        log(100, 'subst', 0);
+
+        acc.push(subst([ap.lam.ret], ap.lam.var, ap.param).slice(-1)[0]);
         return acc;
       }
     )
     .with([{ type: 'app', lam: { type: 'lam' } }, P._], ([ap, a]) => {
+      log(100, 'subst', 1);
+
       const substLam = subst([ap.lam], before, a).slice(-1)[0];
       const substParam = subst([ap.param], before, a).slice(-1)[0];
       acc.push({
@@ -164,6 +171,8 @@ export function subst(
     })
     // App の lam が lam 以外のこともあるのでこれはいる
     .with([{ type: 'app' }, P._], ([ap, a]) => {
+      log(100, 'subst', 2);
+
       const substLam = subst([ap.lam], before, a).slice(-1)[0];
       const substParam = subst([ap.param], before, a).slice(-1)[0];
       acc.push({
@@ -174,12 +183,20 @@ export function subst(
       return acc;
     })
     // Var
-    .with([P._, { type: 'var', var: before }], () => acc)
+    .with([P._, { type: 'var', var: before }], () => {
+      log(100, 'subst', 3);
+
+      return acc;
+    })
     .with([{ type: 'var' }, P._], ([va, a]) => {
+      log(100, 'subst', 4);
+
       if (va.var === before) acc.push(a);
       return acc;
     })
     .with([{ type: 'lam' }, P._], ([la, a]) => {
+      log(100, 'subst', 5);
+
       if (before === la.var) return acc;
       if (!freeValue(la.ret).includes(before)) return acc;
 
@@ -206,7 +223,11 @@ export function subst(
       }
       return acc;
     })
-    .with([P._, P._], () => acc)
+    .with([P._, P._], () => {
+      log(100, 'subst', 6);
+
+      return acc;
+    })
     .exhaustive();
   // console.log('subst---------------------')
   // console.log('acc', acc)

@@ -1,6 +1,15 @@
 import { randomized } from '../../../../../utils/term';
 import { Stage } from '../../../gamemap';
 
+/*
+1 コメを置くだけ。中身は見れない
+(locked) Lam 0 (Var 0)
+--
+(locked) Lam 0 (Var 0)
+(locked) Lam 1 (Lam 0 (Var 0))
+(locked) Lam 2 (Lam 1 (Lam 0 (Var 0)))
+*/
+
 const stage0: Stage = {
   name: '0. place it',
   tests: [

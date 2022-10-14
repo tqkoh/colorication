@@ -337,7 +337,11 @@ export default class Play extends Phaser.Scene {
         param: front[0].term
       };
 
+      deb([app].slice(-1)[0]);
       this.substProgress = subst([app]);
+      deb(this.substProgress.length);
+      deb(this.substProgress);
+      deb('aaa');
 
       this.currentMap.squares[this.focusnexti][this.focusnextj] = {
         ...front[1],
