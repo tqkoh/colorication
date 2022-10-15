@@ -772,14 +772,58 @@ export default class Play extends Phaser.Scene {
       })
       .with({ Atype: 'term', term: { Atype: 'app' } }, (focus) => {
         if (this.modifiedTerm.length < 2) throw new Error('s');
+
+        const app: Term = {
+          ...focus.term,
+          lam: this.modifiedTerm[0],
+          param: this.modifiedTerm[1]
+        };
+
         this.currentMap.squares[this.focusi][this.focusj] = {
           ...focus,
-          term: {
-            ...focus.term,
-            lam: this.modifiedTerm[0],
-            param: this.modifiedTerm[1]
-          }
+          term: app
         };
+
+        this.substProgress = subst([app]).reverse();
+        log(8, this.substProgress[0]);
+        if (this.substProgress.length === 1) return;
+
+        {
+          const y = 16 * this.focusi;
+          const x = 16 * this.focusj;
+          this.gAnimationApply = this.substProgress.map((e, i) =>
+            this.add
+              .image(
+                this.mapOriginx + x + 8,
+                this.mapOriginy + y + 8,
+                this.imageHandleFromSquare(
+                  {
+                    Atype: 'term',
+                    term: e,
+                    name: '',
+                    movable: false,
+                    locked: false,
+                    collidable: false
+                  },
+                  this.focusi,
+                  this.focusj,
+                  this.currentMap.h,
+                  this.currentMap.w
+                )
+              )
+              .setDepth(10 + i)
+          );
+        }
+
+        this.currentMap.squares[this.focusi][this.focusj] = {
+          ...this.currentMap.squares[this.focusi][this.focusj],
+          map: undefined,
+          Atype: 'term',
+          term: cloneDeep(this.substProgress[0])
+        };
+
+        this.animationApplyFrame = 0;
+        this.mainState = 'applyAnimating';
       })
       .with(P._, () => {})
       .exhaustive();
