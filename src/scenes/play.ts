@@ -133,7 +133,8 @@ const BLACK = [84, 75, 64];
 const WHITE = [250, 247, 240];
 const WHITE2 = [255, 239, 215];
 const ANIMATION_APPLY_PER = 20;
-const LONG_PRESS = 10;
+const MOVEMENT_CYCLE = 30;
+const LONG_PRESS = 12;
 
 export default class Play extends Phaser.Scene {
   keys: {
@@ -487,16 +488,11 @@ export default class Play extends Phaser.Scene {
   }
 
   moveToDirection(d: Direction) {
-    const rotation = rotationFromDirection(d);
     if (this.playerDirection === d) {
       this.moveOn();
     } else {
       this.playerDirection = d;
       this.afterTurn = 0;
-      if (this.gImagePlayer !== undefined) {
-        this.gImagePlayer.rotation = rotation;
-      }
-      this.updatePlayerAndFocus();
     }
   }
 
@@ -541,14 +537,12 @@ export default class Play extends Phaser.Scene {
       this.keepingPressingFrame = -1;
     }
 
-    const T = 30;
-
     if (
       jd ||
       (d &&
         this.lastPressedMovementKey === 'd' &&
-        this.keepingPressingFrame % T === 0 &&
-        this.keepingPressingFrame > T)
+        this.keepingPressingFrame % MOVEMENT_CYCLE === 0 &&
+        this.keepingPressingFrame > MOVEMENT_CYCLE)
     ) {
       this.moveToDirection('right');
     }
@@ -556,8 +550,8 @@ export default class Play extends Phaser.Scene {
       js ||
       (s &&
         this.lastPressedMovementKey === 's' &&
-        this.keepingPressingFrame % T === 0 &&
-        this.keepingPressingFrame > T)
+        this.keepingPressingFrame % MOVEMENT_CYCLE === 0 &&
+        this.keepingPressingFrame > MOVEMENT_CYCLE)
     ) {
       this.moveToDirection('down');
     }
@@ -565,8 +559,8 @@ export default class Play extends Phaser.Scene {
       ja ||
       (a &&
         this.lastPressedMovementKey === 'a' &&
-        this.keepingPressingFrame % T === 0 &&
-        this.keepingPressingFrame > T)
+        this.keepingPressingFrame % MOVEMENT_CYCLE === 0 &&
+        this.keepingPressingFrame > MOVEMENT_CYCLE)
     ) {
       this.moveToDirection('left');
     }
@@ -574,20 +568,38 @@ export default class Play extends Phaser.Scene {
       jw ||
       (w &&
         this.lastPressedMovementKey === 'w' &&
-        this.keepingPressingFrame % T === 0 &&
-        this.keepingPressingFrame > T)
+        this.keepingPressingFrame % MOVEMENT_CYCLE === 0 &&
+        this.keepingPressingFrame > MOVEMENT_CYCLE)
     ) {
       this.moveToDirection('up');
     }
 
-    if (
-      this.afterTurn === LONG_PRESS &&
-      ((w && this.lastPressedMovementKey === 'w') ||
+    if (this.afterTurn === LONG_PRESS) {
+      if (
+        (w && this.lastPressedMovementKey === 'w') ||
         (a && this.lastPressedMovementKey === 'a') ||
         (s && this.lastPressedMovementKey === 's') ||
-        (d && this.lastPressedMovementKey === 'd'))
-    ) {
-      this.moveOn();
+        (d && this.lastPressedMovementKey === 'd')
+      ) {
+        if (this.gImagePlayer !== undefined) {
+          let dir: Direction = 'right';
+          if (this.lastPressedMovementKey === 's') dir = 'down';
+          if (this.lastPressedMovementKey === 'w') dir = 'up';
+          if (this.lastPressedMovementKey === 'a') dir = 'left';
+          this.gImagePlayer.rotation = rotationFromDirection(dir);
+        }
+        this.updatePlayerAndFocus();
+        this.moveOn();
+      } else {
+        if (this.gImagePlayer !== undefined) {
+          let dir: Direction = 'right';
+          if (this.lastPressedMovementKey === 's') dir = 'down';
+          if (this.lastPressedMovementKey === 'w') dir = 'up';
+          if (this.lastPressedMovementKey === 'a') dir = 'left';
+          this.gImagePlayer.rotation = rotationFromDirection(dir);
+        }
+        this.updatePlayerAndFocus();
+      }
     }
     this.afterTurn += 1;
   }
