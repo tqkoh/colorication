@@ -5,7 +5,7 @@ import { match, P } from 'ts-pattern';
 import { isDown, justDown, keysFrom } from '../data/keyConfig';
 import { log } from '../utils/deb';
 import FontForPhaser from '../utils/fontForPhaser';
-import Term, { freeValue, randomized, subst } from '../utils/term';
+import Term, { completeSubst, freeValue, randomized } from '../utils/term';
 import { coloredHandleFrom, deltaHFrom, squareHash } from '../utils/termColor';
 import {
   airSquare,
@@ -17,6 +17,8 @@ import {
   wallSquare
 } from './play/gamemap';
 import mapRoot from './play/maps/root';
+
+// const completeSubst = subst;
 
 type MainState =
   | 'operating'
@@ -409,7 +411,7 @@ export default class Play extends Phaser.Scene {
         param: front[0].term
       };
 
-      this.substProgress = subst([app]).reverse();
+      this.substProgress = completeSubst([app]).reverse();
       this.substProgress.push(front[1].term);
       log(8, this.substProgress);
       {
@@ -873,7 +875,7 @@ export default class Play extends Phaser.Scene {
           term: app
         };
 
-        this.substProgress = subst([app]).reverse();
+        this.substProgress = completeSubst([app]).reverse();
         log(8, this.substProgress);
         if (this.substProgress.length === 1) return;
 
