@@ -132,7 +132,8 @@ const ARROW_MERGIN_L = 2;
 const BLACK = [84, 75, 64];
 const WHITE = [250, 247, 240];
 const WHITE2 = [255, 239, 215];
-const ANIMATION_APPLY_PER = 30;
+const ANIMATION_APPLY_PER = 20;
+const LONG_PRESS = 10;
 
 export default class Play extends Phaser.Scene {
   keys: {
@@ -175,6 +176,8 @@ export default class Play extends Phaser.Scene {
 
   playerDirection: Direction;
 
+  afterTurn: number; // 向きを変えた後経ったフレーム
+
   menuDisplaying: boolean;
 
   menu: MenuElement[];
@@ -204,6 +207,14 @@ export default class Play extends Phaser.Scene {
   gImageFocus: Phaser.GameObjects.Image | undefined;
 
   gAnimationApply: Phaser.GameObjects.Image[];
+
+  gMapBackTileOld: Phaser.GameObjects.TileSprite | undefined;
+
+  gMapBackTile: Phaser.GameObjects.Image[][];
+
+  gMapBackgroundShape: Phaser.Geom.Rectangle | undefined;
+
+  gMapBackground: Phaser.GameObjects.Graphics | undefined;
 
   gMenuElements: Phaser.GameObjects.Image[];
 
@@ -249,6 +260,7 @@ export default class Play extends Phaser.Scene {
     this.focusnexti = this.currentMap.starti;
     this.focusnextj = this.currentMap.startj;
     this.playerDirection = 'right';
+    this.afterTurn = 0;
     this.focusj += 1;
     this.focusnextj += 2;
     this.menuDisplaying = false;
@@ -258,6 +270,7 @@ export default class Play extends Phaser.Scene {
     this.selected = 0;
     this.substProgress = [];
     this.gAnimationApply = [];
+    this.gMapBackTile = [];
     this.animationApplyFrame = 0;
 
     const H = globalThis.screenh - 31;
@@ -394,7 +407,7 @@ export default class Play extends Phaser.Scene {
 
       this.substProgress = subst([app]).reverse();
       this.substProgress.push(front[1].term);
-      log(8, this.substProgress[0]);
+      log(8, this.substProgress);
       {
         const y = 16 * this.focusnexti;
         const x = 16 * this.focusnextj;
@@ -476,6 +489,7 @@ export default class Play extends Phaser.Scene {
       this.moveOn();
     } else {
       this.playerDirection = d;
+      this.afterTurn = 0;
       if (this.gImagePlayer !== undefined) {
         this.gImagePlayer.rotation = rotation;
       }
@@ -562,6 +576,17 @@ export default class Play extends Phaser.Scene {
     ) {
       this.moveToDirection('up');
     }
+
+    if (
+      this.afterTurn === LONG_PRESS &&
+      ((w && this.lastPressedMovementKey === 'w') ||
+        (a && this.lastPressedMovementKey === 'a') ||
+        (s && this.lastPressedMovementKey === 's') ||
+        (d && this.lastPressedMovementKey === 'd'))
+    ) {
+      this.moveOn();
+    }
+    this.afterTurn += 1;
   }
 
   openMenu() {
@@ -785,7 +810,7 @@ export default class Play extends Phaser.Scene {
         };
 
         this.substProgress = subst([app]).reverse();
-        log(8, this.substProgress[0]);
+        log(8, this.substProgress);
         if (this.substProgress.length === 1) return;
 
         {
@@ -908,9 +933,17 @@ export default class Play extends Phaser.Scene {
       // const w = 368;
       y += h / 2;
       x = globalThis.screenw / 2;
-      if (this.mapBack) {
-        this.mapBack.setY(y).setX(x);
+      if (this.gMapBackTileOld) {
+        this.gMapBackTileOld.setY(y).setX(x);
       }
+    }
+    if (this.gMapBackground && this.gMapBackgroundShape) {
+      this.gMapBackground.clear();
+      this.gMapBackgroundShape
+        .setPosition(this.mapOriginx, this.mapOriginy)
+        .setSize(16 * this.currentMap.w, 16 * this.currentMap.h);
+      // this.gMapBackground.strokeRectShape(this.gMapBackgroundShape);
+      this.gMapBackground.fillRectShape(this.gMapBackgroundShape);
     }
 
     // add next map
@@ -1111,8 +1144,6 @@ export default class Play extends Phaser.Scene {
       .exhaustive();
   }
 
-  mapBack: Phaser.GameObjects.TileSprite | undefined;
-
   initDrawing() {
     // background
     {
@@ -1122,7 +1153,15 @@ export default class Play extends Phaser.Scene {
       const w = 368;
       y += h / 2;
       x = globalThis.screenw / 2;
-      this.mapBack = this.add.tileSprite(x, y, w, h, 'out').setDepth(-100);
+      this.gMapBackTileOld = this.add
+        .tileSprite(x, y, w, h, 'out')
+        .setDepth(-100);
+      // for (let i = 0; i < h; i += 1) {
+      //   this.gMapBackTile.push([]);
+      //   for (let j = 0; j < w; j += 1) {
+      //     this.gMapBackTile[i].push(this.add.image(backHandleFromPos(i, j)));
+      //   }
+      // }
     }
     {
       const y = 0;
@@ -1140,6 +1179,29 @@ export default class Play extends Phaser.Scene {
     }
 
     // map
+    this.gMapBackgroundShape = new Phaser.Geom.Rectangle(0, 0, 0, 0);
+    this.gMapBackground = this.add.graphics({
+      lineStyle: {
+        color: Phaser.Display.Color.GetColor(BLACK[0], BLACK[1], BLACK[2])
+      },
+      fillStyle: {
+        color: Phaser.Display.Color.GetColor(WHITE[0], WHITE[1], WHITE[2])
+      }
+    });
+    this.gMapBackground.fillRectShape(this.gMapBackgroundShape);
+    this.gMapBackground.lineStyle(
+      2,
+      Phaser.Display.Color.GetColor(BLACK[0], BLACK[1], BLACK[2]),
+      255
+    );
+    this.gMapBackground.clear();
+    this.gMapBackgroundShape
+      .setPosition(this.mapOriginx, this.mapOriginy)
+      .setSize(16 * this.currentMap.w, 16 * this.currentMap.h);
+    // this.gMapBackground.strokeRectShape(this.gMapBackgroundShape);
+    this.gMapBackground.fillRectShape(this.gMapBackgroundShape);
+    this.gMapBackground.setDepth(-90);
+
     for (let i = 0; i < this.currentMap.h; i += 1) {
       for (let j = 0; j < this.currentMap.w; j += 1) {
         const y = 16 * i;

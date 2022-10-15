@@ -8,6 +8,9 @@ export function squareHash(s: Square): string {
     //   ...s,
     //   term: normalized(s.term)
     // };
+    if (s.term.Atype === 'var') {
+      return hash({ term: s.term });
+    }
     return hash({ term: normalized(s.term) });
   }
   return hash(s);
