@@ -9,6 +9,7 @@ import Term, { randomized, subst } from '../utils/term';
 import { coloredHandleFrom, deltaHFrom, squareHash } from '../utils/termColor';
 import {
   airSquare,
+  Direction,
   GameMap,
   Square,
   squaresFromStage,
@@ -17,9 +18,12 @@ import {
 } from './play/gamemap';
 import mapRoot from './play/maps/root';
 
-type MainState = 'operating' | 'applyAnimating' | 'submitAnimating';
+type MainState =
+  | 'operating'
+  | 'applyAnimating'
+  | 'submitAnimating'
+  | 'clipboardAnimating';
 
-type Direction = 'right' | 'down' | 'left' | 'up';
 const menuElement = {
   close: 0,
   copy: 1,
@@ -100,16 +104,21 @@ function menuFromSquare(s: Square): MenuElement[] {
       menuElement.enter,
       menuElement.close
     ])
-    .with({ Atype: 'block' }, () => [
-      menuElement.new,
-      menuElement.paste,
-      menuElement.close
-    ])
+    .with({ Atype: 'block' }, () => [menuElement.paste, menuElement.close])
     .with({ Atype: P._ }, () => [
       menuElement.enter,
       menuElement.memo,
       menuElement.close
     ])
+    .exhaustive();
+}
+
+function rotationFromDirection(d: Direction) {
+  return match(d)
+    .with('right', () => 0)
+    .with('down', () => Math.PI / 2)
+    .with('left', () => Math.PI)
+    .with('up', () => (Math.PI * 3) / 2)
     .exhaustive();
 }
 
@@ -147,6 +156,10 @@ export default class Play extends Phaser.Scene {
   map: GameMap;
 
   currentMap: GameMap;
+
+  currentSquare: Square[];
+
+  modifiedTerm: Term[];
 
   playeri: number;
 
@@ -227,6 +240,8 @@ export default class Play extends Phaser.Scene {
     this.gMenuElements = [];
     this.map = new GameMap(mapRoot);
     this.currentMap = this.map; // ref
+    this.currentSquare = [];
+    this.modifiedTerm = [];
     this.playeri = this.currentMap.starti;
     this.playerj = this.currentMap.startj;
     this.focusi = this.currentMap.starti;
@@ -266,7 +281,7 @@ export default class Play extends Phaser.Scene {
     });
   }
 
-  updatePlayerImage() {
+  updatePlayerAndFocus() {
     this.focusi = this.playeri;
     this.focusj = this.playerj;
     this.focusnexti = this.playeri;
@@ -297,6 +312,14 @@ export default class Play extends Phaser.Scene {
     this.gImageFocus?.setY(fy + 8).setX(fx + 8);
   }
 
+  removeSquareImage(i: number, j: number) {
+    if (this.currentMap.squares[i][j].image) {
+      log(9, 'bu ');
+      this.currentMap.squares[i][j].image?.destroy();
+      this.currentMap.squares[i][j].image = undefined;
+    }
+  }
+
   addSquareImage(i: number, j: number) {
     const y = 16 * i;
     const x = 16 * j;
@@ -319,7 +342,7 @@ export default class Play extends Phaser.Scene {
     this.playeri = nexti;
     this.playerj = nextj;
     log(10, this.playeri, this.playerj);
-    this.updatePlayerImage();
+    this.updatePlayerAndFocus();
   }
 
   moveOn() {
@@ -348,7 +371,12 @@ export default class Play extends Phaser.Scene {
       this.focusnextj,
       front[0].collidable
     );
-    if (front[0].Atype === 'term' && front[1].Atype === 'term') {
+    if (
+      front[0].Atype === 'term' &&
+      front[0].movable &&
+      front[1].Atype === 'term' &&
+      front[1].movable
+    ) {
       log(10, 'apply');
       if (front[0].image) {
         front[0].image.destroy();
@@ -440,7 +468,8 @@ export default class Play extends Phaser.Scene {
     }
   }
 
-  moveToDirection(d: Direction, rotation: number) {
+  moveToDirection(d: Direction) {
+    const rotation = rotationFromDirection(d);
     if (this.playerDirection === d) {
       this.moveOn();
     } else {
@@ -448,7 +477,7 @@ export default class Play extends Phaser.Scene {
       if (this.gImagePlayer !== undefined) {
         this.gImagePlayer.rotation = rotation;
       }
-      this.updatePlayerImage();
+      this.updatePlayerAndFocus();
     }
   }
 
@@ -502,7 +531,7 @@ export default class Play extends Phaser.Scene {
         this.keepingPressingFrame % T === 0 &&
         this.keepingPressingFrame > T)
     ) {
-      this.moveToDirection('right', 0);
+      this.moveToDirection('right');
     }
     if (
       js ||
@@ -511,7 +540,7 @@ export default class Play extends Phaser.Scene {
         this.keepingPressingFrame % T === 0 &&
         this.keepingPressingFrame > T)
     ) {
-      this.moveToDirection('down', Math.PI / 2);
+      this.moveToDirection('down');
     }
     if (
       ja ||
@@ -520,7 +549,7 @@ export default class Play extends Phaser.Scene {
         this.keepingPressingFrame % T === 0 &&
         this.keepingPressingFrame > T)
     ) {
-      this.moveToDirection('left', Math.PI);
+      this.moveToDirection('left');
     }
     if (
       jw ||
@@ -529,7 +558,7 @@ export default class Play extends Phaser.Scene {
         this.keepingPressingFrame % T === 0 &&
         this.keepingPressingFrame > T)
     ) {
-      this.moveToDirection('up', (Math.PI * 3) / 2);
+      this.moveToDirection('up');
     }
   }
 
@@ -645,6 +674,84 @@ export default class Play extends Phaser.Scene {
   // eslint-disable-next-line class-methods-use-this
   execPaste() {}
 
+  leaveCheck() {
+    log(9, this.currentSquare);
+    return match(this.currentSquare.slice(-1)[0])
+      .with({ Atype: 'term', term: { Atype: 'lam' } }, () => {
+        this.removeSquareImage(2, 7);
+        if (this.currentMap.squares[2][7].Atype !== 'term') {
+          if (
+            this.currentMap.squares[2][1].Atype === 'term' &&
+            this.currentMap.squares[2][1].term.Atype === 'var'
+          ) {
+            this.currentMap.squares[2][7] = {
+              Atype: 'term',
+              term: {
+                Atype: 'var',
+                var: this.currentMap.squares[2][1].term.var
+              },
+              name: '',
+              movable: true,
+              collidable: true,
+              locked: false
+            };
+          }
+          this.addSquareImage(2, 7);
+          return false;
+        }
+        this.modifiedTerm = [this.currentMap.squares[2][7].term];
+        // clipboard check
+
+        return true;
+      })
+      .with({ Atype: 'term', term: { Atype: 'app' } }, () => {
+        if (this.currentMap.squares[2][1].Atype !== 'term') return false;
+        if (this.currentMap.squares[2][3].Atype !== 'term') return false;
+        this.modifiedTerm = [
+          this.currentMap.squares[2][1].term,
+          this.currentMap.squares[2][3].term
+        ];
+
+        return true;
+      })
+      .with(P._, () => {
+        this.modifiedTerm = [];
+        return true;
+      })
+      .exhaustive();
+  }
+
+  reflectModified() {
+    match(this.currentMap.squares[this.focusi][this.focusj])
+      .with({ Atype: 'term', term: { Atype: 'lam' } }, (focus) => {
+        if (this.modifiedTerm.length < 1) throw new Error('s');
+        this.removeSquareImage(this.focusi, this.focusj);
+        this.currentMap.squares[this.focusi][this.focusj] = {
+          ...focus,
+          term: {
+            ...focus.term,
+            ret: this.modifiedTerm[0]
+          }
+        };
+        this.addSquareImage(this.focusi, this.focusj);
+      })
+      .with({ Atype: 'term', term: { Atype: 'app' } }, (focus) => {
+        if (this.modifiedTerm.length < 2) throw new Error('s');
+        this.removeSquareImage(this.focusi, this.focusj);
+        this.currentMap.squares[this.focusi][this.focusj] = {
+          ...focus,
+          term: {
+            ...focus.term,
+            lam: this.modifiedTerm[0],
+            param: this.modifiedTerm[1]
+          }
+        };
+        this.addSquareImage(this.focusi, this.focusj);
+      })
+      .with(P._, () => {})
+      .exhaustive();
+  }
+
   execEnter() {
     const focus = this.currentMap.squares[this.focusi][this.focusj];
     let afterMap: GameMap;
@@ -653,13 +760,17 @@ export default class Play extends Phaser.Scene {
     } else if (focus.Atype === 'stage') {
       const st = squaresFromStage(focus.stage);
       log(10, st);
-      focus.map = new GameMap(squaresFromStage(focus.stage));
+      if (!focus.map) {
+        focus.map = new GameMap(squaresFromStage(focus.stage));
+      }
       afterMap = focus.map;
     } else if (
       focus.Atype === 'term' &&
       (focus.term.Atype === 'lam' || focus.term.Atype === 'app')
     ) {
-      focus.map = new GameMap(squaresFromTerm(focus.term));
+      if (!focus.map) {
+        focus.map = new GameMap(squaresFromTerm(focus.term));
+      }
       afterMap = focus.map;
     } else if (focus.Atype === 'block' && focus.block === 'parent') {
       if (this.currentMap.parentMap) {
@@ -667,6 +778,7 @@ export default class Play extends Phaser.Scene {
       } else {
         return;
       }
+      if (!this.leaveCheck()) return;
     } else {
       return;
     }
@@ -681,6 +793,16 @@ export default class Play extends Phaser.Scene {
         this.currentMap.squares[i][j].image = undefined;
       }
     }
+
+    this.currentMap.starti = this.playeri;
+    this.currentMap.startj = this.playerj;
+    this.currentMap.startd = this.playerDirection;
+
+    if (focus.Atype === 'block' && focus.block === 'parent') {
+      this.currentSquare.pop();
+    } else {
+      this.currentSquare.push(focus);
+    }
     this.currentMap = afterMap;
     {
       const H = globalThis.screenh - 31;
@@ -691,11 +813,12 @@ export default class Play extends Phaser.Scene {
       this.mapOriginx = W / 2 - w / 2;
     }
 
-    this.playerDirection = 'right';
-    if (this.gImagePlayer !== undefined) {
-      this.gImagePlayer.rotation = 0;
+    this.playerDirection = this.currentMap.startd;
+    if (this.gImagePlayer) {
+      this.gImagePlayer.rotation = rotationFromDirection(this.playerDirection);
     }
     this.moveToPosition(this.currentMap.starti, this.currentMap.startj);
+    this.reflectModified();
 
     // background
     {
@@ -730,6 +853,9 @@ export default class Play extends Phaser.Scene {
   // eslint-disable-next-line class-methods-use-this
   execNew() {
     const focus = this.currentMap.squares[this.focusi][this.focusj];
+    if (focus.Atype !== 'air') {
+      return;
+    }
     if (focus.image) {
       focus.image.destroy();
     }
