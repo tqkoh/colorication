@@ -110,7 +110,7 @@ export const termExample: Term = randomized({
   }
 });
 
-function freeValue(t: Term): string[] {
+export function freeValue(t: Term): string[] {
   return match(t)
     .with({ Atype: 'var' }, (v) => [v.var])
     .with({ Atype: 'app' }, (a) => [

@@ -5,7 +5,7 @@ import { match, P } from 'ts-pattern';
 import { isDown, justDown, keysFrom } from '../data/keyConfig';
 import { log } from '../utils/deb';
 import FontForPhaser from '../utils/fontForPhaser';
-import Term, { randomized, subst } from '../utils/term';
+import Term, { freeValue, randomized, subst } from '../utils/term';
 import { coloredHandleFrom, deltaHFrom, squareHash } from '../utils/termColor';
 import {
   airSquare,
@@ -78,25 +78,25 @@ function menuFromSquare(s: Square): MenuElement[] {
     .with({ locked: true }, () => [
       menuElement.copy,
       menuElement.delete,
-      menuElement.memo,
+      // menuElement.memo,
       menuElement.close
     ])
     .with({ Atype: 'term', term: { Atype: 'var' } }, () => [
       menuElement.copy,
       menuElement.delete,
-      menuElement.memo,
+      // menuElement.memo,
       menuElement.close
     ])
     .with({ Atype: 'term' }, () => [
       menuElement.enter,
       menuElement.copy,
       menuElement.delete,
-      menuElement.memo,
+      // menuElement.memo,
       menuElement.close
     ])
     .with({ Atype: 'block', block: 'parent' }, () => [
       menuElement.leave,
-      menuElement.memo,
+      // menuElement.memo,
       menuElement.close
     ])
     .with({ Atype: 'block', block: 'wall' }, () => [])
@@ -107,7 +107,7 @@ function menuFromSquare(s: Square): MenuElement[] {
     .with({ Atype: 'block' }, () => [menuElement.paste, menuElement.close])
     .with({ Atype: P._ }, () => [
       menuElement.enter,
-      menuElement.memo,
+      // menuElement.memo,
       menuElement.close
     ])
     .exhaustive();
@@ -159,6 +159,8 @@ export default class Play extends Phaser.Scene {
   currentMap: GameMap;
 
   currentSquare: Square[];
+
+  clipSquare: Square;
 
   modifiedTerm: Term[];
 
@@ -252,6 +254,7 @@ export default class Play extends Phaser.Scene {
     this.map = new GameMap(mapRoot);
     this.currentMap = this.map; // ref
     this.currentSquare = [];
+    this.clipSquare = airSquare();
     this.modifiedTerm = [];
     this.playeri = this.currentMap.starti;
     this.playerj = this.currentMap.startj;
@@ -695,11 +698,40 @@ export default class Play extends Phaser.Scene {
     if (this.gArrow) this.gArrow.visible = false;
   }
 
-  // eslint-disable-next-line class-methods-use-this
-  execCopy() {}
+  updateClipImage() {
+    this.clipSquare.image = this.add.image(
+      globalThis.screenw - 15,
+      15,
+      this.imageHandleFromSquare(this.clipSquare, 1, 1, 3, 3)
+    );
+  }
 
   // eslint-disable-next-line class-methods-use-this
-  execPaste() {}
+  execCopy() {
+    const focus = this.currentMap.squares[this.focusi][this.focusj];
+
+    if (this.clipSquare.image) this.clipSquare.image.destroy();
+    this.clipSquare = cloneDeep<Square>({
+      ...focus,
+      image: undefined
+    });
+    this.updateClipImage();
+    log(10, this.clipSquare);
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  execPaste() {
+    const focus = this.currentMap.squares[this.focusi][this.focusj];
+    if (focus.Atype !== 'air') {
+      return;
+    }
+    this.removeSquareImage(this.focusi, this.focusj);
+    this.currentMap.squares[this.focusi][this.focusj] = cloneDeep<Square>({
+      ...this.clipSquare,
+      image: undefined
+    });
+    this.addSquareImage(this.focusi, this.focusj);
+  }
 
   leaveCheck() {
     log(9, this.currentSquare);
@@ -726,8 +758,28 @@ export default class Play extends Phaser.Scene {
           }
           return false;
         }
+        if (this.currentMap.squares[2][7].Atype === 'term') {
+          // clipboard check
+          if (this.clipSquare.Atype === 'term') {
+            log(9, freeValue(this.clipSquare.term));
+          }
+          if (
+            this.clipSquare.Atype === 'term' &&
+            this.currentMap.squares[2][7].term.Atype === 'var' &&
+            freeValue(this.clipSquare.term).includes(
+              this.currentMap.squares[2][7].term.var
+            )
+          ) {
+            log(
+              9,
+              `detect life end: ${this.currentMap.squares[2][7].term.var}`
+            );
+            if (this.clipSquare.image) this.clipSquare.image.destroy();
+            this.clipSquare = airSquare();
+            this.updateClipImage();
+          }
+        }
         this.modifiedTerm = [this.currentMap.squares[2][1].term];
-        // clipboard check
 
         return true;
       })
@@ -955,7 +1007,11 @@ export default class Play extends Phaser.Scene {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  execDelete() {}
+  execDelete() {
+    this.removeSquareImage(this.focusi, this.focusj);
+    this.currentMap.squares[this.focusi][this.focusj] = airSquare();
+    this.addSquareImage(this.focusi, this.focusj);
+  }
 
   // eslint-disable-next-line class-methods-use-this
   execMemo() {}
@@ -1041,6 +1097,22 @@ export default class Play extends Phaser.Scene {
 
   handleMenuShortcut() {
     if (justDown(this.keys.Escape)) {
+      this.closeMenu();
+    }
+    if (justDown(this.keys.C)) {
+      this.execCopy();
+      this.closeMenu();
+    }
+    if (justDown(this.keys.Del)) {
+      this.execDelete();
+      this.closeMenu();
+    }
+    if (justDown(this.keys.E)) {
+      this.execNew();
+      this.closeMenu();
+    }
+    if (justDown(this.keys.V)) {
+      this.execPaste();
       this.closeMenu();
     }
   }
@@ -1221,6 +1293,8 @@ export default class Play extends Phaser.Scene {
       }
     }
     log(10, 0, this.currentMap);
+
+    this.updateClipImage();
 
     // player
     const py = this.mapOriginy + this.playeri * 16;

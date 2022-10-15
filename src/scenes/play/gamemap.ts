@@ -40,8 +40,6 @@ export type Square = (
   collidable: boolean;
   locked: boolean;
   image?: Phaser.GameObjects.Image;
-
-  testString?: string;
 };
 
 export class GameMap {
