@@ -722,11 +722,20 @@ export default class Play extends Phaser.Scene {
 
   // eslint-disable-next-line class-methods-use-this
   execCopy() {
+    if (
+      this.focusi < 0 ||
+      this.currentMap.h <= this.focusi ||
+      this.focusj < 0 ||
+      this.currentMap.w <= this.focusj
+    ) {
+      return;
+    }
     const focus = this.currentMap.squares[this.focusi][this.focusj];
 
     if (this.clipSquare.image) this.clipSquare.image.destroy();
     this.clipSquare = cloneDeep<Square>({
       ...focus,
+      movable: true,
       image: undefined
     });
     this.updateClipImage();
@@ -735,6 +744,14 @@ export default class Play extends Phaser.Scene {
 
   // eslint-disable-next-line class-methods-use-this
   execPaste() {
+    if (
+      this.focusi < 0 ||
+      this.currentMap.h <= this.focusi ||
+      this.focusj < 0 ||
+      this.currentMap.w <= this.focusj
+    ) {
+      return;
+    }
     const focus = this.currentMap.squares[this.focusi][this.focusj];
     if (focus.Atype !== 'air') {
       return;
@@ -921,6 +938,14 @@ export default class Play extends Phaser.Scene {
   }
 
   execEnter() {
+    if (
+      this.focusi < 0 ||
+      this.currentMap.h <= this.focusi ||
+      this.focusj < 0 ||
+      this.currentMap.w <= this.focusj
+    ) {
+      return;
+    }
     const focus = this.currentMap.squares[this.focusi][this.focusj];
     let afterMap: GameMap;
     if (focus.Atype === 'map') {
@@ -1022,6 +1047,14 @@ export default class Play extends Phaser.Scene {
 
   // eslint-disable-next-line class-methods-use-this
   execDelete() {
+    if (
+      this.focusi < 0 ||
+      this.currentMap.h <= this.focusi ||
+      this.focusj < 0 ||
+      this.currentMap.w <= this.focusj
+    ) {
+      return;
+    }
     this.removeSquareImage(this.focusi, this.focusj);
     this.currentMap.squares[this.focusi][this.focusj] = airSquare();
     this.addSquareImage(this.focusi, this.focusj);
@@ -1032,6 +1065,14 @@ export default class Play extends Phaser.Scene {
 
   // eslint-disable-next-line class-methods-use-this
   execNew() {
+    if (
+      this.focusi < 0 ||
+      this.currentMap.h <= this.focusi ||
+      this.focusj < 0 ||
+      this.currentMap.w <= this.focusj
+    ) {
+      return;
+    }
     const focus = this.currentMap.squares[this.focusi][this.focusj];
     if (focus.Atype !== 'air') {
       return;
