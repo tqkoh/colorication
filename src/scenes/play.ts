@@ -314,9 +314,10 @@ export default class Play extends Phaser.Scene {
 
   removeSquareImage(i: number, j: number) {
     if (this.currentMap.squares[i][j].image) {
-      log(9, 'bu ');
       this.currentMap.squares[i][j].image?.destroy();
       this.currentMap.squares[i][j].image = undefined;
+    } else {
+      log(9, 'bu');
     }
   }
 
@@ -423,6 +424,7 @@ export default class Play extends Phaser.Scene {
 
       this.currentMap.squares[this.focusnexti][this.focusnextj] = {
         ...front[1],
+        map: undefined,
         Atype: 'term',
         term: cloneDeep(this.substProgress[0])
       };
@@ -678,35 +680,70 @@ export default class Play extends Phaser.Scene {
     log(9, this.currentSquare);
     return match(this.currentSquare.slice(-1)[0])
       .with({ Atype: 'term', term: { Atype: 'lam' } }, () => {
-        this.removeSquareImage(2, 7);
-        if (this.currentMap.squares[2][7].Atype !== 'term') {
+        if (this.currentMap.squares[2][1].Atype !== 'term') {
           if (
-            this.currentMap.squares[2][1].Atype === 'term' &&
-            this.currentMap.squares[2][1].term.Atype === 'var'
+            this.currentMap.squares[2][7].Atype === 'term' &&
+            this.currentMap.squares[2][7].term.Atype === 'var'
           ) {
-            this.currentMap.squares[2][7] = {
+            this.removeSquareImage(2, 1);
+            this.currentMap.squares[2][1] = {
               Atype: 'term',
               term: {
                 Atype: 'var',
-                var: this.currentMap.squares[2][1].term.var
+                var: this.currentMap.squares[2][7].term.var
               },
               name: '',
               movable: true,
               collidable: true,
               locked: false
             };
+            this.addSquareImage(2, 1);
           }
-          this.addSquareImage(2, 7);
           return false;
         }
-        this.modifiedTerm = [this.currentMap.squares[2][7].term];
+        this.modifiedTerm = [this.currentMap.squares[2][1].term];
         // clipboard check
 
         return true;
       })
       .with({ Atype: 'term', term: { Atype: 'app' } }, () => {
-        if (this.currentMap.squares[2][1].Atype !== 'term') return false;
-        if (this.currentMap.squares[2][3].Atype !== 'term') return false;
+        let ok = true;
+        if (this.currentMap.squares[2][1].Atype !== 'term') {
+          this.removeSquareImage(2, 1);
+          this.currentMap.squares[2][1] = {
+            Atype: 'term',
+            term: randomized({
+              Atype: 'lam',
+              var: '0',
+              ret: { Atype: 'var', var: '0' }
+            }),
+            name: '',
+            movable: true,
+            collidable: true,
+            locked: false
+          };
+          this.addSquareImage(2, 1);
+          ok = false;
+        }
+        if (this.currentMap.squares[2][3].Atype !== 'term') {
+          this.removeSquareImage(2, 3);
+          this.currentMap.squares[2][3] = {
+            Atype: 'term',
+            term: randomized({
+              Atype: 'lam',
+              var: '0',
+              ret: { Atype: 'var', var: '0' }
+            }),
+            name: '',
+            movable: true,
+            collidable: true,
+            locked: false
+          };
+          this.addSquareImage(2, 3);
+          ok = false;
+        }
+        if (!ok) return false;
+
         this.modifiedTerm = [
           this.currentMap.squares[2][1].term,
           this.currentMap.squares[2][3].term
@@ -725,7 +762,6 @@ export default class Play extends Phaser.Scene {
     match(this.currentMap.squares[this.focusi][this.focusj])
       .with({ Atype: 'term', term: { Atype: 'lam' } }, (focus) => {
         if (this.modifiedTerm.length < 1) throw new Error('s');
-        this.removeSquareImage(this.focusi, this.focusj);
         this.currentMap.squares[this.focusi][this.focusj] = {
           ...focus,
           term: {
@@ -733,11 +769,9 @@ export default class Play extends Phaser.Scene {
             ret: this.modifiedTerm[0]
           }
         };
-        this.addSquareImage(this.focusi, this.focusj);
       })
       .with({ Atype: 'term', term: { Atype: 'app' } }, (focus) => {
         if (this.modifiedTerm.length < 2) throw new Error('s');
-        this.removeSquareImage(this.focusi, this.focusj);
         this.currentMap.squares[this.focusi][this.focusj] = {
           ...focus,
           term: {
@@ -746,7 +780,6 @@ export default class Play extends Phaser.Scene {
             param: this.modifiedTerm[1]
           }
         };
-        this.addSquareImage(this.focusi, this.focusj);
       })
       .with(P._, () => {})
       .exhaustive();

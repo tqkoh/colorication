@@ -264,21 +264,21 @@ function squaresFromLam(v: string, r: Term) {
 
   ret[2][1] = {
     Atype: 'term',
-    term: {
-      Atype: 'var',
-      var: v
-    },
+    term: r,
     name: '',
-    movable: false,
+    movable: true,
     collidable: true,
     locked: false
   };
 
   ret[2][7] = {
     Atype: 'term',
-    term: r,
+    term: {
+      Atype: 'var',
+      var: v
+    },
     name: '',
-    movable: true,
+    movable: false,
     collidable: true,
     locked: false
   };
