@@ -1,7 +1,10 @@
 import { cloneDeep } from 'lodash';
+import objectHash from 'object-hash';
 import { match, P } from 'ts-pattern';
 import { v4 as uuid } from 'uuid';
 import { log } from './deb';
+
+const MAX_SUBST = 20;
 
 type Term =
   | { Atype: 'var'; var: string }
@@ -258,6 +261,44 @@ export function subst(
   // console.log('a', after)
   // console.log('-----------return: ', ret)
   log(100, cloneDeep(ret), `} subst-${sid}`);
+  return ret;
+}
+
+export function equal(l: Term, r: Term): boolean {
+  // return eq(normalized(l), normalized(r));
+  const hashl = objectHash(l);
+  const hashr = objectHash(r);
+  return hashl === hashr;
+}
+
+export function completeSubst(acc: Term[]) {
+  let count = 0;
+  const hashAcc: string[] = [];
+  for (let i = 0; i < acc.length; i += 1) {
+    hashAcc.push(objectHash(acc[i]));
+  }
+
+  while (
+    count < MAX_SUBST &&
+    (hashAcc.length < 2 || hashAcc.slice(-1)[0] !== hashAcc.slice(-2)[0])
+  ) {
+    log(100, count, cloneDeep(acc));
+    const next = subst([acc.slice(-1)[0]]);
+    for (let i = 0; i < next.length; i += 1) {
+      acc.push(next[i]);
+      hashAcc.push(objectHash(next[i]));
+    }
+    count += 1;
+  }
+
+  const ret: Term[] = [];
+  for (let i = 0; i < acc.length - 1; i += 1) {
+    if (hashAcc[i] !== hashAcc[i + 1]) {
+      ret.push(acc[i]);
+    }
+  }
+  ret.push(acc.slice(-1)[0]);
+  log(100, count, cloneDeep(ret));
   return ret;
 }
 
