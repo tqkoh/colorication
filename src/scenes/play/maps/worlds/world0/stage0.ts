@@ -6,7 +6,7 @@ import { Stage } from '../../../gamemap';
 (locked) Lam 0 (Var 0)
 --
 (locked) Lam 0 (Var 0)
-(locked) Lam 1 (Lam 0 (Var 0))
+(locked) Lam 1 (Lam 0 (Var 0)
 (locked) Lam 2 (Lam 1 (Lam 0 (Var 0)))
 */
 

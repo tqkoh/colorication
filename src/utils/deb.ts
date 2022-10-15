@@ -7,6 +7,6 @@ export default function deb(...s: any[]) {
 
 export function log(level: number, ...s: any[]) {
   if (level <= import.meta.env.VITE_LOG_LEVEL) {
-    deb(s);
+    deb(level, ...s);
   }
 }

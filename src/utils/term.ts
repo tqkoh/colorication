@@ -110,7 +110,7 @@ export const termExample: Term = randomized({
   }
 });
 
-function freeValue(t: Term): string[] {
+export function freeValue(t: Term): string[] {
   return match(t)
     .with({ Atype: 'var' }, (v) => [v.var])
     .with({ Atype: 'app' }, (a) => [
@@ -134,7 +134,8 @@ export function subst(
     var: before
   }
 ): Term[] {
-  log(100, 'subst', cloneDeep(acc), before, after);
+  const sid = uuid();
+  log(100, `subst-${sid}: {`, cloneDeep(acc), before, after);
   const ret = match<[Term, Term], Term[]>([acc.slice(-1)[0], after])
     // app の場合、subst した後適用する。(lam の返り値の中の引数を、適用するものでさらに subst する)
     .with(
@@ -146,7 +147,22 @@ export function subst(
       ([ap]) => {
         log(100, 'subst', 0);
 
-        acc.push(subst([ap.lam.ret], ap.lam.var, ap.param).slice(-1)[0]);
+        log(100, 't1 motomemasu');
+        const t1 = subst([ap.lam.ret], ap.lam.var, ap.param);
+        log(100, 't1', t1);
+        // for (let i = 0; i < t1.length; i += 1) {
+        //   acc.push(t1[i]);
+        // }
+        acc.push(t1.slice(-1)[0]);
+        if (t1.slice(-1)[0].Atype === 'app') {
+          log(100, 't2 motomemasu');
+          const t2 = subst([t1.slice(-1)[0]]);
+          // for (let i = 1; i < t2.length; i += 1) {
+          //   acc.push(t2[i]);
+          // }
+          acc.push(t2.slice(-1)[0]);
+          log(100, 't2: ', t2);
+        }
         return acc;
       }
     )
@@ -155,18 +171,20 @@ export function subst(
 
       const substLam = subst([ap.lam], before, a).slice(-1)[0];
       const substParam = subst([ap.param], before, a).slice(-1)[0];
-      acc.push({
+      const app: Term = {
         Atype: 'app',
         lam: substLam,
         param: substParam
-      });
-      acc.push(
-        subst(
-          [subst([ap.lam.ret], before, a).slice(-1)[0]],
-          ap.lam.var,
-          substParam
-        ).slice(-1)[0]
-      );
+      };
+      acc.push(app);
+      acc.push(subst([app]).slice(-1)[0]);
+      // acc.push(
+      //   subst(
+      //     [subst([ap.lam.ret], before, a).slice(-1)[0]],
+      //     ap.lam.var,
+      //     substParam
+      //   ).slice(-1)[0]
+      // );
       return acc;
     })
     // App の lam が lam 以外のこともあるのでこれはいる
@@ -175,11 +193,13 @@ export function subst(
 
       const substLam = subst([ap.lam], before, a).slice(-1)[0];
       const substParam = subst([ap.param], before, a).slice(-1)[0];
-      acc.push({
+      const app: Term = {
         Atype: 'app',
         lam: substLam,
         param: substParam
-      });
+      };
+      acc.push(app);
+      // acc.push(subst([app]).slice(-1)[0]);
       return acc;
     })
     // Var
@@ -192,6 +212,9 @@ export function subst(
       log(100, 'subst', 4);
 
       if (va.var === before) acc.push(a);
+      if (a.Atype === 'app') {
+        acc.push(subst([a]).slice(-1)[0]);
+      }
       return acc;
     })
     .with([{ Atype: 'lam' }, P._], ([la, a]) => {
@@ -234,6 +257,7 @@ export function subst(
   // console.log('b', before)
   // console.log('a', after)
   // console.log('-----------return: ', ret)
+  log(100, cloneDeep(ret), `} subst-${sid}`);
   return ret;
 }
 

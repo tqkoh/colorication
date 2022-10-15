@@ -4,6 +4,8 @@ import Phaser from 'phaser';
 import { log } from '../../utils/deb';
 import Term from '../../utils/term';
 
+export type Direction = 'right' | 'down' | 'left' | 'up';
+
 export type Block =
   | 'start'
   | 'parent'
@@ -38,8 +40,6 @@ export type Square = (
   collidable: boolean;
   locked: boolean;
   image?: Phaser.GameObjects.Image;
-
-  testString?: string;
 };
 
 export class GameMap {
@@ -56,9 +56,12 @@ export class GameMap {
 
   startj: number;
 
+  startd: Direction;
+
   constructor(squares: Square[][]) {
     this.starti = -1;
     this.startj = -1;
+    this.startd = 'right';
     this.squares = squares;
     this.h = squares.length;
     this.w = this.h ? squares[0].length : 0;
@@ -239,7 +242,7 @@ export function squaresFromStage(s: Stage): Square[][] {
 
 function squaresFromLam(v: string, r: Term) {
   const h = 5;
-  const w = 11;
+  const w = 9;
   const ret: Square[][] = [];
   for (let i = 0; i < h; i += 1) {
     ret.push([]);
@@ -259,21 +262,21 @@ function squaresFromLam(v: string, r: Term) {
 
   ret[2][1] = {
     Atype: 'term',
+    term: r,
+    name: '',
+    movable: true,
+    collidable: true,
+    locked: false
+  };
+
+  ret[2][7] = {
+    Atype: 'term',
     term: {
       Atype: 'var',
       var: v
     },
     name: '',
     movable: false,
-    collidable: true,
-    locked: false
-  };
-
-  ret[2][9] = {
-    Atype: 'term',
-    term: r,
-    name: '',
-    movable: true,
     collidable: true,
     locked: false
   };
@@ -304,7 +307,7 @@ function squaresFromApp(l: Term, p: Term) {
     Atype: 'term',
     term: l,
     name: '',
-    movable: false,
+    movable: true,
     collidable: true,
     locked: false
   };
@@ -320,7 +323,7 @@ function squaresFromApp(l: Term, p: Term) {
     Atype: 'term',
     term: p,
     name: '',
-    movable: false,
+    movable: true,
     collidable: true,
     locked: false
   };
