@@ -22,10 +22,11 @@ const stage0: Stage = {
           var: '0',
           ret: { Atype: 'var', var: '0' }
         },
-        name: '',
+        name: [],
         movable: false,
         collidable: true,
-        locked: true
+        locked: true,
+        image: []
       }
     }
   ],
@@ -37,10 +38,11 @@ const stage0: Stage = {
         var: '0',
         ret: { Atype: 'var', var: '0' }
       }),
-      name: '',
+      name: [],
       movable: true,
       collidable: true,
-      locked: true
+      locked: true,
+      image: []
     },
     {
       Atype: 'term',
@@ -53,10 +55,11 @@ const stage0: Stage = {
           ret: { Atype: 'var', var: '0' }
         }
       }),
-      name: '',
+      name: [],
       movable: true,
       collidable: true,
-      locked: true
+      locked: true,
+      image: []
     },
     {
       Atype: 'term',
@@ -73,10 +76,11 @@ const stage0: Stage = {
           }
         }
       }),
-      name: '',
+      name: [],
       movable: true,
       collidable: true,
-      locked: true
+      locked: true,
+      image: []
     }
   ]
 };

@@ -1,7 +1,9 @@
 /* eslint-disable no-use-before-define */
 import * as lodash from 'lodash';
+import { cloneDeep } from 'lodash';
 import Phaser from 'phaser';
 import { log } from '../../utils/deb';
+import { codesFrom } from '../../utils/font';
 import Term from '../../utils/term';
 
 export type Direction = 'right' | 'down' | 'left' | 'up';
@@ -9,13 +11,16 @@ export type Direction = 'right' | 'down' | 'left' | 'up';
 export type Block =
   | 'start'
   | 'parent'
+  | 'return_title'
   | 'reset'
   | 'submit'
   | 'apply'
   | 'equal'
   | 'place'
   | 'down'
-  | 'wall';
+  | 'wall'
+  | 'lam_var'
+  | 'lam_ret';
 
 export type Test = {
   input: Square[];
@@ -35,11 +40,11 @@ export type Square = (
   | { Atype: 'stage'; stage: Stage; map?: GameMap }
   | { Atype: 'block'; block: Block }
 ) & {
-  name: string;
+  name: number[];
   movable: boolean;
   collidable: boolean;
   locked: boolean;
-  image?: Phaser.GameObjects.Image;
+  image: Phaser.GameObjects.Image[];
 };
 
 export class GameMap {
@@ -58,11 +63,17 @@ export class GameMap {
 
   startd: Direction;
 
-  constructor(squares: Square[][]) {
-    this.starti = -1;
-    this.startj = -1;
-    this.startd = 'right';
-    this.squares = squares;
+  constructor(squares: Square[][], from: GameMap | undefined = undefined) {
+    if (from) {
+      this.starti = from.starti;
+      this.startj = from.startj;
+      this.startd = from.startd;
+    } else {
+      this.starti = -1;
+      this.startj = -1;
+      this.startd = 'right';
+    }
+    this.squares = cloneDeep(squares);
     this.h = squares.length;
     this.w = this.h ? squares[0].length : 0;
     for (let i = 0; i < squares.length; i += 1) {
@@ -90,10 +101,11 @@ export class GameMap {
 
 export const airSquareI: Square = {
   Atype: 'air',
-  name: '',
+  name: [],
   movable: false,
   collidable: false,
-  locked: false
+  locked: false,
+  image: []
 };
 
 export function airSquare() {
@@ -103,10 +115,11 @@ export function airSquare() {
 export const parentSquareI: Square = {
   Atype: 'block',
   block: 'parent',
-  name: '..',
+  name: [],
   movable: false,
   collidable: true,
-  locked: false
+  locked: false,
+  image: []
 };
 
 export function parentSquare() {
@@ -116,10 +129,11 @@ export function parentSquare() {
 export const wallSquareI: Square = {
   Atype: 'block',
   block: 'wall',
-  name: '',
+  name: [],
   movable: false,
   collidable: true,
-  locked: true
+  locked: true,
+  image: []
 };
 
 export function wallSquare() {
@@ -129,10 +143,11 @@ export function wallSquare() {
 export const startSquareI: Square = {
   Atype: 'block',
   block: 'start',
-  name: '',
+  name: [],
   movable: false,
   collidable: false,
-  locked: false
+  locked: false,
+  image: []
 };
 
 export function startSquare() {
@@ -178,37 +193,41 @@ export function squaresFromStage(s: Stage): Square[][] {
   ret[0][0] = {
     Atype: 'block',
     block: 'parent',
-    name: '..',
+    name: [],
     movable: false,
     collidable: true,
-    locked: false
+    locked: false,
+    image: []
   };
   ret[0][1] = startSquare();
   for (let j = 0; j < w; j += 1) {
     ret[5][j] = {
       Atype: 'block',
       block: 'wall',
-      name: '',
+      name: [],
       movable: false,
       collidable: true,
-      locked: false
+      locked: false,
+      image: []
     };
   }
   ret[5][5] = {
     Atype: 'block',
     block: 'submit',
-    name: 'submit',
+    name: codesFrom('submit'),
     movable: false,
     collidable: true,
-    locked: false
+    locked: false,
+    image: []
   };
   ret[6][5] = {
     Atype: 'block',
     block: 'down',
-    name: '',
+    name: [],
     movable: false,
     collidable: false,
-    locked: false
+    locked: false,
+    image: []
   };
 
   for (let k = 0; k < s.terms.length; k += 1) {
@@ -223,18 +242,20 @@ export function squaresFromStage(s: Stage): Square[][] {
     ret[7 + k][4] = {
       Atype: 'block',
       block: 'equal',
-      name: '',
+      name: [],
       movable: false,
       collidable: false,
-      locked: false
+      locked: false,
+      image: []
     };
     ret[7 + k][5] = {
       Atype: 'block',
       block: 'place',
-      name: '',
+      name: [],
       movable: false,
       collidable: true,
-      locked: false
+      locked: false,
+      image: []
     };
   }
   return ret;
@@ -242,7 +263,7 @@ export function squaresFromStage(s: Stage): Square[][] {
 
 function squaresFromLam(v: string, r: Term) {
   const h = 5;
-  const w = 9;
+  const w = 7;
   const ret: Square[][] = [];
   for (let i = 0; i < h; i += 1) {
     ret.push([]);
@@ -253,32 +274,52 @@ function squaresFromLam(v: string, r: Term) {
   ret[0][0] = {
     Atype: 'block',
     block: 'parent',
-    name: '..',
+    name: [],
     movable: false,
     collidable: true,
-    locked: false
+    locked: false,
+    image: []
   };
   ret[0][1] = startSquare();
 
+  ret[2][0] = {
+    Atype: 'block',
+    block: 'lam_ret',
+    name: [],
+    movable: false,
+    collidable: false,
+    locked: false,
+    image: []
+  };
   ret[2][1] = {
     Atype: 'term',
     term: r,
-    name: '',
+    name: [],
     movable: true,
     collidable: true,
-    locked: false
+    locked: false,
+    image: []
   };
-
-  ret[2][7] = {
+  ret[2][5] = {
     Atype: 'term',
     term: {
       Atype: 'var',
       var: v
     },
-    name: '',
+    name: [],
     movable: false,
     collidable: true,
-    locked: false
+    locked: false,
+    image: []
+  };
+  ret[2][6] = {
+    Atype: 'block',
+    block: 'lam_var',
+    name: [],
+    movable: false,
+    collidable: false,
+    locked: false,
+    image: []
   };
 
   return ret;
@@ -286,7 +327,7 @@ function squaresFromLam(v: string, r: Term) {
 
 function squaresFromApp(l: Term, p: Term) {
   const h = 5;
-  const w = 5;
+  const w = 7;
   const ret: Square[][] = [];
   for (let i = 0; i < h; i += 1) {
     ret.push([]);
@@ -297,35 +338,39 @@ function squaresFromApp(l: Term, p: Term) {
   ret[0][0] = {
     Atype: 'block',
     block: 'parent',
-    name: '..',
+    name: [],
     movable: false,
     collidable: true,
-    locked: false
+    locked: false,
+    image: []
   };
   ret[0][1] = startSquare();
-  ret[2][1] = {
+  ret[2][2] = {
     Atype: 'term',
     term: l,
-    name: '',
+    name: [],
     movable: true,
     collidable: true,
-    locked: false
-  };
-  ret[2][2] = {
-    Atype: 'block',
-    block: 'apply',
-    name: '',
-    movable: false,
-    collidable: false,
-    locked: false
+    locked: false,
+    image: []
   };
   ret[2][3] = {
+    Atype: 'block',
+    block: 'apply',
+    name: [],
+    movable: false,
+    collidable: false,
+    locked: false,
+    image: []
+  };
+  ret[2][4] = {
     Atype: 'term',
     term: p,
-    name: '',
+    name: [],
     movable: true,
     collidable: true,
-    locked: false
+    locked: false,
+    image: []
   };
 
   return ret;
@@ -339,4 +384,34 @@ export function squaresFromTerm(t: Term): Square[][] {
     return squaresFromApp(t.lam, t.param);
   }
   throw new Error('var cant become map');
+}
+
+export function cloneSquare(s: Square, addMovable: boolean = true): Square {
+  if (s.Atype === 'air' || s.Atype === 'block') {
+    return {
+      ...s,
+      movable: addMovable,
+      image: []
+    };
+  }
+  if (!s.map) {
+    return {
+      ...s,
+      movable: addMovable,
+      image: []
+    };
+  }
+
+  log(10, s.map);
+  const newMap = new GameMap(
+    s.map.squares.map((col) => col.map((sq) => cloneSquare(sq, false))),
+    s.map
+  );
+  const ret: Square = {
+    ...s,
+    map: newMap,
+    movable: addMovable,
+    image: []
+  };
+  return ret;
 }

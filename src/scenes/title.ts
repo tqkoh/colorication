@@ -86,8 +86,23 @@ export default class Title extends Phaser.Scene {
     this.selected = menu.play;
   }
 
+  init() {
+    this.keys = {
+      enter: [],
+      up: [],
+      down: []
+    };
+    this.sTitleIntro.volume(BGM_VOLUME);
+    this.sTitleLoop.volume(BGM_VOLUME);
+    this.fading = false;
+    this.fadingStart = 0;
+
+    this.selected = menu.play;
+  }
+
   preload() {
     log(10, 'Title.preload');
+    this.init();
     this.cameras.main.setBackgroundColor(
       `rgba(${BLACK[0]},${BLACK[1]},${BLACK[2]},1)`
     );
@@ -126,9 +141,6 @@ export default class Title extends Phaser.Scene {
     );
 
     this.font = new FontForPhaser(this.textures, 'font', 10);
-    this.font.loadImageFrom('play', 'play', 2, ...BLACK);
-
-    this.add.image(100, 100, 'play');
   }
 
   update() {

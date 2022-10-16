@@ -1,26 +1,29 @@
-import Phaser from 'phaser'
+import Phaser from 'phaser';
 
 export interface KeyConfig {
-  Enter: number[]
-  Ctrl: number[]
-  Escape: number[]
-  W: number[]
-  A: number[]
-  S: number[]
-  D: number[]
-  N: number[]
-  E: number[]
-  C: number[]
-  V: number[]
-  F2: number[]
-  Del: number[]
+  Enter: number[];
+  Ctrl: number[];
+  Shift: number[];
+  Escape: number[];
+  W: number[];
+  A: number[];
+  S: number[];
+  D: number[];
+  N: number[];
+  E: number[];
+  C: number[];
+  V: number[];
+  Q: number[];
+  F2: number[];
+  Del: number[];
 }
 
-const k = Phaser.Input.Keyboard.KeyCodes
+const k = Phaser.Input.Keyboard.KeyCodes;
 
 export const defaultKeyConfig: KeyConfig = {
   Enter: [k.ENTER],
   Ctrl: [k.CTRL],
+  Shift: [k.SHIFT],
   Escape: [k.ESC],
   W: [k.W, k.UP],
   A: [k.A, k.LEFT],
@@ -30,15 +33,16 @@ export const defaultKeyConfig: KeyConfig = {
   E: [k.E],
   C: [k.C],
   V: [k.V],
+  Q: [k.Q],
   F2: [k.F2],
   Del: [k.DELETE]
-}
+};
 
 export function keysFrom(
   s: Phaser.Scene,
   keys: number[]
 ): Phaser.Input.Keyboard.Key[] {
-  return keys.map((key: number) => s.input.keyboard.addKey(key))
+  return keys.map((key: number) => s.input.keyboard.addKey(key));
 }
 
 export function justDown(keys: Phaser.Input.Keyboard.Key[]): boolean {
@@ -46,11 +50,11 @@ export function justDown(keys: Phaser.Input.Keyboard.Key[]): boolean {
     .map((key: Phaser.Input.Keyboard.Key) =>
       Phaser.Input.Keyboard.JustDown(key)
     )
-    .reduce((acc: boolean, e: boolean) => acc || e)
+    .reduce((acc: boolean, e: boolean) => acc || e);
 }
 
 export function isDown(keys: Phaser.Input.Keyboard.Key[]): boolean {
   return keys
     .map((key: Phaser.Input.Keyboard.Key) => key.isDown)
-    .reduce((acc: boolean, e: boolean) => acc || e)
+    .reduce((acc: boolean, e: boolean) => acc || e);
 }
