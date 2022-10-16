@@ -80,25 +80,29 @@ function menuFromSquare(s: Square): MenuElement[] {
       menuElement.paste,
       menuElement.close
     ])
+    .with({ movable: false, locked: true }, () => [
+      menuElement.copy,
+      // menuElement.memo,
+      menuElement.close
+    ])
     .with({ locked: true }, () => [
       menuElement.copy,
       menuElement.delete,
       // menuElement.memo,
       menuElement.close
     ])
-    .with({ Atype: 'term', term: { Atype: 'var' } }, () => [
-      menuElement.copy,
-      menuElement.delete,
-      // menuElement.memo,
-      menuElement.close
-    ])
-    .with({ Atype: 'term' }, () => [
-      menuElement.enter,
-      menuElement.copy,
-      menuElement.delete,
-      // menuElement.memo,
-      menuElement.close
-    ])
+    .with({ Atype: 'term', term: { Atype: 'var' } }, (sq) => {
+      const ret: MenuElement[] = [menuElement.copy];
+      if (sq.movable) ret.push(menuElement.delete);
+      ret.push(menuElement.close);
+      return ret;
+    })
+    .with({ Atype: 'term' }, (sq) => {
+      const ret: MenuElement[] = [menuElement.enter, menuElement.copy];
+      if (sq.movable) ret.push(menuElement.delete);
+      ret.push(menuElement.close);
+      return ret;
+    })
     .with({ Atype: 'block', block: 'parent' }, () => [
       menuElement.leave,
       // menuElement.memo,
@@ -513,6 +517,7 @@ export default class Play extends Phaser.Scene {
     if (current.term.Atype === 'lam') {
       if (i === 2 && j === 1 && this.gMapBackParent) {
         this.gMapBackParent.setAlpha(0.2);
+        this.gMapName?.setAlpha(0.3);
       }
     } else if (current.term.Atype === 'app') {
       if (i === 2 && j === 2 && this.gMapBackParent) {
@@ -1276,7 +1281,13 @@ export default class Play extends Phaser.Scene {
       }
       const t = this.textures.get(handle).getSourceImage();
       const w = t.width;
-      this.gMapName = this.add.image(3 + w / 2, 15, handle);
+      this.gMapName = this.add
+        .image(10 + w / 2, 15, handle)
+        .setAlpha(
+          afterLeave && this.currentSquare.slice(-1)[0].Atype === 'term'
+            ? 0.3
+            : 1
+        );
     }
     this.gMapBackAir = [];
     for (let i = 0; i < this.currentMap.h; i += 1) {
@@ -1313,6 +1324,10 @@ export default class Play extends Phaser.Scene {
     ) {
       return;
     }
+    if (!this.currentMap.squares[this.focusi][this.focusj].movable) {
+      return;
+    }
+    this.checkChangeBackParent(this.focusi, this.focusj);
     this.removeSquareImage(this.focusi, this.focusj);
     this.currentMap.squares[this.focusi][this.focusj] = airSquare();
     this.addSquareImage(this.focusi, this.focusj);
@@ -1335,6 +1350,9 @@ export default class Play extends Phaser.Scene {
     if (focus.Atype !== 'air') {
       return;
     }
+
+    this.checkChangeBackParent(this.focusi, this.focusj);
+
     for (let k = 0; k < focus.image.length; k += 1) {
       focus.image[k].destroy();
     }
