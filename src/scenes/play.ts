@@ -142,6 +142,8 @@ const ARROW_MERGIN_L = 2;
 const BLACK = [84, 75, 64];
 const WHITE = [250, 247, 240];
 const WHITE2 = [255, 239, 215];
+const SQUARE_NAME_COLOR = [100, 100, 100];
+const SQUARE_NAME_ALPHA = 150;
 const ANIMATION_APPLY_PER = 20;
 const MOVEMENT_CYCLE = 30;
 // const LONG_PRESS = 12;
@@ -431,7 +433,15 @@ export default class Play extends Phaser.Scene {
     const abst = s.name.length < 3 ? s.name : `${s.name[0]}.`;
     const handle = `name_${abst}`;
     if (!this.textures.exists(handle)) {
-      this.font?.loadImageFrom(codesFrom(abst), handle);
+      this.font?.loadImageFrom(
+        codesFrom(abst),
+        handle,
+        1,
+        SQUARE_NAME_COLOR[0],
+        SQUARE_NAME_COLOR[1],
+        SQUARE_NAME_COLOR[2],
+        SQUARE_NAME_ALPHA
+      );
     }
     s.image.push(
       this.add
@@ -459,12 +469,24 @@ export default class Play extends Phaser.Scene {
     );
 
     if (this.clipSquare.name !== '') {
-      const handle = `name_${this.clipSquare.name}`;
+      const abst =
+        this.clipSquare.name.length < 3
+          ? this.clipSquare.name
+          : `${this.clipSquare.name[0]}.`;
+      const handle = `name_${abst}`;
       if (!this.textures.exists(handle)) {
-        this.font?.loadImageFrom(codesFrom(this.clipSquare.name), handle);
+        this.font?.loadImageFrom(
+          codesFrom(abst),
+          handle,
+          1,
+          SQUARE_NAME_COLOR[0],
+          SQUARE_NAME_COLOR[1],
+          SQUARE_NAME_COLOR[2],
+          SQUARE_NAME_ALPHA
+        );
       }
       this.clipSquare.image.push(
-        this.add.image(globalThis.screenw - 15, 15, handle).setDepth(-9)
+        this.add.image(globalThis.screenw - 15, 15, handle).setDepth(1)
       );
     }
 
@@ -1589,17 +1611,27 @@ export default class Play extends Phaser.Scene {
             .setDepth(-10)
         );
 
-        const abst = s.name.length < 3 ? s.name : `${s.name[0]}.`;
-        const handle = `name_${abst}`;
-        if (!this.textures.exists(handle)) {
-          this.font?.loadImageFrom(codesFrom(abst), handle);
+        {
+          const abst = s.name.length < 3 ? s.name : `${s.name[0]}.`;
+          const handle = `name_${abst}`;
+          if (!this.textures.exists(handle)) {
+            this.font?.loadImageFrom(
+              codesFrom(abst),
+              handle,
+              1,
+              SQUARE_NAME_COLOR[0],
+              SQUARE_NAME_COLOR[1],
+              SQUARE_NAME_COLOR[2],
+              SQUARE_NAME_ALPHA
+            );
+          }
+          log(10, this.textures.exists(handle));
+          s.image.push(
+            this.add
+              .image(this.mapOriginx + x + 8, this.mapOriginy + y + 8, handle)
+              .setDepth(-9)
+          );
         }
-        log(10, this.textures.exists(handle));
-        s.image.push(
-          this.add
-            .image(this.mapOriginx + x + 8, this.mapOriginy + y + 8, handle)
-            .setDepth(-9)
-        );
 
         this.gMapBackAir[i].push(
           this.add.image(
@@ -1646,10 +1678,12 @@ export default class Play extends Phaser.Scene {
       Phaser.Display.Color.GetColor(BLACK[0], BLACK[1], BLACK[2]),
       255
     );
-    this.gMenuBackground.strokeRectShape(this.gMenuBackgroundShape).setDepth(5);
+    this.gMenuBackground
+      .strokeRectShape(this.gMenuBackgroundShape)
+      .setDepth(105);
     this.gMenuBackground.visible = false;
     this.gMenuBackground.clear();
-    this.gArrow = this.add.image(0, 0, 'arrow').setDepth(6);
+    this.gArrow = this.add.image(0, 0, 'arrow').setDepth(106);
     this.gArrow.visible = false;
 
     // eslint-disable-next-line no-restricted-syntax
@@ -1661,7 +1695,7 @@ export default class Play extends Phaser.Scene {
         ...BLACK
       );
       this.gMenuElements.push(
-        this.add.image(0, 0, menuElementIds[e]).setDepth(6)
+        this.add.image(0, 0, menuElementIds[e]).setDepth(106)
       );
     }
     // eslint-disable-next-line no-restricted-syntax
