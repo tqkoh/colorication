@@ -114,7 +114,7 @@ export function airSquare() {
 export const parentSquareI: Square = {
   Atype: 'block',
   block: 'parent',
-  name: '..',
+  name: '',
   movable: false,
   collidable: true,
   locked: false,
@@ -192,7 +192,7 @@ export function squaresFromStage(s: Stage): Square[][] {
   ret[0][0] = {
     Atype: 'block',
     block: 'parent',
-    name: '..',
+    name: '',
     movable: false,
     collidable: true,
     locked: false,
@@ -273,7 +273,7 @@ function squaresFromLam(v: string, r: Term) {
   ret[0][0] = {
     Atype: 'block',
     block: 'parent',
-    name: '..',
+    name: '',
     movable: false,
     collidable: true,
     locked: false,
@@ -337,7 +337,7 @@ function squaresFromApp(l: Term, p: Term) {
   ret[0][0] = {
     Atype: 'block',
     block: 'parent',
-    name: '..',
+    name: '',
     movable: false,
     collidable: true,
     locked: false,

@@ -4,9 +4,11 @@ import Phaser from 'phaser';
 import { match, P } from 'ts-pattern';
 import { isDown, justDown, keysFrom } from '../data/keyConfig';
 import { log } from '../utils/deb';
+import { codesFrom } from '../utils/font';
 import FontForPhaser from '../utils/fontForPhaser';
 import Term, { completeSubst, freeValue, randomized } from '../utils/term';
 import { coloredHandleFrom, deltaHFrom, squareHash } from '../utils/termColor';
+import { asString } from '../utils/termUtils';
 import {
   airSquare,
   cloneSquare,
@@ -220,6 +222,8 @@ export default class Play extends Phaser.Scene {
 
   gAnimationApply: Phaser.GameObjects.Image[];
 
+  gMapName: Phaser.GameObjects.Image | undefined;
+
   gMapBackTile: Phaser.GameObjects.TileSprite | undefined;
 
   gMapBackAir: Phaser.GameObjects.Image[][];
@@ -406,23 +410,36 @@ export default class Play extends Phaser.Scene {
   addSquareImage(i: number, j: number) {
     const y = 16 * i;
     const x = 16 * j;
-    this.currentMap.squares[i][j].image.push(
+    const s = this.currentMap.squares[i][j];
+    s.image.push(
       this.add
         .image(
           this.mapOriginx + x + 8,
           this.mapOriginy + y + 8,
           this.imageHandleFromSquare(
-            this.currentMap.squares[i][j],
+            s,
             i,
             j,
             this.currentMap.h,
             this.currentMap.w
           )
         )
+
         .setDepth(-10)
     );
-    if (this.currentMap.squares[i][j].locked) {
-      this.currentMap.squares[i][j].image.push(
+
+    const abst = s.name.length < 3 ? s.name : `${s.name[0]}.`;
+    const handle = `name_${abst}`;
+    if (!this.textures.exists(handle)) {
+      this.font?.loadImageFrom(codesFrom(abst), handle);
+    }
+    s.image.push(
+      this.add
+        .image(this.mapOriginx + x + 8, this.mapOriginy + y + 8, handle)
+        .setDepth(-9)
+    );
+    if (s.locked) {
+      s.image.push(
         this.add
           .image(this.mapOriginx + x + 1, this.mapOriginy + y, 'locked')
           .setDepth(100)
@@ -440,6 +457,16 @@ export default class Play extends Phaser.Scene {
         )
         .setDepth(0)
     );
+
+    if (this.clipSquare.name !== '') {
+      const handle = `name_${this.clipSquare.name}`;
+      if (!this.textures.exists(handle)) {
+        this.font?.loadImageFrom(codesFrom(this.clipSquare.name), handle);
+      }
+      this.clipSquare.image.push(
+        this.add.image(globalThis.screenw - 15, 15, handle).setDepth(-9)
+      );
+    }
 
     if (this.clipSquare.locked) {
       this.clipSquare.image.push(
@@ -602,6 +629,14 @@ export default class Play extends Phaser.Scene {
         const y = 16 * this.focusnexti;
         const x = 16 * this.focusnextj;
         front[1].image[1]
+          .setY(this.mapOriginy + y + 8)
+          .setX(this.mapOriginx + x + 8);
+      }
+      if (front[1].image.length > 2) {
+        // locked
+        const y = 16 * this.focusnexti;
+        const x = 16 * this.focusnextj;
+        front[1].image[2]
           .setY(this.mapOriginy + y)
           .setX(this.mapOriginx + x + 1);
       }
@@ -1116,6 +1151,8 @@ export default class Play extends Phaser.Scene {
     }
 
     // destroy previous map
+    this.gMapName?.destroy();
+
     for (let i = 0; i < this.currentMap.h; i += 1) {
       for (let j = 0; j < this.currentMap.w; j += 1) {
         for (
@@ -1205,6 +1242,20 @@ export default class Play extends Phaser.Scene {
     }
 
     // add next map
+
+    if (this.currentSquare.length) {
+      const handle = `mapname_${this.currentSquare.slice(-1)[0].name}`;
+      if (!this.textures.exists(handle)) {
+        this.font?.loadImageFrom(
+          codesFrom(this.currentSquare.slice(-1)[0].name),
+          handle,
+          1
+        );
+      }
+      const t = this.textures.get(handle).getSourceImage();
+      const w = t.width;
+      this.gMapName = this.add.image(3 + w / 2, 15, handle);
+    }
     this.gMapBackAir = [];
     for (let i = 0; i < this.currentMap.h; i += 1) {
       this.gMapBackAir.push([]);
@@ -1450,6 +1501,8 @@ export default class Play extends Phaser.Scene {
         if (s.Atype !== 'term') {
           return '';
         }
+        // eslint-disable-next-line no-param-reassign
+        s.name = asString(s.term);
         const hash: string = squareHash(s);
         const handle = coloredHandleFrom(s.term, hash);
         log(10, handle);
@@ -1463,6 +1516,8 @@ export default class Play extends Phaser.Scene {
   }
 
   initDrawing() {
+    this.font = new FontForPhaser(this.textures, 'font', 10);
+
     // background
     {
       let y = 31;
@@ -1517,13 +1572,14 @@ export default class Play extends Phaser.Scene {
       for (let j = 0; j < this.currentMap.w; j += 1) {
         const y = 16 * i;
         const x = 16 * j;
-        this.currentMap.squares[i][j].image.push(
+        const s = this.currentMap.squares[i][j];
+        s.image.push(
           this.add
             .image(
               this.mapOriginx + x + 8,
               this.mapOriginy + y + 8,
               this.imageHandleFromSquare(
-                this.currentMap.squares[i][j],
+                s,
                 i,
                 j,
                 this.currentMap.h,
@@ -1531,6 +1587,18 @@ export default class Play extends Phaser.Scene {
               )
             )
             .setDepth(-10)
+        );
+
+        const abst = s.name.length < 3 ? s.name : `${s.name[0]}.`;
+        const handle = `name_${abst}`;
+        if (!this.textures.exists(handle)) {
+          this.font?.loadImageFrom(codesFrom(abst), handle);
+        }
+        log(10, this.textures.exists(handle));
+        s.image.push(
+          this.add
+            .image(this.mapOriginx + x + 8, this.mapOriginy + y + 8, handle)
+            .setDepth(-9)
         );
 
         this.gMapBackAir[i].push(
@@ -1584,12 +1652,10 @@ export default class Play extends Phaser.Scene {
     this.gArrow = this.add.image(0, 0, 'arrow').setDepth(6);
     this.gArrow.visible = false;
 
-    this.font = new FontForPhaser(this.textures, 'font', 10);
-    // font: FontForPhase
     // eslint-disable-next-line no-restricted-syntax
     for (const e of menuElementList) {
       this.font.loadImageFrom(
-        menuElementMessages[e],
+        codesFrom(menuElementMessages[e]),
         menuElementIds[e],
         1,
         ...BLACK

@@ -4,7 +4,7 @@ import mapWorld0 from './worlds/world0';
 const wo0: Square = {
   Atype: 'map',
   map: new GameMap(mapWorld0),
-  name: '0. welcome',
+  name: 'w0',
   movable: false,
   collidable: true,
   locked: false,

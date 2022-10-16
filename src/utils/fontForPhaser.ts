@@ -3,8 +3,10 @@ import { v4 as uuid } from 'uuid';
 import { log } from './deb';
 import Font from './font';
 
+const BLACK = [84, 75, 64];
+
 class FontForPhaser extends Font {
-  textures: Phaser.Textures.TextureManager;
+  textures: Phaser.Textures.TextureManager; // ref
 
   constructor(
     textures: Phaser.Textures.TextureManager,
@@ -24,16 +26,16 @@ class FontForPhaser extends Font {
       }
     }
     super(h, w, fImage, offset);
-    this.textures = textures;
+    this.textures = textures; // ref
   }
 
   loadImageFrom(
-    from: string,
+    from: number[],
     handle: string = uuid(),
     scale: number = 1,
-    r: number = 0,
-    g: number = 0,
-    b: number = 0,
+    r: number = BLACK[0],
+    g: number = BLACK[1],
+    b: number = BLACK[2],
     a: number = 255
   ) {
     if (this.textures.exists(handle)) {
@@ -64,6 +66,7 @@ class FontForPhaser extends Font {
 
       context.putImageData(pixels, 0, 0);
       newTexture.refresh();
+      log(10, this.textures.exists(handle));
     } else {
       throw new Error('bu');
     }
