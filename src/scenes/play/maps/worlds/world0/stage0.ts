@@ -25,7 +25,8 @@ const stage0: Stage = {
         name: '',
         movable: false,
         collidable: true,
-        locked: true
+        locked: true,
+        image: []
       }
     }
   ],
@@ -40,7 +41,8 @@ const stage0: Stage = {
       name: '',
       movable: true,
       collidable: true,
-      locked: true
+      locked: true,
+      image: []
     },
     {
       Atype: 'term',
@@ -56,7 +58,8 @@ const stage0: Stage = {
       name: '',
       movable: true,
       collidable: true,
-      locked: true
+      locked: true,
+      image: []
     },
     {
       Atype: 'term',
@@ -76,7 +79,8 @@ const stage0: Stage = {
       name: '',
       movable: true,
       collidable: true,
-      locked: true
+      locked: true,
+      image: []
     }
   ]
 };

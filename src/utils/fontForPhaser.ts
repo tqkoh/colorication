@@ -36,6 +36,9 @@ class FontForPhaser extends Font {
     b: number = 0,
     a: number = 255
   ) {
+    if (this.textures.exists(handle)) {
+      return;
+    }
     log(10, scale);
     const image = this.getImage(from, scale);
     if (image.length) {

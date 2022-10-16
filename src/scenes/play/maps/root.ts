@@ -7,11 +7,21 @@ const wo0: Square = {
   name: '0. welcome',
   movable: false,
   collidable: true,
-  locked: false
+  locked: false,
+  image: []
+};
+const rtt: Square = {
+  Atype: 'block',
+  block: 'return_title',
+  name: '',
+  movable: true,
+  collidable: true,
+  locked: false,
+  image: []
 };
 
 const mapRoot: Square[][] = [
-  [s(), a(), a(), a(), a(), a(), a(), a(), a(), a(), a()],
+  [rtt, s(), a(), a(), a(), a(), a(), a(), a(), a(), a()],
   [a(), a(), a(), a(), a(), a(), a(), a(), a(), a(), a()],
   [a(), wo0, a(), a(), a(), a(), a(), a(), a(), a(), a()],
   [a(), a(), a(), a(), a(), a(), a(), a(), a(), a(), a()],

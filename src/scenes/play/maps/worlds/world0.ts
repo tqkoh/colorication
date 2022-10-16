@@ -12,7 +12,8 @@ const st0: Square = {
   name: stage0.name,
   movable: false,
   collidable: true,
-  locked: false
+  locked: false,
+  image: []
 };
 
 const mapWorld0: Square[][] = [

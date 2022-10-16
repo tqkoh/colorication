@@ -1,5 +1,6 @@
 /* eslint-disable no-use-before-define */
 import * as lodash from 'lodash';
+import { cloneDeep } from 'lodash';
 import Phaser from 'phaser';
 import { log } from '../../utils/deb';
 import Term from '../../utils/term';
@@ -9,6 +10,7 @@ export type Direction = 'right' | 'down' | 'left' | 'up';
 export type Block =
   | 'start'
   | 'parent'
+  | 'return_title'
   | 'reset'
   | 'submit'
   | 'apply'
@@ -41,7 +43,7 @@ export type Square = (
   movable: boolean;
   collidable: boolean;
   locked: boolean;
-  image?: Phaser.GameObjects.Image;
+  image: Phaser.GameObjects.Image[];
 };
 
 export class GameMap {
@@ -64,7 +66,7 @@ export class GameMap {
     this.starti = -1;
     this.startj = -1;
     this.startd = 'right';
-    this.squares = squares;
+    this.squares = cloneDeep(squares);
     this.h = squares.length;
     this.w = this.h ? squares[0].length : 0;
     for (let i = 0; i < squares.length; i += 1) {
@@ -95,7 +97,8 @@ export const airSquareI: Square = {
   name: '',
   movable: false,
   collidable: false,
-  locked: false
+  locked: false,
+  image: []
 };
 
 export function airSquare() {
@@ -108,7 +111,8 @@ export const parentSquareI: Square = {
   name: '..',
   movable: false,
   collidable: true,
-  locked: false
+  locked: false,
+  image: []
 };
 
 export function parentSquare() {
@@ -121,7 +125,8 @@ export const wallSquareI: Square = {
   name: '',
   movable: false,
   collidable: true,
-  locked: true
+  locked: true,
+  image: []
 };
 
 export function wallSquare() {
@@ -134,7 +139,8 @@ export const startSquareI: Square = {
   name: '',
   movable: false,
   collidable: false,
-  locked: false
+  locked: false,
+  image: []
 };
 
 export function startSquare() {
@@ -183,7 +189,8 @@ export function squaresFromStage(s: Stage): Square[][] {
     name: '..',
     movable: false,
     collidable: true,
-    locked: false
+    locked: false,
+    image: []
   };
   ret[0][1] = startSquare();
   for (let j = 0; j < w; j += 1) {
@@ -193,7 +200,8 @@ export function squaresFromStage(s: Stage): Square[][] {
       name: '',
       movable: false,
       collidable: true,
-      locked: false
+      locked: false,
+      image: []
     };
   }
   ret[5][5] = {
@@ -202,7 +210,8 @@ export function squaresFromStage(s: Stage): Square[][] {
     name: 'submit',
     movable: false,
     collidable: true,
-    locked: false
+    locked: false,
+    image: []
   };
   ret[6][5] = {
     Atype: 'block',
@@ -210,7 +219,8 @@ export function squaresFromStage(s: Stage): Square[][] {
     name: '',
     movable: false,
     collidable: false,
-    locked: false
+    locked: false,
+    image: []
   };
 
   for (let k = 0; k < s.terms.length; k += 1) {
@@ -228,7 +238,8 @@ export function squaresFromStage(s: Stage): Square[][] {
       name: '',
       movable: false,
       collidable: false,
-      locked: false
+      locked: false,
+      image: []
     };
     ret[7 + k][5] = {
       Atype: 'block',
@@ -236,7 +247,8 @@ export function squaresFromStage(s: Stage): Square[][] {
       name: '',
       movable: false,
       collidable: true,
-      locked: false
+      locked: false,
+      image: []
     };
   }
   return ret;
@@ -258,7 +270,8 @@ function squaresFromLam(v: string, r: Term) {
     name: '..',
     movable: false,
     collidable: true,
-    locked: false
+    locked: false,
+    image: []
   };
   ret[0][1] = startSquare();
 
@@ -268,7 +281,8 @@ function squaresFromLam(v: string, r: Term) {
     name: '',
     movable: false,
     collidable: false,
-    locked: false
+    locked: false,
+    image: []
   };
   ret[2][1] = {
     Atype: 'term',
@@ -276,7 +290,8 @@ function squaresFromLam(v: string, r: Term) {
     name: '',
     movable: true,
     collidable: true,
-    locked: false
+    locked: false,
+    image: []
   };
   ret[2][5] = {
     Atype: 'term',
@@ -287,7 +302,8 @@ function squaresFromLam(v: string, r: Term) {
     name: '',
     movable: false,
     collidable: true,
-    locked: false
+    locked: false,
+    image: []
   };
   ret[2][6] = {
     Atype: 'block',
@@ -295,7 +311,8 @@ function squaresFromLam(v: string, r: Term) {
     name: '',
     movable: false,
     collidable: false,
-    locked: false
+    locked: false,
+    image: []
   };
 
   return ret;
@@ -317,7 +334,8 @@ function squaresFromApp(l: Term, p: Term) {
     name: '..',
     movable: false,
     collidable: true,
-    locked: false
+    locked: false,
+    image: []
   };
   ret[0][1] = startSquare();
   ret[2][2] = {
@@ -326,7 +344,8 @@ function squaresFromApp(l: Term, p: Term) {
     name: '',
     movable: true,
     collidable: true,
-    locked: false
+    locked: false,
+    image: []
   };
   ret[2][3] = {
     Atype: 'block',
@@ -334,7 +353,8 @@ function squaresFromApp(l: Term, p: Term) {
     name: '',
     movable: false,
     collidable: false,
-    locked: false
+    locked: false,
+    image: []
   };
   ret[2][4] = {
     Atype: 'term',
@@ -342,7 +362,8 @@ function squaresFromApp(l: Term, p: Term) {
     name: '',
     movable: true,
     collidable: true,
-    locked: false
+    locked: false,
+    image: []
   };
 
   return ret;

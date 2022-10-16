@@ -101,6 +101,11 @@ function menuFromSquare(s: Square): MenuElement[] {
       // menuElement.memo,
       menuElement.close
     ])
+    .with({ Atype: 'block', block: 'return_title' }, () => [
+      menuElement.leave,
+      // menuElement.memo,
+      menuElement.close
+    ])
     .with({ Atype: 'block', block: 'wall' }, () => [])
     .with({ Atype: 'block', block: 'submit' }, () => [
       menuElement.enter,
@@ -302,6 +307,60 @@ export default class Play extends Phaser.Scene {
     });
   }
 
+  init() {
+    this.keys = {
+      Enter: [],
+      Ctrl: [],
+      Escape: [],
+      W: [],
+      A: [],
+      S: [],
+      D: [],
+      N: [],
+      E: [],
+      C: [],
+      V: [],
+      F2: [],
+      Del: []
+    };
+    this.mainState = 'operating';
+    this.gMenuElements = [];
+    // this.map = new GameMap(mapRoot);
+    // this.currentMap = this.map; // ref
+    this.currentSquare = [];
+    this.clipSquare = airSquare();
+    this.modifiedTerm = [];
+    // this.playeri = this.currentMap.starti;
+    // this.playerj = this.currentMap.startj;
+    // this.focusi = this.currentMap.starti;
+    // this.focusj = this.currentMap.startj;
+    // this.focusnexti = this.currentMap.starti;
+    // this.focusnextj = this.currentMap.startj;
+    // this.playerDirection = 'right';
+    // this.afterTurn = 0;
+    // this.focusj += 1;
+    // this.focusnextj += 2;
+    this.menuDisplaying = false;
+    this.menu = [];
+    this.menuY = 0;
+    this.menuX = 0;
+    this.selected = 0;
+    this.substProgress = [];
+    this.gAnimationApply = [];
+    this.gMapBackAir = [];
+    this.animationApplyFrame = 0;
+
+    // const H = globalThis.screenh - 31;
+    // const W = globalThis.screenw;
+    // const h = this.currentMap.h * 16;
+    // const w = this.currentMap.w * 16;
+    // this.mapOriginy = 31 + H / 2 - h / 2;
+    // this.mapOriginx = W / 2 - w / 2;
+
+    this.keepingPressingFrame = 0;
+    this.lastPressedMovementKey = '';
+  }
+
   updatePlayerAndFocus() {
     this.focusi = this.playeri;
     this.focusj = this.playerj;
@@ -334,30 +393,57 @@ export default class Play extends Phaser.Scene {
   }
 
   removeSquareImage(i: number, j: number) {
-    if (this.currentMap.squares[i][j].image) {
-      this.currentMap.squares[i][j].image?.destroy();
-      this.currentMap.squares[i][j].image = undefined;
-    } else {
-      log(9, 'bu');
+    for (let k = 0; k < this.currentMap.squares[i][j].image.length; k += 1) {
+      this.currentMap.squares[i][j].image[k].destroy();
     }
+    this.currentMap.squares[i][j].image = [];
   }
 
   addSquareImage(i: number, j: number) {
     const y = 16 * i;
     const x = 16 * j;
-    this.currentMap.squares[i][j].image = this.add
-      .image(
-        this.mapOriginx + x + 8,
-        this.mapOriginy + y + 8,
-        this.imageHandleFromSquare(
-          this.currentMap.squares[i][j],
-          i,
-          j,
-          this.currentMap.h,
-          this.currentMap.w
+    this.currentMap.squares[i][j].image.push(
+      this.add
+        .image(
+          this.mapOriginx + x + 8,
+          this.mapOriginy + y + 8,
+          this.imageHandleFromSquare(
+            this.currentMap.squares[i][j],
+            i,
+            j,
+            this.currentMap.h,
+            this.currentMap.w
+          )
         )
-      )
-      .setDepth(-10);
+        .setDepth(-10)
+    );
+    if (this.currentMap.squares[i][j].locked) {
+      this.currentMap.squares[i][j].image.push(
+        this.add
+          .image(this.mapOriginx + x + 1, this.mapOriginy + y, 'locked')
+          .setDepth(100)
+      );
+    }
+  }
+
+  updateClipImage() {
+    this.clipSquare.image.push(
+      this.add
+        .image(
+          globalThis.screenw - 15,
+          15,
+          this.imageHandleFromSquare(this.clipSquare, 1, 1, 3, 3)
+        )
+        .setDepth(0)
+    );
+
+    if (this.clipSquare.locked) {
+      this.clipSquare.image.push(
+        this.add
+          .image(globalThis.screenw - 15 - 8 + 1, 15 - 8, 'locked')
+          .setDepth(100)
+      );
+    }
   }
 
   moveToPosition(nexti: number, nextj: number) {
@@ -400,12 +486,15 @@ export default class Play extends Phaser.Scene {
       front[1].movable
     ) {
       log(10, 'apply');
-      if (front[0].image) {
-        front[0].image.destroy();
+      for (let k = 0; k < front[0].image.length; k += 1) {
+        front[0].image[k].destroy();
       }
-      if (front[1].image) {
-        front[1].image.destroy();
+      front[0].image = [];
+
+      for (let k = 0; k < front[1].image.length; k += 1) {
+        front[1].image[k].destroy();
       }
+      front[1].image = [];
 
       const app: Term = {
         Atype: 'app',
@@ -431,7 +520,8 @@ export default class Play extends Phaser.Scene {
                   name: '',
                   movable: false,
                   locked: false,
-                  collidable: false
+                  collidable: false,
+                  image: []
                 },
                 this.focusnexti,
                 this.focusnextj,
@@ -463,21 +553,29 @@ export default class Play extends Phaser.Scene {
       this.mainState = 'applyAnimating';
     } else if (front[0].movable && front[1].Atype === 'air') {
       log(10, 'moveblock');
-      if (front[1].image) {
-        front[1].image.destroy();
+      for (let k = 0; k < front[1].image.length; k += 1) {
+        front[1].image[k].destroy();
       }
+      front[1].image = [];
       this.currentMap.squares[this.focusi][this.focusj] = airSquare();
       [this.currentMap.squares[this.focusnexti][this.focusnextj]] = front;
       front[0] = this.currentMap.squares[this.focusi][this.focusj];
       front[1] = this.currentMap.squares[this.focusnexti][this.focusnextj];
 
       this.addSquareImage(this.focusi, this.focusj);
-      if (front[1].image) {
+      if (front[1].image.length > 0) {
         const y = 16 * this.focusnexti;
         const x = 16 * this.focusnextj;
-        front[1].image
+        front[1].image[0]
           .setY(this.mapOriginy + y + 8)
           .setX(this.mapOriginx + x + 8);
+      }
+      if (front[1].image.length > 1) {
+        const y = 16 * this.focusnexti;
+        const x = 16 * this.focusnextj;
+        front[1].image[1]
+          .setY(this.mapOriginy + y)
+          .setX(this.mapOriginx + x + 1);
       }
 
       this.moveToPosition(this.focusi, this.focusj);
@@ -714,14 +812,6 @@ export default class Play extends Phaser.Scene {
     if (this.gArrow) this.gArrow.visible = false;
   }
 
-  updateClipImage() {
-    this.clipSquare.image = this.add.image(
-      globalThis.screenw - 15,
-      15,
-      this.imageHandleFromSquare(this.clipSquare, 1, 1, 3, 3)
-    );
-  }
-
   // eslint-disable-next-line class-methods-use-this
   execCopy() {
     if (
@@ -734,11 +824,13 @@ export default class Play extends Phaser.Scene {
     }
     const focus = this.currentMap.squares[this.focusi][this.focusj];
 
-    if (this.clipSquare.image) this.clipSquare.image.destroy();
+    for (let k = 0; k < this.clipSquare.image.length; k += 1) {
+      this.clipSquare.image[k].destroy();
+    }
     this.clipSquare = cloneDeep<Square>({
       ...focus,
       movable: true,
-      image: undefined
+      image: []
     });
     this.updateClipImage();
     log(10, this.clipSquare);
@@ -761,7 +853,7 @@ export default class Play extends Phaser.Scene {
     this.removeSquareImage(this.focusi, this.focusj);
     this.currentMap.squares[this.focusi][this.focusj] = cloneDeep<Square>({
       ...this.clipSquare,
-      image: undefined
+      image: []
     });
     this.addSquareImage(this.focusi, this.focusj);
   }
@@ -785,7 +877,8 @@ export default class Play extends Phaser.Scene {
               name: '',
               movable: true,
               collidable: true,
-              locked: false
+              locked: false,
+              image: []
             };
             this.addSquareImage(2, 1);
           }
@@ -807,7 +900,11 @@ export default class Play extends Phaser.Scene {
               9,
               `detect life end: ${this.currentMap.squares[2][5].term.var}`
             );
-            if (this.clipSquare.image) this.clipSquare.image.destroy();
+
+            for (let k = 0; k < this.clipSquare.image.length; k += 1) {
+              this.clipSquare.image[k].destroy();
+            }
+
             this.clipSquare = airSquare();
             this.updateClipImage();
           }
@@ -830,7 +927,8 @@ export default class Play extends Phaser.Scene {
             name: '',
             movable: true,
             collidable: true,
-            locked: false
+            locked: false,
+            image: []
           };
           this.addSquareImage(2, 2);
           ok = false;
@@ -847,7 +945,8 @@ export default class Play extends Phaser.Scene {
             name: '',
             movable: true,
             collidable: true,
-            locked: false
+            locked: false,
+            image: []
           };
           this.addSquareImage(2, 4);
           ok = false;
@@ -913,7 +1012,8 @@ export default class Play extends Phaser.Scene {
                     name: '',
                     movable: false,
                     locked: false,
-                    collidable: false
+                    collidable: false,
+                    image: []
                   },
                   this.focusi,
                   this.focusj,
@@ -950,6 +1050,10 @@ export default class Play extends Phaser.Scene {
     }
     const focus = this.currentMap.squares[this.focusi][this.focusj];
     let afterMap: GameMap;
+    if (focus.Atype === 'block' && focus.block === 'return_title') {
+      this.scene.start('title');
+      return;
+    }
     if (focus.Atype === 'map') {
       afterMap = focus.map;
     } else if (focus.Atype === 'stage') {
@@ -984,7 +1088,14 @@ export default class Play extends Phaser.Scene {
     // destroy previous map
     for (let i = 0; i < this.currentMap.h; i += 1) {
       for (let j = 0; j < this.currentMap.w; j += 1) {
-        this.currentMap.squares[i][j].image?.destroy();
+        for (
+          let k = 0;
+          k < this.currentMap.squares[i][j].image.length;
+          k += 1
+        ) {
+          this.currentMap.squares[i][j].image[k].destroy();
+        }
+        this.currentMap.squares[i][j].image = [];
         this.gMapBackAir[i][j]?.destroy();
       }
     }
@@ -1120,9 +1231,10 @@ export default class Play extends Phaser.Scene {
     if (focus.Atype !== 'air') {
       return;
     }
-    if (focus.image) {
-      focus.image.destroy();
+    for (let k = 0; k < focus.image.length; k += 1) {
+      focus.image[k].destroy();
     }
+    focus.image = [];
     const newSquare: Square = {
       Atype: 'term',
       term: randomized({
@@ -1133,7 +1245,8 @@ export default class Play extends Phaser.Scene {
       name: '',
       movable: true,
       collidable: true,
-      locked: false
+      locked: false,
+      image: []
     };
     this.currentMap.squares[this.focusi][this.focusj] = newSquare;
     this.addSquareImage(this.focusi, this.focusj);
@@ -1300,6 +1413,7 @@ export default class Play extends Phaser.Scene {
       .with({ Atype: 'block', block: 'lam_var' }, () => 'lam_var')
       .with({ Atype: 'block', block: 'lam_ret' }, () => 'lam_ret')
       .with({ Atype: 'block', block: 'parent' }, () => 'parent')
+      .with({ Atype: 'block', block: 'return_title' }, () => 'parent')
       .with({ Atype: 'block' }, () => 'lam')
       .with({ Atype: 'term' }, () => {
         if (s.Atype !== 'term') {
@@ -1372,18 +1486,21 @@ export default class Play extends Phaser.Scene {
       for (let j = 0; j < this.currentMap.w; j += 1) {
         const y = 16 * i;
         const x = 16 * j;
-        this.currentMap.squares[i][j].image = this.add.image(
-          this.mapOriginx + x + 8,
-          this.mapOriginy + y + 8,
-          this.imageHandleFromSquare(
-            this.currentMap.squares[i][j],
-            i,
-            j,
-            this.currentMap.h,
-            this.currentMap.w
-          )
+        this.currentMap.squares[i][j].image.push(
+          this.add
+            .image(
+              this.mapOriginx + x + 8,
+              this.mapOriginy + y + 8,
+              this.imageHandleFromSquare(
+                this.currentMap.squares[i][j],
+                i,
+                j,
+                this.currentMap.h,
+                this.currentMap.w
+              )
+            )
+            .setDepth(-10)
         );
-        this.currentMap.squares[i][j].image?.setDepth(-10);
 
         this.gMapBackAir[i].push(
           this.add.image(
@@ -1409,9 +1526,9 @@ export default class Play extends Phaser.Scene {
     const py = this.mapOriginy + this.playeri * 16;
     const px = this.mapOriginx + this.playerj * 16;
     this.gImagePlayer = this.add.image(px + 8, py + 8, 'player');
-    this.gImagePlayer.setDepth(100);
+    this.gImagePlayer.setDepth(90);
     this.gImageFocus = this.add.image(px + 16 + 8, py + 8, 'focus');
-    this.gImageFocus.setDepth(100);
+    this.gImageFocus.setDepth(90);
 
     // menu
 
@@ -1460,6 +1577,7 @@ export default class Play extends Phaser.Scene {
 
   preload() {
     log(10, 'Play.preload');
+    this.init();
     this.cameras.main.setBackgroundColor(
       `rgba(${WHITE[0]},${WHITE[1]},${WHITE[2]},1)`
     );
@@ -1508,6 +1626,7 @@ export default class Play extends Phaser.Scene {
     this.load.image('lam_var', 'assets/images/lam_var.png');
     this.load.image('lam_ret', 'assets/images/lam_ret.png');
     this.load.image('parent', 'assets/images/parent.png');
+    this.load.image('locked', 'assets/images/locked.png');
     this.load.image('font', 'assets/images/font.png');
 
     this.load.audio('collide', 'assets/sounds/collide.mp3');
