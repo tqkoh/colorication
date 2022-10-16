@@ -62,10 +62,16 @@ export class GameMap {
 
   startd: Direction;
 
-  constructor(squares: Square[][]) {
-    this.starti = -1;
-    this.startj = -1;
-    this.startd = 'right';
+  constructor(squares: Square[][], from: GameMap | undefined = undefined) {
+    if (from) {
+      this.starti = from.starti;
+      this.startj = from.startj;
+      this.startd = from.startd;
+    } else {
+      this.starti = -1;
+      this.startj = -1;
+      this.startd = 'right';
+    }
     this.squares = cloneDeep(squares);
     this.h = squares.length;
     this.w = this.h ? squares[0].length : 0;
@@ -377,4 +383,34 @@ export function squaresFromTerm(t: Term): Square[][] {
     return squaresFromApp(t.lam, t.param);
   }
   throw new Error('var cant become map');
+}
+
+export function cloneSquare(s: Square, addMovable: boolean = true): Square {
+  if (s.Atype === 'air' || s.Atype === 'block') {
+    return {
+      ...s,
+      movable: addMovable,
+      image: []
+    };
+  }
+  if (!s.map) {
+    return {
+      ...s,
+      movable: addMovable,
+      image: []
+    };
+  }
+
+  log(10, s.map);
+  const newMap = new GameMap(
+    s.map.squares.map((col) => col.map((sq) => cloneSquare(sq, false))),
+    s.map
+  );
+  const ret: Square = {
+    ...s,
+    map: newMap,
+    movable: addMovable,
+    image: []
+  };
+  return ret;
 }

@@ -9,6 +9,7 @@ import Term, { completeSubst, freeValue, randomized } from '../utils/term';
 import { coloredHandleFrom, deltaHFrom, squareHash } from '../utils/termColor';
 import {
   airSquare,
+  cloneSquare,
   Direction,
   GameMap,
   Square,
@@ -456,6 +457,24 @@ export default class Play extends Phaser.Scene {
     this.updatePlayerAndFocus();
   }
 
+  checkChangeBackParent(i: number, j: number) {
+    if (!this.currentSquare.length) return;
+    const current = this.currentSquare.slice(-1)[0];
+    if (current.Atype !== 'term') return;
+    if (current.term.Atype === 'lam') {
+      if (i === 2 && j === 1 && this.gMapBackParent) {
+        this.gMapBackParent.setAlpha(0.2);
+      }
+    } else if (current.term.Atype === 'app') {
+      if (i === 2 && j === 2 && this.gMapBackParent) {
+        this.gMapBackParent.setAlpha(0.2);
+      }
+      if (i === 2 && j === 4 && this.gMapBackParent) {
+        this.gMapBackParent.setAlpha(0.2);
+      }
+    }
+  }
+
   moveOn() {
     const front = [wallSquare(), wallSquare()];
     if (
@@ -536,6 +555,9 @@ export default class Play extends Phaser.Scene {
         );
       }
 
+      this.checkChangeBackParent(this.focusi, this.focusj);
+      this.checkChangeBackParent(this.focusnexti, this.focusnextj);
+
       this.currentMap.squares[this.focusnexti][this.focusnextj] = {
         ...front[1],
         map: undefined,
@@ -564,6 +586,9 @@ export default class Play extends Phaser.Scene {
       [this.currentMap.squares[this.focusnexti][this.focusnextj]] = front;
       front[0] = this.currentMap.squares[this.focusi][this.focusj];
       front[1] = this.currentMap.squares[this.focusnexti][this.focusnextj];
+
+      this.checkChangeBackParent(this.focusi, this.focusj);
+      this.checkChangeBackParent(this.focusnexti, this.focusnextj);
 
       this.addSquareImage(this.focusi, this.focusj);
       if (front[1].image.length > 0) {
@@ -835,11 +860,7 @@ export default class Play extends Phaser.Scene {
     for (let k = 0; k < this.clipSquare.image.length; k += 1) {
       this.clipSquare.image[k].destroy();
     }
-    this.clipSquare = cloneDeep<Square>({
-      ...focus,
-      movable: true,
-      image: []
-    });
+    this.clipSquare = cloneSquare(focus);
     this.updateClipImage();
     log(10, this.clipSquare);
   }
@@ -859,10 +880,9 @@ export default class Play extends Phaser.Scene {
       return;
     }
     this.removeSquareImage(this.focusi, this.focusj);
-    this.currentMap.squares[this.focusi][this.focusj] = cloneDeep<Square>({
-      ...this.clipSquare,
-      image: []
-    });
+    this.currentMap.squares[this.focusi][this.focusj] = cloneSquare(
+      this.clipSquare
+    );
     this.addSquareImage(this.focusi, this.focusj);
   }
 
@@ -1048,6 +1068,7 @@ export default class Play extends Phaser.Scene {
   }
 
   execEnter() {
+    let afterLeave = false;
     if (
       this.focusi < 0 ||
       this.currentMap.h <= this.focusi ||
@@ -1080,6 +1101,7 @@ export default class Play extends Phaser.Scene {
       }
       afterMap = focus.map;
     } else if (focus.Atype === 'block' && focus.block === 'parent') {
+      afterLeave = true;
       if (this.currentMap.parentMap) {
         afterMap = this.currentMap.parentMap;
       } else {
@@ -1163,6 +1185,7 @@ export default class Play extends Phaser.Scene {
       if (current.Atype === 'term') {
         const y = 31 + (globalThis.screenh - 31) / 2;
         const x = globalThis.screenw / 2;
+
         this.gMapBackParent = this.add
           .image(
             x,
@@ -1176,7 +1199,7 @@ export default class Play extends Phaser.Scene {
             )
           )
           .setScale(7)
-          .setAlpha(0.5)
+          .setAlpha(afterLeave ? 0.2 : 0.5)
           .setDepth(-20);
       }
     }
@@ -1406,8 +1429,8 @@ export default class Play extends Phaser.Scene {
         }
         return ret;
       })
-      .with({ Atype: 'map' }, () => 'lam')
-      .with({ Atype: 'stage' }, () => 'lam')
+      .with({ Atype: 'map' }, () => 'block')
+      .with({ Atype: 'stage' }, () => 'block')
       .with({ Atype: 'block', block: 'apply' }, () => 'apply')
       .with({ Atype: 'block', block: 'down' }, () => 'down')
       .with({ Atype: 'block', block: 'equal' }, () => 'equal')
@@ -1422,7 +1445,7 @@ export default class Play extends Phaser.Scene {
       .with({ Atype: 'block', block: 'lam_ret' }, () => 'lam_ret')
       .with({ Atype: 'block', block: 'parent' }, () => 'parent')
       .with({ Atype: 'block', block: 'return_title' }, () => 'parent')
-      .with({ Atype: 'block' }, () => 'lam')
+      .with({ Atype: 'block' }, () => 'block')
       .with({ Atype: 'term' }, () => {
         if (s.Atype !== 'term') {
           return '';
@@ -1619,6 +1642,7 @@ export default class Play extends Phaser.Scene {
     this.load.image('down', 'assets/images/down.png');
     this.load.image('apply', 'assets/images/apply.png');
     this.load.image('submit', 'assets/images/submit.png');
+    this.load.image('block', 'assets/images/block.png');
 
     this.load.image('air', 'assets/images/air.png');
     this.load.image('airr', 'assets/images/airr.png');
