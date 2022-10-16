@@ -16,8 +16,7 @@ import {
   GameMap,
   Square,
   squaresFromStage,
-  squaresFromTerm,
-  wallSquare
+  squaresFromTerm
 } from './play/gamemap';
 import mapRoot from './play/maps/root';
 
@@ -166,6 +165,7 @@ export default class Play extends Phaser.Scene {
     E: Phaser.Input.Keyboard.Key[];
     C: Phaser.Input.Keyboard.Key[];
     V: Phaser.Input.Keyboard.Key[];
+    Q: Phaser.Input.Keyboard.Key[];
     F2: Phaser.Input.Keyboard.Key[];
     Del: Phaser.Input.Keyboard.Key[];
   };
@@ -269,6 +269,7 @@ export default class Play extends Phaser.Scene {
       E: [],
       C: [],
       V: [],
+      Q: [],
       F2: [],
       Del: []
     };
@@ -276,6 +277,7 @@ export default class Play extends Phaser.Scene {
     this.gMenuElements = [];
     this.map = new GameMap(mapRoot);
     this.currentMap = this.map; // ref
+    this.front = [];
     this.currentSquare = [];
     this.clipSquare = airSquare();
     this.modifiedTerm = [];
@@ -334,6 +336,7 @@ export default class Play extends Phaser.Scene {
       E: [],
       C: [],
       V: [],
+      Q: [],
       F2: [],
       Del: []
     };
@@ -529,61 +532,60 @@ export default class Play extends Phaser.Scene {
     }
   }
 
-  moveOn() {
-    const front = [wallSquare(), wallSquare()];
+  front: Square[];
+
+  execApply(
+    xi: number = this.focusi,
+    xj: number = this.focusj,
+    fi: number = this.focusnexti,
+    fj: number = this.focusnextj
+  ) {
+    this.front = [];
     if (
-      this.focusi >= 0 &&
-      this.focusi < this.currentMap.h &&
-      this.focusj >= 0 &&
-      this.focusj < this.currentMap.w
+      xi >= 0 &&
+      xi < this.currentMap.h &&
+      xj >= 0 &&
+      xj < this.currentMap.w
     ) {
-      front[0] = this.currentMap.squares[this.focusi][this.focusj];
+      this.front.push(this.currentMap.squares[xi][xj]);
     }
     if (
-      this.focusnexti >= 0 &&
-      this.focusnexti < this.currentMap.h &&
-      this.focusnextj >= 0 &&
-      this.focusnextj < this.currentMap.w
+      fi >= 0 &&
+      fi < this.currentMap.h &&
+      fj >= 0 &&
+      fj < this.currentMap.w
     ) {
-      front[1] = this.currentMap.squares[this.focusnexti][this.focusnextj];
+      this.front.push(this.currentMap.squares[fi][fj]);
     }
-    log(
-      10,
-      this.focusi,
-      this.focusj,
-      this.focusnexti,
-      this.focusnextj,
-      front[0].collidable
-    );
     if (
-      front[0].Atype === 'term' &&
-      front[0].movable &&
-      front[1].Atype === 'term' &&
-      front[1].movable
+      this.front[0].Atype === 'term' &&
+      this.front[0].movable &&
+      this.front[1].Atype === 'term' &&
+      this.front[1].movable
     ) {
       log(10, 'apply');
-      for (let k = 0; k < front[0].image.length; k += 1) {
-        front[0].image[k].destroy();
+      for (let k = 0; k < this.front[0].image.length; k += 1) {
+        this.front[0].image[k].destroy();
       }
-      front[0].image = [];
+      this.front[0].image = [];
 
-      for (let k = 0; k < front[1].image.length; k += 1) {
-        front[1].image[k].destroy();
+      for (let k = 0; k < this.front[1].image.length; k += 1) {
+        this.front[1].image[k].destroy();
       }
-      front[1].image = [];
+      this.front[1].image = [];
 
       const app: Term = {
         Atype: 'app',
-        lam: front[1].term,
-        param: front[0].term
+        lam: this.front[1].term,
+        param: this.front[0].term
       };
 
       this.substProgress = completeSubst([app]).reverse();
-      this.substProgress.push(front[1].term);
+      this.substProgress.push(this.front[1].term);
       log(8, this.substProgress);
       {
-        const y = 16 * this.focusnexti;
-        const x = 16 * this.focusnextj;
+        const y = 16 * fi;
+        const x = 16 * fj;
         this.gAnimationApply = this.substProgress.map((e, i) =>
           this.add
             .image(
@@ -599,8 +601,8 @@ export default class Play extends Phaser.Scene {
                   collidable: false,
                   image: []
                 },
-                this.focusnexti,
-                this.focusnextj,
+                fi,
+                fj,
                 this.currentMap.h,
                 this.currentMap.w
               )
@@ -609,68 +611,113 @@ export default class Play extends Phaser.Scene {
         );
       }
 
-      this.checkChangeBackParent(this.focusi, this.focusj);
-      this.checkChangeBackParent(this.focusnexti, this.focusnextj);
+      this.checkChangeBackParent(xi, xj);
+      this.checkChangeBackParent(fi, fj);
 
-      this.currentMap.squares[this.focusnexti][this.focusnextj] = {
-        ...front[1],
+      this.currentMap.squares[fi][fj] = {
+        ...this.front[1],
         map: undefined,
         Atype: 'term',
         term: cloneDeep(this.substProgress[0])
       };
-      this.currentMap.squares[this.focusi][this.focusj] = airSquare();
+      this.currentMap.squares[xi][xj] = airSquare();
 
-      front[0] = this.currentMap.squares[this.focusi][this.focusj];
-      front[1] = this.currentMap.squares[this.focusnexti][this.focusnextj];
+      this.front[0] = this.currentMap.squares[xi][xj];
+      this.front[1] = this.currentMap.squares[fi][fj];
 
-      this.addSquareImage(this.focusi, this.focusj);
-      this.addSquareImage(this.focusnexti, this.focusnextj);
-
-      this.moveToPosition(this.focusi, this.focusj);
+      this.addSquareImage(xi, xj);
+      this.addSquareImage(fi, fj);
 
       this.animationApplyFrame = 0;
       this.mainState = 'applyAnimating';
-    } else if (front[0].movable && front[1].Atype === 'air') {
+    }
+  }
+
+  moveBlock() {
+    if (this.front[0].movable && this.front[1].Atype === 'air') {
       log(10, 'moveblock');
-      for (let k = 0; k < front[1].image.length; k += 1) {
-        front[1].image[k].destroy();
+      for (let k = 0; k < this.front[1].image.length; k += 1) {
+        this.front[1].image[k].destroy();
       }
-      front[1].image = [];
+      this.front[1].image = [];
       this.currentMap.squares[this.focusi][this.focusj] = airSquare();
-      [this.currentMap.squares[this.focusnexti][this.focusnextj]] = front;
-      front[0] = this.currentMap.squares[this.focusi][this.focusj];
-      front[1] = this.currentMap.squares[this.focusnexti][this.focusnextj];
+      [this.currentMap.squares[this.focusnexti][this.focusnextj]] = this.front;
+      this.front[0] = this.currentMap.squares[this.focusi][this.focusj];
+      this.front[1] = this.currentMap.squares[this.focusnexti][this.focusnextj];
 
       this.checkChangeBackParent(this.focusi, this.focusj);
       this.checkChangeBackParent(this.focusnexti, this.focusnextj);
 
       this.addSquareImage(this.focusi, this.focusj);
-      if (front[1].image.length > 0) {
+      if (this.front[1].image.length > 0) {
         const y = 16 * this.focusnexti;
         const x = 16 * this.focusnextj;
-        front[1].image[0]
+        this.front[1].image[0]
           .setY(this.mapOriginy + y + 8)
           .setX(this.mapOriginx + x + 8);
       }
-      if (front[1].image.length > 1) {
+      if (this.front[1].image.length > 1) {
         const y = 16 * this.focusnexti;
         const x = 16 * this.focusnextj;
-        front[1].image[1]
+        this.front[1].image[1]
           .setY(this.mapOriginy + y + 8)
           .setX(this.mapOriginx + x + 8);
       }
-      if (front[1].image.length > 2) {
+      if (this.front[1].image.length > 2) {
         // locked
         const y = 16 * this.focusnexti;
         const x = 16 * this.focusnextj;
-        front[1].image[2]
+        this.front[1].image[2]
           .setY(this.mapOriginy + y)
           .setX(this.mapOriginx + x + 1);
       }
 
       this.moveToPosition(this.focusi, this.focusj);
       log(10, this.currentMap);
-    } else if (front[0].collidable) {
+    }
+  }
+
+  moveOn() {
+    this.front = [];
+    if (
+      this.focusi >= 0 &&
+      this.focusi < this.currentMap.h &&
+      this.focusj >= 0 &&
+      this.focusj < this.currentMap.w
+    ) {
+      this.front.push(this.currentMap.squares[this.focusi][this.focusj]);
+    }
+    if (
+      this.focusnexti >= 0 &&
+      this.focusnexti < this.currentMap.h &&
+      this.focusnextj >= 0 &&
+      this.focusnextj < this.currentMap.w
+    ) {
+      this.front.push(
+        this.currentMap.squares[this.focusnexti][this.focusnextj]
+      );
+    }
+    log(
+      10,
+      this.focusi,
+      this.focusj,
+      this.focusnexti,
+      this.focusnextj,
+      this.front[0].collidable
+    );
+    if (
+      this.front[0].Atype === 'term' &&
+      this.front[0].movable &&
+      this.front[1].Atype === 'term' &&
+      this.front[1].movable
+    ) {
+      this.execApply();
+      this.moveToPosition(this.focusi, this.focusj);
+    } else if (this.front[0].movable && this.front[1].Atype === 'air') {
+      this.moveBlock();
+      this.moveToPosition(this.focusi, this.focusj);
+      log(10, this.currentMap);
+    } else if (this.front[0].collidable) {
       log(10, 'collide');
       this.sCollide.play();
     } else {
@@ -1448,6 +1495,37 @@ export default class Play extends Phaser.Scene {
       this.execPaste();
       this.closeMenu();
     }
+    if (justDown(this.keys.Q)) {
+      this.execApply(
+        this.focusnexti,
+        this.focusnextj,
+        this.focusi,
+        this.focusj
+      );
+      this.closeMenu();
+    }
+    if (justDown(this.keys.F2)) {
+      this.front = [];
+      if (
+        this.focusi >= 0 &&
+        this.focusi < this.currentMap.h &&
+        this.focusj >= 0 &&
+        this.focusj < this.currentMap.w
+      ) {
+        this.front.push(this.currentMap.squares[this.focusi][this.focusj]);
+      }
+      if (
+        this.focusnexti >= 0 &&
+        this.focusnexti < this.currentMap.h &&
+        this.focusnextj >= 0 &&
+        this.focusnextj < this.currentMap.w
+      ) {
+        this.front.push(
+          this.currentMap.squares[this.focusnexti][this.focusnextj]
+        );
+      }
+      this.moveBlock();
+    }
   }
 
   createColoredTermImage(t: Term, hash: string, handle: string) {
@@ -1743,6 +1821,7 @@ export default class Play extends Phaser.Scene {
     this.keys.E = keysFrom(this, globalThis.keyConfig.E);
     this.keys.C = keysFrom(this, globalThis.keyConfig.C);
     this.keys.V = keysFrom(this, globalThis.keyConfig.V);
+    this.keys.Q = keysFrom(this, globalThis.keyConfig.Q);
     this.keys.F2 = keysFrom(this, globalThis.keyConfig.F2);
     this.keys.Del = keysFrom(this, globalThis.keyConfig.Del);
 
