@@ -141,12 +141,13 @@ const WHITE = [250, 247, 240];
 const WHITE2 = [255, 239, 215];
 const ANIMATION_APPLY_PER = 20;
 const MOVEMENT_CYCLE = 30;
-const LONG_PRESS = 12;
+// const LONG_PRESS = 12;
 
 export default class Play extends Phaser.Scene {
   keys: {
     Enter: Phaser.Input.Keyboard.Key[];
     Ctrl: Phaser.Input.Keyboard.Key[];
+    Shift: Phaser.Input.Keyboard.Key[];
     Escape: Phaser.Input.Keyboard.Key[];
     W: Phaser.Input.Keyboard.Key[];
     A: Phaser.Input.Keyboard.Key[];
@@ -247,6 +248,7 @@ export default class Play extends Phaser.Scene {
     this.keys = {
       Enter: [],
       Ctrl: [],
+      Shift: [],
       Escape: [],
       W: [],
       A: [],
@@ -311,6 +313,7 @@ export default class Play extends Phaser.Scene {
     this.keys = {
       Enter: [],
       Ctrl: [],
+      Shift: [],
       Escape: [],
       W: [],
       A: [],
@@ -589,12 +592,17 @@ export default class Play extends Phaser.Scene {
     }
   }
 
-  moveToDirection(d: Direction) {
-    if (this.playerDirection === d) {
-      this.moveOn();
-    } else {
+  moveToDirection(d: Direction, shift: boolean) {
+    if (this.playerDirection !== d) {
       this.playerDirection = d;
       this.afterTurn = 0;
+      if (this.gImagePlayer) {
+        this.gImagePlayer.rotation = rotationFromDirection(d);
+      }
+      this.updatePlayerAndFocus();
+    }
+    if (!shift) {
+      this.moveOn();
     }
   }
 
@@ -646,7 +654,7 @@ export default class Play extends Phaser.Scene {
         this.keepingPressingFrame % MOVEMENT_CYCLE === 0 &&
         this.keepingPressingFrame > MOVEMENT_CYCLE)
     ) {
-      this.moveToDirection('right');
+      this.moveToDirection('right', isDown(this.keys.Shift));
     }
     if (
       js ||
@@ -655,7 +663,7 @@ export default class Play extends Phaser.Scene {
         this.keepingPressingFrame % MOVEMENT_CYCLE === 0 &&
         this.keepingPressingFrame > MOVEMENT_CYCLE)
     ) {
-      this.moveToDirection('down');
+      this.moveToDirection('down', isDown(this.keys.Shift));
     }
     if (
       ja ||
@@ -664,7 +672,7 @@ export default class Play extends Phaser.Scene {
         this.keepingPressingFrame % MOVEMENT_CYCLE === 0 &&
         this.keepingPressingFrame > MOVEMENT_CYCLE)
     ) {
-      this.moveToDirection('left');
+      this.moveToDirection('left', isDown(this.keys.Shift));
     }
     if (
       jw ||
@@ -673,36 +681,36 @@ export default class Play extends Phaser.Scene {
         this.keepingPressingFrame % MOVEMENT_CYCLE === 0 &&
         this.keepingPressingFrame > MOVEMENT_CYCLE)
     ) {
-      this.moveToDirection('up');
+      this.moveToDirection('up', isDown(this.keys.Shift));
     }
 
-    if (this.afterTurn === LONG_PRESS) {
-      if (
-        (w && this.lastPressedMovementKey === 'w') ||
-        (a && this.lastPressedMovementKey === 'a') ||
-        (s && this.lastPressedMovementKey === 's') ||
-        (d && this.lastPressedMovementKey === 'd')
-      ) {
-        if (this.gImagePlayer !== undefined) {
-          let dir: Direction = 'right';
-          if (this.lastPressedMovementKey === 's') dir = 'down';
-          if (this.lastPressedMovementKey === 'w') dir = 'up';
-          if (this.lastPressedMovementKey === 'a') dir = 'left';
-          this.gImagePlayer.rotation = rotationFromDirection(dir);
-        }
-        this.updatePlayerAndFocus();
-        this.moveOn();
-      } else {
-        if (this.gImagePlayer !== undefined) {
-          let dir: Direction = 'right';
-          if (this.lastPressedMovementKey === 's') dir = 'down';
-          if (this.lastPressedMovementKey === 'w') dir = 'up';
-          if (this.lastPressedMovementKey === 'a') dir = 'left';
-          this.gImagePlayer.rotation = rotationFromDirection(dir);
-        }
-        this.updatePlayerAndFocus();
-      }
-    }
+    // if (this.afterTurn === LONG_PRESS) {
+    //   if (
+    //     (w && this.lastPressedMovementKey === 'w') ||
+    //     (a && this.lastPressedMovementKey === 'a') ||
+    //     (s && this.lastPressedMovementKey === 's') ||
+    //     (d && this.lastPressedMovementKey === 'd')
+    //   ) {
+    //     if (this.gImagePlayer !== undefined) {
+    //       let dir: Direction = 'right';
+    //       if (this.lastPressedMovementKey === 's') dir = 'down';
+    //       if (this.lastPressedMovementKey === 'w') dir = 'up';
+    //       if (this.lastPressedMovementKey === 'a') dir = 'left';
+    //       this.gImagePlayer.rotation = rotationFromDirection(dir);
+    //     }
+    //     this.updatePlayerAndFocus();
+    //     this.moveOn();
+    //   } else {
+    //     if (this.gImagePlayer !== undefined) {
+    //       let dir: Direction = 'right';
+    //       if (this.lastPressedMovementKey === 's') dir = 'down';
+    //       if (this.lastPressedMovementKey === 'w') dir = 'up';
+    //       if (this.lastPressedMovementKey === 'a') dir = 'left';
+    //       this.gImagePlayer.rotation = rotationFromDirection(dir);
+    //     }
+    //     this.updatePlayerAndFocus();
+    //   }
+    // }
     this.afterTurn += 1;
   }
 
@@ -1584,6 +1592,7 @@ export default class Play extends Phaser.Scene {
 
     this.keys.Enter = keysFrom(this, globalThis.keyConfig.Enter);
     this.keys.Ctrl = keysFrom(this, globalThis.keyConfig.Ctrl);
+    this.keys.Shift = keysFrom(this, globalThis.keyConfig.Shift);
     this.keys.Escape = keysFrom(this, globalThis.keyConfig.Escape);
     this.keys.W = keysFrom(this, globalThis.keyConfig.W);
     this.keys.A = keysFrom(this, globalThis.keyConfig.A);
