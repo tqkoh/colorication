@@ -15,7 +15,9 @@ export type Block =
   | 'equal'
   | 'place'
   | 'down'
-  | 'wall';
+  | 'wall'
+  | 'lam_var'
+  | 'lam_ret';
 
 export type Test = {
   input: Square[];
@@ -242,7 +244,7 @@ export function squaresFromStage(s: Stage): Square[][] {
 
 function squaresFromLam(v: string, r: Term) {
   const h = 5;
-  const w = 9;
+  const w = 7;
   const ret: Square[][] = [];
   for (let i = 0; i < h; i += 1) {
     ret.push([]);
@@ -260,6 +262,14 @@ function squaresFromLam(v: string, r: Term) {
   };
   ret[0][1] = startSquare();
 
+  ret[2][0] = {
+    Atype: 'block',
+    block: 'lam_ret',
+    name: '',
+    movable: false,
+    collidable: false,
+    locked: false
+  };
   ret[2][1] = {
     Atype: 'term',
     term: r,
@@ -268,8 +278,7 @@ function squaresFromLam(v: string, r: Term) {
     collidable: true,
     locked: false
   };
-
-  ret[2][7] = {
+  ret[2][5] = {
     Atype: 'term',
     term: {
       Atype: 'var',
@@ -280,13 +289,21 @@ function squaresFromLam(v: string, r: Term) {
     collidable: true,
     locked: false
   };
+  ret[2][6] = {
+    Atype: 'block',
+    block: 'lam_var',
+    name: '',
+    movable: false,
+    collidable: false,
+    locked: false
+  };
 
   return ret;
 }
 
 function squaresFromApp(l: Term, p: Term) {
   const h = 5;
-  const w = 5;
+  const w = 7;
   const ret: Square[][] = [];
   for (let i = 0; i < h; i += 1) {
     ret.push([]);
@@ -303,7 +320,7 @@ function squaresFromApp(l: Term, p: Term) {
     locked: false
   };
   ret[0][1] = startSquare();
-  ret[2][1] = {
+  ret[2][2] = {
     Atype: 'term',
     term: l,
     name: '',
@@ -311,7 +328,7 @@ function squaresFromApp(l: Term, p: Term) {
     collidable: true,
     locked: false
   };
-  ret[2][2] = {
+  ret[2][3] = {
     Atype: 'block',
     block: 'apply',
     name: '',
@@ -319,7 +336,7 @@ function squaresFromApp(l: Term, p: Term) {
     collidable: false,
     locked: false
   };
-  ret[2][3] = {
+  ret[2][4] = {
     Atype: 'term',
     term: p,
     name: '',
