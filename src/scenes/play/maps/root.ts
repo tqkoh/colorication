@@ -1,10 +1,11 @@
+import { codesFrom } from '../../../utils/font';
 import { airSquare as a, GameMap, Square, startSquare as s } from '../gamemap';
 import mapWorld0 from './worlds/world0';
 
 const wo0: Square = {
   Atype: 'map',
   map: new GameMap(mapWorld0),
-  name: 'w0',
+  name: codesFrom('w0'),
   movable: false,
   collidable: true,
   locked: false,
@@ -13,7 +14,7 @@ const wo0: Square = {
 const rtt: Square = {
   Atype: 'block',
   block: 'return_title',
-  name: '',
+  name: [],
   movable: true,
   collidable: true,
   locked: false,

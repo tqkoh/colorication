@@ -1,6 +1,7 @@
 import { log } from './deb';
 
-const MAX_DISPLAY_NUMBER = 999;
+const MAX_CODE = 999;
+const CHAR_OF_1_WIDTH = [33, 39, 46];
 
 export function codesFrom(s: string): number[] {
   return s.split('').map((c) => c.charCodeAt(0));
@@ -39,7 +40,7 @@ class Font {
         letter = [];
       }
     }
-    for (let i = 0; i < MAX_DISPLAY_NUMBER + 1; i += 1) {
+    for (let i = 0; i < MAX_CODE + 1; i += 1) {
       if (
         i < offset ||
         offset + letters.length <= i ||
@@ -52,16 +53,19 @@ class Font {
         this.isLetter.push(true);
       }
     }
-    for (let i = 0; i < MAX_DISPLAY_NUMBER + 1; i += 1) {
+    for (let i = 0; i < MAX_CODE + 1; i += 1) {
       if (
         i < offset ||
         offset + letters.length <= i ||
-        (letters[i - offset][0].length === 1 && !letters[i - offset][6][0])
+        (letters[i - offset][0].length === 1 && !CHAR_OF_1_WIDTH.includes(i))
       ) {
-        this.data.push(this.getImage([i]));
+        // i に対応する文字がない場合、i を文字列として見たものを表示する
+        const s = `#${i.toString()}`; // "#129"
+        const codes = s.split('').map((c) => c.charCodeAt(0));
+        this.data[i] = this.getImage(codes);
       }
     }
-    log(10, this.data);
+    log(10, 'font.data: ', this.data);
   }
 
   getImage(fromParam: number[], scale: number = 1): boolean[][] {

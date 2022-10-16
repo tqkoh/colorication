@@ -1,3 +1,4 @@
+import { codesFrom } from '../../../../utils/font';
 import {
   airSquare as a,
   parentSquare as p,
@@ -9,7 +10,7 @@ import stage0 from './world0/stage0';
 const st0: Square = {
   Atype: 'stage',
   stage: stage0,
-  name: stage0.name,
+  name: codesFrom(stage0.name),
   movable: false,
   collidable: true,
   locked: false,

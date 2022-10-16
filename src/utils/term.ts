@@ -1,10 +1,13 @@
-import { cloneDeep } from 'lodash';
 import objectHash from 'object-hash';
 import { match, P } from 'ts-pattern';
 import { v4 as uuid } from 'uuid';
 import { log } from './deb';
 
-const MAX_SUBST = 20;
+const MAX_COMPLETE_SUBST = 2000;
+const MAX_SUBST = 2000;
+const LOG_SUBST_COUNT_EVERY = 10;
+const MAX_ACC_LENGTH = 20;
+const MAX_SUBST_TIME = 1000;
 
 type Term =
   | { Atype: 'var'; var: string }
@@ -129,6 +132,10 @@ export function freeValue(t: Term): string[] {
     .exhaustive();
 }
 
+let substCount = 0;
+let startTime = performance.now();
+let lastSubstTime = performance.now();
+
 export function subst(
   acc: Term[], // ref
   before: string = '',
@@ -137,8 +144,24 @@ export function subst(
     var: before
   }
 ): Term[] {
+  substCount += 1;
+  {
+    const now = performance.now();
+    log(101, now - lastSubstTime, 'ms', (now - startTime) / 1000, 's');
+    lastSubstTime = now;
+    if (substCount % LOG_SUBST_COUNT_EVERY === 0) {
+      log(5, `substCount: ${substCount}`);
+    }
+    if (substCount >= MAX_SUBST || now - startTime >= MAX_SUBST_TIME) {
+      log(101, 'muri');
+      return [];
+    }
+  }
+  // eslint-disable-next-line no-param-reassign
+  if (acc.length > MAX_ACC_LENGTH) acc = acc.slice(-MAX_ACC_LENGTH);
   const sid = uuid();
-  log(100, `subst-${sid}: {`, cloneDeep(acc), before, after);
+  log(100, `subst-${sid}: {`); // , cloneDeep(acc), before, after
+
   const ret = match<[Term, Term], Term[]>([acc.slice(-1)[0], after])
     // app の場合、subst した後適用する。(lam の返り値の中の引数を、適用するものでさらに subst する)
     .with(
@@ -150,21 +173,27 @@ export function subst(
       ([ap]) => {
         log(100, 'subst', 0);
 
-        log(100, 't1 motomemasu');
+        // log(200, 't1 motomemasu');
         const t1 = subst([ap.lam.ret], ap.lam.var, ap.param);
-        log(100, 't1', t1);
+        if (!t1.length) {
+          return [];
+        }
+        // log(200, 't1', t1);
         // for (let i = 0; i < t1.length; i += 1) {
         //   acc.push(t1[i]);
         // }
         acc.push(t1.slice(-1)[0]);
         if (t1.slice(-1)[0].Atype === 'app') {
-          log(100, 't2 motomemasu');
+          // log(100, 't2 motomemasu');
           const t2 = subst([t1.slice(-1)[0]]);
+          if (!t2.length) {
+            return [];
+          }
           // for (let i = 1; i < t2.length; i += 1) {
           //   acc.push(t2[i]);
           // }
           acc.push(t2.slice(-1)[0]);
-          log(100, 't2: ', t2);
+          // log(200, 't2: ', t2);
         }
         return acc;
       }
@@ -172,15 +201,25 @@ export function subst(
     .with([{ Atype: 'app', lam: { Atype: 'lam' } }, P._], ([ap, a]) => {
       log(100, 'subst', 1);
 
-      const substLam = subst([ap.lam], before, a).slice(-1)[0];
-      const substParam = subst([ap.param], before, a).slice(-1)[0];
+      const substLam = subst([ap.lam], before, a);
+      if (!substLam.length) {
+        return [];
+      }
+      const substParam = subst([ap.param], before, a);
+      if (!substParam.length) {
+        return [];
+      }
       const app: Term = {
         Atype: 'app',
-        lam: substLam,
-        param: substParam
+        lam: substLam.slice(-1)[0],
+        param: substParam.slice(-1)[0]
       };
       acc.push(app);
-      acc.push(subst([app]).slice(-1)[0]);
+      const substApp = subst([app]);
+      if (!substApp.length) {
+        return [];
+      }
+      acc.push(substApp.slice(-1)[0]);
       // acc.push(
       //   subst(
       //     [subst([ap.lam.ret], before, a).slice(-1)[0]],
@@ -190,7 +229,6 @@ export function subst(
       // );
       return acc;
     })
-    // App の lam が lam 以外のこともあるのでこれはいる
     .with([{ Atype: 'app' }, P._], ([ap, a]) => {
       log(100, 'subst', 2);
 
@@ -205,12 +243,29 @@ export function subst(
       // acc.push(subst([app]).slice(-1)[0]);
       return acc;
     })
-    // Var
+    // 適用だけ
+    .with([{ Atype: 'lam' }, { Atype: 'var', var: before }], ([la]) => {
+      log(100, 'subst', 3);
+
+      const applyRet = subst([la.ret]).slice(-1)[0];
+      acc.push({
+        Atype: 'lam',
+        var: la.var,
+        ret: applyRet
+      });
+      return acc;
+    })
+    .with([{ Atype: 'var' }, { Atype: 'var', var: before }], () => {
+      log(100, 'subst', 3.5);
+
+      return acc;
+    })
     .with([P._, { Atype: 'var', var: before }], () => {
       log(100, 'subst', 3);
 
       return acc;
     })
+    // Var
     .with([{ Atype: 'var' }, P._], ([va, a]) => {
       log(100, 'subst', 4);
 
@@ -235,7 +290,7 @@ export function subst(
             subst([la.ret], la.var, {
               Atype: 'var',
               var: newId
-            }),
+            }).slice(-1),
             before,
             a
           ).slice(-1)[0]
@@ -260,7 +315,7 @@ export function subst(
   // console.log('b', before)
   // console.log('a', after)
   // console.log('-----------return: ', ret)
-  log(100, cloneDeep(ret), `} subst-${sid}`);
+  log(100, `} subst-${sid}`); // , cloneDeep(ret)
   return ret;
 }
 
@@ -272,6 +327,8 @@ export function equal(l: Term, r: Term): boolean {
 }
 
 export function completeSubst(acc: Term[]) {
+  substCount = 0;
+  startTime = performance.now();
   let count = 0;
   const hashAcc: string[] = [];
   for (let i = 0; i < acc.length; i += 1) {
@@ -279,10 +336,10 @@ export function completeSubst(acc: Term[]) {
   }
 
   while (
-    count < MAX_SUBST &&
+    count < MAX_COMPLETE_SUBST &&
     (hashAcc.length < 2 || hashAcc.slice(-1)[0] !== hashAcc.slice(-2)[0])
   ) {
-    log(100, count, cloneDeep(acc));
+    // log(100, count, cloneDeep(acc));
     const next = subst([acc.slice(-1)[0]]);
     for (let i = 0; i < next.length; i += 1) {
       acc.push(next[i]);
@@ -298,7 +355,8 @@ export function completeSubst(acc: Term[]) {
     }
   }
   ret.push(acc.slice(-1)[0]);
-  log(100, count, cloneDeep(ret));
+  // log(88, count, cloneDeep(acc));
+  // log(100, count, ret);
   return ret;
 }
 

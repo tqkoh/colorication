@@ -1,5 +1,6 @@
 import { Howl } from 'howler';
 import { cloneDeep } from 'lodash';
+import objectHash from 'object-hash';
 import Phaser from 'phaser';
 import { match, P } from 'ts-pattern';
 import { isDown, justDown, keysFrom } from '../data/keyConfig';
@@ -8,7 +9,7 @@ import { codesFrom } from '../utils/font';
 import FontForPhaser from '../utils/fontForPhaser';
 import Term, { completeSubst, freeValue, randomized } from '../utils/term';
 import { coloredHandleFrom, deltaHFrom, squareHash } from '../utils/termColor';
-import { asString } from '../utils/termUtils';
+import { asCodes } from '../utils/termUtils';
 import {
   airSquare,
   cloneSquare,
@@ -16,7 +17,8 @@ import {
   GameMap,
   Square,
   squaresFromStage,
-  squaresFromTerm
+  squaresFromTerm,
+  wallSquare
 } from './play/gamemap';
 import mapRoot from './play/maps/root';
 
@@ -278,7 +280,16 @@ export default class Play extends Phaser.Scene {
     this.map = new GameMap(mapRoot);
     this.currentMap = this.map; // ref
     this.front = [];
-    this.currentSquare = [];
+    this.currentSquare = [
+      {
+        Atype: 'air',
+        name: codesFrom('WASD to move, use shift to just turn'),
+        collidable: false,
+        movable: false,
+        locked: false,
+        image: []
+      }
+    ];
     this.clipSquare = airSquare();
     this.modifiedTerm = [];
     this.playeri = this.currentMap.starti;
@@ -344,7 +355,16 @@ export default class Play extends Phaser.Scene {
     this.gMenuElements = [];
     // this.map = new GameMap(mapRoot);
     // this.currentMap = this.map; // ref
-    this.currentSquare = [];
+    this.currentSquare = [
+      {
+        Atype: 'air',
+        name: codesFrom('WASD to move, use shift to just turn'),
+        collidable: false,
+        movable: false,
+        locked: false,
+        image: []
+      }
+    ];
     this.clipSquare = airSquare();
     this.modifiedTerm = [];
     // this.playeri = this.currentMap.starti;
@@ -437,11 +457,14 @@ export default class Play extends Phaser.Scene {
         .setDepth(-10)
     );
 
-    const abst = s.name.length < 3 ? s.name : `${s.name[0]}.`;
-    const handle = `name_${abst}`;
+    const abst =
+      s.name.length < 3 ? s.name : [s.name[0]].concat(codesFrom('.'));
+    const handle = `name_${objectHash(abst)}`;
+    if (abst.length === 2) log(10, 'abst:', abst);
+
     if (!this.textures.exists(handle)) {
       this.font?.loadImageFrom(
-        codesFrom(abst),
+        abst,
         handle,
         1,
         SQUARE_NAME_COLOR[0],
@@ -475,15 +498,15 @@ export default class Play extends Phaser.Scene {
         .setDepth(0)
     );
 
-    if (this.clipSquare.name !== '') {
+    if (!this.clipSquare.name.length) {
       const abst =
         this.clipSquare.name.length < 3
           ? this.clipSquare.name
-          : `${this.clipSquare.name[0]}.`;
-      const handle = `name_${abst}`;
+          : [this.clipSquare.name[0]].concat(codesFrom('.'));
+      const handle = `name_${objectHash(abst)}`;
       if (!this.textures.exists(handle)) {
         this.font?.loadImageFrom(
-          codesFrom(abst),
+          abst,
           handle,
           1,
           SQUARE_NAME_COLOR[0],
@@ -540,14 +563,14 @@ export default class Play extends Phaser.Scene {
     fi: number = this.focusnexti,
     fj: number = this.focusnextj
   ) {
-    this.front = [];
+    this.front = [wallSquare(), wallSquare()];
     if (
       xi >= 0 &&
       xi < this.currentMap.h &&
       xj >= 0 &&
       xj < this.currentMap.w
     ) {
-      this.front.push(this.currentMap.squares[xi][xj]);
+      this.front[0] = this.currentMap.squares[xi][xj];
     }
     if (
       fi >= 0 &&
@@ -555,7 +578,7 @@ export default class Play extends Phaser.Scene {
       fj >= 0 &&
       fj < this.currentMap.w
     ) {
-      this.front.push(this.currentMap.squares[fi][fj]);
+      this.front[1] = this.currentMap.squares[fi][fj];
     }
     if (
       this.front[0].Atype === 'term' &&
@@ -595,7 +618,7 @@ export default class Play extends Phaser.Scene {
                 {
                   Atype: 'term',
                   term: e,
-                  name: '',
+                  name: [],
                   movable: false,
                   locked: false,
                   collidable: false,
@@ -672,20 +695,19 @@ export default class Play extends Phaser.Scene {
           .setX(this.mapOriginx + x + 1);
       }
 
-      this.moveToPosition(this.focusi, this.focusj);
       log(10, this.currentMap);
     }
   }
 
   moveOn() {
-    this.front = [];
+    this.front = [wallSquare(), wallSquare()];
     if (
       this.focusi >= 0 &&
       this.focusi < this.currentMap.h &&
       this.focusj >= 0 &&
       this.focusj < this.currentMap.w
     ) {
-      this.front.push(this.currentMap.squares[this.focusi][this.focusj]);
+      this.front[0] = this.currentMap.squares[this.focusi][this.focusj];
     }
     if (
       this.focusnexti >= 0 &&
@@ -693,9 +715,7 @@ export default class Play extends Phaser.Scene {
       this.focusnextj >= 0 &&
       this.focusnextj < this.currentMap.w
     ) {
-      this.front.push(
-        this.currentMap.squares[this.focusnexti][this.focusnextj]
-      );
+      this.front[1] = this.currentMap.squares[this.focusnexti][this.focusnextj];
     }
     log(
       10,
@@ -754,7 +774,6 @@ export default class Play extends Phaser.Scene {
       js = false;
     }
     if (ja && jd) {
-      log(10, this.keys);
       ja = false;
       jd = false;
     }
@@ -1011,7 +1030,7 @@ export default class Play extends Phaser.Scene {
                 Atype: 'var',
                 var: this.currentMap.squares[2][5].term.var
               },
-              name: '',
+              name: [],
               movable: true,
               collidable: true,
               locked: false,
@@ -1061,7 +1080,7 @@ export default class Play extends Phaser.Scene {
               var: '0',
               ret: { Atype: 'var', var: '0' }
             }),
-            name: '',
+            name: [],
             movable: true,
             collidable: true,
             locked: false,
@@ -1079,7 +1098,7 @@ export default class Play extends Phaser.Scene {
               var: '0',
               ret: { Atype: 'var', var: '0' }
             }),
-            name: '',
+            name: [],
             movable: true,
             collidable: true,
             locked: false,
@@ -1146,7 +1165,7 @@ export default class Play extends Phaser.Scene {
                   {
                     Atype: 'term',
                     term: e,
-                    name: '',
+                    name: [],
                     movable: false,
                     locked: false,
                     collidable: false,
@@ -1321,7 +1340,7 @@ export default class Play extends Phaser.Scene {
       const handle = `mapname_${this.currentSquare.slice(-1)[0].name}`;
       if (!this.textures.exists(handle)) {
         this.font?.loadImageFrom(
-          codesFrom(this.currentSquare.slice(-1)[0].name),
+          this.currentSquare.slice(-1)[0].name,
           handle,
           1
         );
@@ -1411,7 +1430,7 @@ export default class Play extends Phaser.Scene {
         var: '0',
         ret: { Atype: 'var', var: '0' }
       }),
-      name: '',
+      name: [],
       movable: true,
       collidable: true,
       locked: false,
@@ -1505,14 +1524,14 @@ export default class Play extends Phaser.Scene {
       this.closeMenu();
     }
     if (justDown(this.keys.F2)) {
-      this.front = [];
+      this.front = [wallSquare(), wallSquare()];
       if (
         this.focusi >= 0 &&
         this.focusi < this.currentMap.h &&
         this.focusj >= 0 &&
         this.focusj < this.currentMap.w
       ) {
-        this.front.push(this.currentMap.squares[this.focusi][this.focusj]);
+        this.front[0] = this.currentMap.squares[this.focusi][this.focusj];
       }
       if (
         this.focusnexti >= 0 &&
@@ -1520,9 +1539,8 @@ export default class Play extends Phaser.Scene {
         this.focusnextj >= 0 &&
         this.focusnextj < this.currentMap.w
       ) {
-        this.front.push(
-          this.currentMap.squares[this.focusnexti][this.focusnextj]
-        );
+        this.front[1] =
+          this.currentMap.squares[this.focusnexti][this.focusnextj];
       }
       this.moveBlock();
     }
@@ -1571,7 +1589,6 @@ export default class Play extends Phaser.Scene {
     }
     context.putImageData(pixels, 0, 0);
     newTexture.refresh();
-    log(10, this.textures.exists(handle));
   }
 
   imageHandleFromSquare(
@@ -1620,10 +1637,10 @@ export default class Play extends Phaser.Scene {
           return '';
         }
         // eslint-disable-next-line no-param-reassign
-        s.name = asString(s.term);
+        s.name = asCodes(s.term);
         const hash: string = squareHash(s);
         const handle = coloredHandleFrom(s.term, hash);
-        log(10, handle);
+
         if (!this.textures.exists(handle)) {
           this.createColoredTermImage(s.term, hash, handle);
         }
@@ -1685,6 +1702,20 @@ export default class Play extends Phaser.Scene {
     this.gMapBackground.fillRectShape(this.gMapBackgroundShape);
     this.gMapBackground.setDepth(-90);
 
+    if (this.currentSquare.length) {
+      const handle = `mapname_${this.currentSquare.slice(-1)[0].name}`;
+      if (!this.textures.exists(handle)) {
+        this.font?.loadImageFrom(
+          this.currentSquare.slice(-1)[0].name,
+          handle,
+          1
+        );
+      }
+      const t = this.textures.get(handle).getSourceImage();
+      const w = t.width;
+      this.gMapName = this.add.image(10 + w / 2, 15, handle).setAlpha(1);
+    }
+
     for (let i = 0; i < this.currentMap.h; i += 1) {
       this.gMapBackAir.push([]);
       for (let j = 0; j < this.currentMap.w; j += 1) {
@@ -1708,11 +1739,14 @@ export default class Play extends Phaser.Scene {
         );
 
         {
-          const abst = s.name.length < 3 ? s.name : `${s.name[0]}.`;
-          const handle = `name_${abst}`;
+          const abst =
+            s.name.length < 3 ? s.name : [s.name[0]].concat(codesFrom('.'));
+          const handle = `name_${objectHash(abst)}`;
+          if (abst.length === 2) log(10, 'abst:', abst);
+
           if (!this.textures.exists(handle)) {
             this.font?.loadImageFrom(
-              codesFrom(abst),
+              abst,
               handle,
               1,
               SQUARE_NAME_COLOR[0],
@@ -1721,7 +1755,6 @@ export default class Play extends Phaser.Scene {
               SQUARE_NAME_ALPHA
             );
           }
-          log(10, this.textures.exists(handle));
           s.image.push(
             this.add
               .image(this.mapOriginx + x + 8, this.mapOriginy + y + 8, handle)

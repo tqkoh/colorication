@@ -18,10 +18,9 @@ export function zero() {
 }
 
 function isTimes(t: Term, f: string, x: string): number {
-  log(200, 'isTimes', t, f, x);
+  log(200, 'isTimes', t);
   if (t.Atype === 'var' && t.var === x) return 0;
   if (t.Atype === 'app' && t.lam.Atype === 'var' && t.lam.var === f) {
-    log(200, 'isTimes -');
     const p = isTimes(t.param, f, x);
     return p < 0 ? p : p + 1;
   }
@@ -40,10 +39,11 @@ export function asNumber(t: Term): number {
   return isTimes(t.ret.ret, f, x);
 }
 
-export function asString(t: Term): string {
+export function asCodes(t: Term): number[] {
   log(200, 'asString');
   const n = asNumber(t);
-  if (n < 0) return '';
-  log(200, n.toString());
-  return n.toString();
+  if (n < 0) {
+    return [];
+  }
+  return [n];
 }

@@ -3,6 +3,7 @@ import * as lodash from 'lodash';
 import { cloneDeep } from 'lodash';
 import Phaser from 'phaser';
 import { log } from '../../utils/deb';
+import { codesFrom } from '../../utils/font';
 import Term from '../../utils/term';
 
 export type Direction = 'right' | 'down' | 'left' | 'up';
@@ -39,7 +40,7 @@ export type Square = (
   | { Atype: 'stage'; stage: Stage; map?: GameMap }
   | { Atype: 'block'; block: Block }
 ) & {
-  name: string;
+  name: number[];
   movable: boolean;
   collidable: boolean;
   locked: boolean;
@@ -100,7 +101,7 @@ export class GameMap {
 
 export const airSquareI: Square = {
   Atype: 'air',
-  name: '',
+  name: [],
   movable: false,
   collidable: false,
   locked: false,
@@ -114,7 +115,7 @@ export function airSquare() {
 export const parentSquareI: Square = {
   Atype: 'block',
   block: 'parent',
-  name: '',
+  name: [],
   movable: false,
   collidable: true,
   locked: false,
@@ -128,7 +129,7 @@ export function parentSquare() {
 export const wallSquareI: Square = {
   Atype: 'block',
   block: 'wall',
-  name: '',
+  name: [],
   movable: false,
   collidable: true,
   locked: true,
@@ -142,7 +143,7 @@ export function wallSquare() {
 export const startSquareI: Square = {
   Atype: 'block',
   block: 'start',
-  name: '',
+  name: [],
   movable: false,
   collidable: false,
   locked: false,
@@ -192,7 +193,7 @@ export function squaresFromStage(s: Stage): Square[][] {
   ret[0][0] = {
     Atype: 'block',
     block: 'parent',
-    name: '',
+    name: [],
     movable: false,
     collidable: true,
     locked: false,
@@ -203,7 +204,7 @@ export function squaresFromStage(s: Stage): Square[][] {
     ret[5][j] = {
       Atype: 'block',
       block: 'wall',
-      name: '',
+      name: [],
       movable: false,
       collidable: true,
       locked: false,
@@ -213,7 +214,7 @@ export function squaresFromStage(s: Stage): Square[][] {
   ret[5][5] = {
     Atype: 'block',
     block: 'submit',
-    name: 'submit',
+    name: codesFrom('submit'),
     movable: false,
     collidable: true,
     locked: false,
@@ -222,7 +223,7 @@ export function squaresFromStage(s: Stage): Square[][] {
   ret[6][5] = {
     Atype: 'block',
     block: 'down',
-    name: '',
+    name: [],
     movable: false,
     collidable: false,
     locked: false,
@@ -241,7 +242,7 @@ export function squaresFromStage(s: Stage): Square[][] {
     ret[7 + k][4] = {
       Atype: 'block',
       block: 'equal',
-      name: '',
+      name: [],
       movable: false,
       collidable: false,
       locked: false,
@@ -250,7 +251,7 @@ export function squaresFromStage(s: Stage): Square[][] {
     ret[7 + k][5] = {
       Atype: 'block',
       block: 'place',
-      name: '',
+      name: [],
       movable: false,
       collidable: true,
       locked: false,
@@ -273,7 +274,7 @@ function squaresFromLam(v: string, r: Term) {
   ret[0][0] = {
     Atype: 'block',
     block: 'parent',
-    name: '',
+    name: [],
     movable: false,
     collidable: true,
     locked: false,
@@ -284,7 +285,7 @@ function squaresFromLam(v: string, r: Term) {
   ret[2][0] = {
     Atype: 'block',
     block: 'lam_ret',
-    name: '',
+    name: [],
     movable: false,
     collidable: false,
     locked: false,
@@ -293,7 +294,7 @@ function squaresFromLam(v: string, r: Term) {
   ret[2][1] = {
     Atype: 'term',
     term: r,
-    name: '',
+    name: [],
     movable: true,
     collidable: true,
     locked: false,
@@ -305,7 +306,7 @@ function squaresFromLam(v: string, r: Term) {
       Atype: 'var',
       var: v
     },
-    name: '',
+    name: [],
     movable: false,
     collidable: true,
     locked: false,
@@ -314,7 +315,7 @@ function squaresFromLam(v: string, r: Term) {
   ret[2][6] = {
     Atype: 'block',
     block: 'lam_var',
-    name: '',
+    name: [],
     movable: false,
     collidable: false,
     locked: false,
@@ -337,7 +338,7 @@ function squaresFromApp(l: Term, p: Term) {
   ret[0][0] = {
     Atype: 'block',
     block: 'parent',
-    name: '',
+    name: [],
     movable: false,
     collidable: true,
     locked: false,
@@ -347,7 +348,7 @@ function squaresFromApp(l: Term, p: Term) {
   ret[2][2] = {
     Atype: 'term',
     term: l,
-    name: '',
+    name: [],
     movable: true,
     collidable: true,
     locked: false,
@@ -356,7 +357,7 @@ function squaresFromApp(l: Term, p: Term) {
   ret[2][3] = {
     Atype: 'block',
     block: 'apply',
-    name: '',
+    name: [],
     movable: false,
     collidable: false,
     locked: false,
@@ -365,7 +366,7 @@ function squaresFromApp(l: Term, p: Term) {
   ret[2][4] = {
     Atype: 'term',
     term: p,
-    name: '',
+    name: [],
     movable: true,
     collidable: true,
     locked: false,

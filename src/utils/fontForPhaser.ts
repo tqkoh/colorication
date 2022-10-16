@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
 import { v4 as uuid } from 'uuid';
-import { log } from './deb';
 import Font from './font';
 
 const BLACK = [84, 75, 64];
@@ -41,7 +40,6 @@ class FontForPhaser extends Font {
     if (this.textures.exists(handle)) {
       return;
     }
-    log(10, scale);
     const image = this.getImage(from, scale);
     if (image.length) {
       const h = image.length;
@@ -66,7 +64,6 @@ class FontForPhaser extends Font {
 
       context.putImageData(pixels, 0, 0);
       newTexture.refresh();
-      log(10, this.textures.exists(handle));
     } else {
       throw new Error('bu');
     }
