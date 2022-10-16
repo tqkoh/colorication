@@ -603,7 +603,7 @@ export default class Play extends Phaser.Scene {
         param: this.front[0].term
       };
 
-      this.substProgress = completeSubst([app]).reverse();
+      this.substProgress = completeSubst(app).reverse();
       this.substProgress.push(this.front[1].term);
       log(8, this.substProgress);
       {
@@ -1149,7 +1149,7 @@ export default class Play extends Phaser.Scene {
           term: app
         };
 
-        this.substProgress = completeSubst([app]).reverse();
+        this.substProgress = completeSubst(app).reverse();
         log(8, this.substProgress);
         if (this.substProgress.length === 1) return;
 
