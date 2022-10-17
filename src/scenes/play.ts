@@ -605,7 +605,7 @@ export default class Play extends Phaser.Scene {
 
       this.substProgress = completeSubst(app).reverse();
       this.substProgress.push(this.front[1].term);
-      log(8, this.substProgress);
+      log(8, 'left is newer', this.substProgress);
       {
         const y = 16 * fi;
         const x = 16 * fj;
@@ -1124,22 +1124,27 @@ export default class Play extends Phaser.Scene {
   }
 
   reflectModified() {
-    match(this.currentMap.squares[this.focusi][this.focusj])
+    const changedTerm: Term | undefined = match(
+      this.currentMap.squares[this.focusi][this.focusj]
+    )
       .with({ Atype: 'term', term: { Atype: 'lam' } }, (focus) => {
         if (this.modifiedTerm.length < 1) throw new Error('s');
+        const lam: Term = {
+          Atype: 'lam',
+          var: focus.term.var,
+          ret: this.modifiedTerm[0]
+        };
         this.currentMap.squares[this.focusi][this.focusj] = {
           ...focus,
-          term: {
-            ...focus.term,
-            ret: this.modifiedTerm[0]
-          }
+          term: lam
         };
+        return lam;
       })
       .with({ Atype: 'term', term: { Atype: 'app' } }, (focus) => {
         if (this.modifiedTerm.length < 2) throw new Error('s');
 
         const app: Term = {
-          ...focus.term,
+          Atype: 'app',
           lam: this.modifiedTerm[0],
           param: this.modifiedTerm[1]
         };
@@ -1148,51 +1153,53 @@ export default class Play extends Phaser.Scene {
           ...focus,
           term: app
         };
-
-        this.substProgress = completeSubst(app).reverse();
-        log(8, this.substProgress);
-        if (this.substProgress.length === 1) return;
-
-        {
-          const y = 16 * this.focusi;
-          const x = 16 * this.focusj;
-          this.gAnimationApply = this.substProgress.map((e, i) =>
-            this.add
-              .image(
-                this.mapOriginx + x + 8,
-                this.mapOriginy + y + 8,
-                this.imageHandleFromSquare(
-                  {
-                    Atype: 'term',
-                    term: e,
-                    name: [],
-                    movable: false,
-                    locked: false,
-                    collidable: false,
-                    image: []
-                  },
-                  this.focusi,
-                  this.focusj,
-                  this.currentMap.h,
-                  this.currentMap.w
-                )
-              )
-              .setDepth(10 + i)
-          );
-        }
-
-        this.currentMap.squares[this.focusi][this.focusj] = {
-          ...this.currentMap.squares[this.focusi][this.focusj],
-          map: undefined,
-          Atype: 'term',
-          term: cloneDeep(this.substProgress[0])
-        };
-
-        this.animationApplyFrame = 0;
-        this.mainState = 'applyAnimating';
+        return app;
       })
-      .with(P._, () => {})
+      .with(P._, () => undefined)
       .exhaustive();
+
+    if (!changedTerm) return;
+    this.substProgress = completeSubst(changedTerm).reverse();
+    log(8, this.substProgress);
+    if (this.substProgress.length === 1) return;
+
+    {
+      const y = 16 * this.focusi;
+      const x = 16 * this.focusj;
+      this.gAnimationApply = this.substProgress.map((e, i) =>
+        this.add
+          .image(
+            this.mapOriginx + x + 8,
+            this.mapOriginy + y + 8,
+            this.imageHandleFromSquare(
+              {
+                Atype: 'term',
+                term: e,
+                name: [],
+                movable: false,
+                locked: false,
+                collidable: false,
+                image: []
+              },
+              this.focusi,
+              this.focusj,
+              this.currentMap.h,
+              this.currentMap.w
+            )
+          )
+          .setDepth(10 + i)
+      );
+    }
+
+    this.currentMap.squares[this.focusi][this.focusj] = {
+      ...this.currentMap.squares[this.focusi][this.focusj],
+      map: undefined,
+      Atype: 'term',
+      term: cloneDeep(this.substProgress[0])
+    };
+
+    this.animationApplyFrame = 0;
+    this.mainState = 'applyAnimating';
   }
 
   execEnter() {
