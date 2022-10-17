@@ -6,7 +6,7 @@ import Term, { normalized, randomized, subst } from './term';
 
 import { Square } from '../scenes/play/gamemap';
 
-const MAX_NUMBER_RECOGNIZE = 999;
+const MAX_ISTIMES_COUNT = 999;
 const MAX_REDUCE_TERM_DEPTH = 20;
 const MAX_REDUCE_TERM_COUNT = 500;
 let depth = 0;
@@ -14,7 +14,7 @@ let count = 0;
 
 function reduceTerm(t: Term): Term {
   depth += 1;
-  log(100, depth, count);
+  log(100, 'reduceTerm', depth, count);
   if (MAX_REDUCE_TERM_DEPTH < depth || MAX_REDUCE_TERM_COUNT < count) {
     depth -= 1;
     return {
@@ -87,6 +87,13 @@ export function equal(l: Term, r: Term): boolean {
   return hashl === hashr;
 }
 
+export function completeEqual(l: Term, r: Term): boolean {
+  // return eq(normalized(l), normalized(r));
+  const hashl = hash(normalized(l));
+  const hashr = hash(normalized(r));
+  return hashl === hashr;
+}
+
 export function id() {
   return randomized({
     Atype: 'lam',
@@ -109,7 +116,7 @@ function isTimes(t: Term, f: string, x: string): number {
   // n < 0: n f x である, =-1: 違う, =-2: デカすぎる(MAX_NUMBER_RECOGNIZE 以上), <-2: デカすぎる(処理が重すぎる、-3-ret 以上)
   log(200, 'isTimes', isTimesCount, t);
   isTimesCount += 1;
-  if (MAX_NUMBER_RECOGNIZE < isTimesCount) return -2;
+  if (MAX_ISTIMES_COUNT < isTimesCount) return -2;
   if (t.Atype === 'var' && t.var === x) return 0;
   if (t.Atype === 'app' && t.lam.Atype === 'var' && t.lam.var === f) {
     const p = isTimes(t.param, f, x);
@@ -124,8 +131,14 @@ function isTimes(t: Term, f: string, x: string): number {
     log(200, 'isTimes -3');
     return -3;
   }
-  if (equal(t, sub[0])) {
+  // if (equal(t, sub[0])) {
+  // ある程度の深さまでしか見ずに等しいと言ってるので、ダメ
+  if (completeEqual(t, sub[0])) {
+    // subst が最後までできたくらいのデカさなので、最後まで見ていい(:honmaka:)
     log(200, 'isTimes -1');
+    return -1;
+  }
+  if (sub[0].Atype === 'var' && sub[0].var !== x) {
     return -1;
   }
 
@@ -150,7 +163,7 @@ export function asCodes(t: Term): number[] {
   const n = asNumber(t);
   if (n === -2) {
     log(103, 'asCodes', -2);
-    return codesFrom(`#${MAX_NUMBER_RECOGNIZE}+`);
+    return codesFrom(`#${MAX_ISTIMES_COUNT}+`);
   }
   if (n < -2) {
     const moreThan = -3 - n;

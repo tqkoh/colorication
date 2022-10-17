@@ -1648,7 +1648,7 @@ export default class Play extends Phaser.Scene {
         }
         // eslint-disable-next-line no-param-reassign
         s.name = asCodes(s.term);
-        const hash: string = squareHash(s);
+        const hash: string = s.name.length ? objectHash(s.name) : squareHash(s);
         const handle = coloredHandleFrom(s.term, hash);
 
         if (!this.textures.exists(handle)) {
