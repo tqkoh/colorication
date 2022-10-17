@@ -1,6 +1,5 @@
 import { log } from './deb';
 
-const MAX_CODE = 999;
 const CHAR_OF_1_WIDTH = [33, 39, 46];
 
 export function codesFrom(s: string): number[] {
@@ -40,31 +39,7 @@ class Font {
         letter = [];
       }
     }
-    for (let i = 0; i < MAX_CODE + 1; i += 1) {
-      if (
-        i < offset ||
-        offset + letters.length <= i ||
-        (letters[i - offset][0].length === 1 && !letters[i - offset][6][0])
-      ) {
-        this.data.push(letters[1]); // temp
-        this.isLetter.push(false);
-      } else {
-        this.data.push(letters[i - offset]);
-        this.isLetter.push(true);
-      }
-    }
-    for (let i = 0; i < MAX_CODE + 1; i += 1) {
-      if (
-        i < offset ||
-        offset + letters.length <= i ||
-        (letters[i - offset][0].length === 1 && !CHAR_OF_1_WIDTH.includes(i))
-      ) {
-        // i に対応する文字がない場合、i を文字列として見たものを表示する
-        const s = `#${i.toString()}`; // "#129"
-        const codes = s.split('').map((c) => c.charCodeAt(0));
-        this.data[i] = this.getImage(codes);
-      }
-    }
+    this.data = letters;
     log(10, 'font.data: ', this.data);
   }
 
@@ -75,8 +50,21 @@ class Font {
       ret.push([]);
     }
     for (let k = 0; k < from.length; k += 1) {
-      const letter = this.data[from[k]]; // ref
-
+      const code = from[k];
+      let letter: boolean[][] = [];
+      if (
+        code < this.offset ||
+        this.offset + this.data.length <= code ||
+        (this.data[code - this.offset][0].length === 1 &&
+          !CHAR_OF_1_WIDTH.includes(code))
+      ) {
+        // code に対応する文字がない場合、code を(その文字コードの文字の代わりに)数値の文字列として見たものを表示する
+        const s = `#${code.toString()}`; // "#129"
+        const codes = s.split('').map((c) => c.charCodeAt(0));
+        letter = this.getImage(codes);
+      } else {
+        letter = this.data[code - this.offset]; // ref
+      }
       for (let i = 0; i < this.h; i += 1) {
         for (let j = 0; j < letter[0].length; j += 1) {
           for (let ki = 0; ki < scale; ki += 1) {

@@ -605,7 +605,7 @@ export default class Play extends Phaser.Scene {
 
       this.substProgress = completeSubst(app).reverse();
       this.substProgress.push(this.front[1].term);
-      log(8, this.substProgress);
+      log(8, 'left is newer', this.substProgress);
       {
         const y = 16 * fi;
         const x = 16 * fj;

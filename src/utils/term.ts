@@ -213,7 +213,9 @@ export function subst(
     .with([{ Atype: 'app' }, P._], ([ap, a]) => {
       log(100, 'subst', 2);
 
+      log(102, sid, ap.lam);
       const substLam = subst(ap.lam, before, a);
+      log(103, sid, substLam);
       const substParam = subst(ap.param, before, a);
       const app: Term = {
         Atype: 'app',
@@ -249,10 +251,7 @@ export function subst(
       log(100, 'subst', 4);
 
       if (va.var === before) return a;
-      if (a.Atype === 'app') {
-        return subst(a);
-      }
-      return a;
+      return va;
     })
     .with([{ Atype: 'lam' }, P._], ([la, a]) => {
       log(100, 'subst', 5);
