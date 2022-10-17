@@ -1,6 +1,55 @@
 import hash from 'object-hash';
+import { match } from 'ts-pattern';
 import { Square } from '../scenes/play/gamemap';
+import { log } from './deb';
 import Term, { normalized } from './term';
+
+const MAX_REDUCE_TERM_DEPTH = 20;
+const MAX_REDUCE_TERM_COUNT = 500;
+let depth = 0;
+let count = 0;
+
+function reduceTerm(t: Term): Term {
+  depth += 1;
+  log(100, depth, count);
+  if (MAX_REDUCE_TERM_DEPTH < depth || MAX_REDUCE_TERM_COUNT < count) {
+    depth -= 1;
+    return {
+      Atype: 'var',
+      var: 'omitted'
+    };
+  }
+  count += 1;
+
+  return match<Term, Term>(t)
+    .with({ Atype: 'var' }, (va) => {
+      depth -= 1;
+      return {
+        Atype: 'var',
+        var: va.var
+      };
+    })
+    .with({ Atype: 'app' }, (ap) => {
+      const reducedLam = reduceTerm(ap.lam);
+      const reducedParam = reduceTerm(ap.param);
+      depth -= 1;
+      return {
+        Atype: 'app',
+        lam: reducedLam,
+        param: reducedParam
+      };
+    })
+    .with({ Atype: 'lam' }, (la) => {
+      const reducedRet = reduceTerm(la.ret);
+      depth -= 1;
+      return {
+        Atype: 'lam',
+        var: la.var,
+        ret: reducedRet
+      };
+    })
+    .exhaustive();
+}
 
 export function squareHash(s: Square): string {
   if (s.Atype === 'term') {
@@ -11,7 +60,9 @@ export function squareHash(s: Square): string {
     if (s.term.Atype === 'var') {
       return hash({ term: s.term });
     }
-    return hash({ term: normalized(s.term) });
+    depth = 0;
+    count = 0;
+    return hash({ term: normalized(reduceTerm(s.term)) });
   }
   return hash(s);
 }

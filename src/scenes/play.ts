@@ -21,7 +21,6 @@ import {
   wallSquare
 } from './play/gamemap';
 import mapRoot from './play/maps/root';
-
 // const completeSubst = subst;
 
 type MainState =
