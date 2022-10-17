@@ -170,10 +170,6 @@ export function subst(
       ([ap]) => {
         log(100, 'subst', 0);
 
-          // log(100, 't2 motomemasu');
-          const t2 = subst(t1);
-          // for (let i = 1; i < t2.length; i += 1) {
-          //   acc.push(t2[i]);
         const substRet = subst(ap.lam.ret, ap.lam.var, ap.param);
         if (substRet === 'muri') {
           // ap.lam.var を消しかけているけどやめないと未定義な変数として残っちゃう
