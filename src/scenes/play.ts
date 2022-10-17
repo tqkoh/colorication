@@ -8,8 +8,12 @@ import { log } from '../utils/deb';
 import { codesFrom } from '../utils/font';
 import FontForPhaser from '../utils/fontForPhaser';
 import Term, { completeSubst, freeValue, randomized } from '../utils/term';
-import { coloredHandleFrom, deltaHFrom, squareHash } from '../utils/termColor';
-import { asCodes } from '../utils/termUtils';
+import {
+  asCodes,
+  coloredHandleFrom,
+  deltaHFrom,
+  squareHash
+} from '../utils/termUtils';
 import {
   airSquare,
   cloneSquare,

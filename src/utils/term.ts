@@ -4,9 +4,9 @@ import { v4 as uuid } from 'uuid';
 import { log } from './deb';
 
 const MAX_COMPLETE_SUBST = 2000;
-const MAX_SUBST = 2000;
 const LOG_SUBST_COUNT_EVERY = 10;
-const MAX_SUBST_TIME = 1000;
+const MAX_SUBST_COUNT_COMPLETE = 2000;
+const MAX_SUBST_TIME_COMPLETE = 1000;
 
 type Term =
   | { Atype: 'var'; var: string }
@@ -134,15 +134,20 @@ export function freeValue(t: Term): string[] {
 let substCount = 0;
 let startTime = performance.now();
 let lastSubstTime = performance.now();
+let maxSubstCount = MAX_SUBST_COUNT_COMPLETE;
+let maxSubstTime = MAX_SUBST_TIME_COMPLETE;
 
-export function subst(
+type SubstStatus = 'ok' | 'muri' | 'compromise';
+
+function substI(
   t: Term, // ref
   before: string = '',
   after: Term = {
     Atype: 'var',
     var: before
   }
-): Term | 'muri' {
+): [Term, SubstStatus] {
+  // 最後までできたがどうか
   substCount += 1;
   {
     const now = performance.now();
@@ -151,15 +156,15 @@ export function subst(
     if (substCount % LOG_SUBST_COUNT_EVERY === 0) {
       log(5, `substCount: ${substCount}`);
     }
-    if (substCount >= MAX_SUBST || now - startTime >= MAX_SUBST_TIME) {
+    if (substCount >= maxSubstCount || now - startTime >= maxSubstTime) {
       log(101, 'muri');
-      return 'muri';
+      return [t, 'muri'];
     }
   }
   const sid = uuid();
   log(100, `subst-${sid}: {`); // , cloneDeep(acc), before, after
 
-  const ret = match<[Term, Term], Term>([t, after])
+  const ret = match<[Term, Term], [Term, SubstStatus]>([t, after])
     // app の場合、subst した後適用する。(lam の返り値の中の引数を、適用するものでさらに subst する)
     .with(
       // before と after が同じな場合、適用だけする
@@ -170,14 +175,14 @@ export function subst(
       ([ap]) => {
         log(100, 'subst', 0);
 
-        const substRet = subst(ap.lam.ret, ap.lam.var, ap.param);
-        if (substRet === 'muri') {
+        const substRet = substI(ap.lam.ret, ap.lam.var, ap.param);
+        if (substRet[1] === 'muri') {
           // ap.lam.var を消しかけているけどやめないと未定義な変数として残っちゃう
-          return t;
+          return [t, 'compromise'];
         }
-        if (substRet.Atype === 'app') {
-          const app = subst(substRet);
-          return app === 'muri' ? substRet : app;
+        if (substRet[0].Atype === 'app') {
+          const app = substI(substRet[0]);
+          return app[1] === 'muri' ? [substRet[0], 'compromise'] : app;
           // log(200, 't2: ', t2);
         }
         return substRet;
@@ -186,25 +191,28 @@ export function subst(
     .with([{ Atype: 'app', lam: { Atype: 'lam' } }, P._], ([ap, a]) => {
       log(100, 'subst', 1);
 
-      const substLam = subst(ap.lam, before, a);
-      if (substLam === 'muri') {
-        return t;
+      const substLam = substI(ap.lam, before, a);
+      if (substLam[1] === 'muri') {
+        return [t, 'compromise'];
       }
-      const substParam = subst(ap.param, before, a);
-      if (substParam === 'muri') {
-        return {
-          Atype: 'app',
-          lam: substLam,
-          param: ap.param
-        };
+      const substParam = substI(ap.param, before, a);
+      if (substParam[1] === 'muri') {
+        return [
+          {
+            Atype: 'app',
+            lam: substLam[0],
+            param: ap.param
+          },
+          'compromise'
+        ];
       }
-      const app: Term = {
+      const app0: Term = {
         Atype: 'app',
-        lam: substLam,
-        param: substParam
+        lam: substLam[0],
+        param: substParam[0]
       };
       // acc.push(app);
-      const substApp = subst(app);
+      const substApp = substI(app0);
       // acc.push(
       //   subst(
       //     [subst([ap.lam.ret], before, a)],
@@ -212,75 +220,102 @@ export function subst(
       //     substParam
       //   )
       // );
-      return substApp === 'muri' ? app : substApp;
+      return substApp[1] === 'muri' ? [app0, 'compromise'] : substApp;
     })
     .with([{ Atype: 'app' }, P._], ([ap, a]) => {
       log(100, 'subst', 2);
 
       log(102, sid, ap.lam);
-      const substLam = subst(ap.lam, before, a);
-      if (substLam === 'muri') return t;
-      log(103, sid, substLam);
-      const substParam = subst(ap.param, before, a);
-      const app: Term = {
-        Atype: 'app',
-        lam: substLam,
-        param: substParam === 'muri' ? ap.param : substParam
-      };
-      // acc.push(subst([app]));
-      return app;
+      const substLam = substI(ap.lam, before, a);
+      if (substLam[1] === 'muri') {
+        return [t, 'compromise'];
+      }
+      log(103, sid, substLam[0]);
+      const substParam = substI(ap.param, before, a);
+      return substParam[1] === 'muri'
+        ? [
+            {
+              Atype: 'app',
+              lam: substLam[0],
+              param: ap.param
+            },
+            'compromise'
+          ]
+        : [
+            {
+              Atype: 'app',
+              lam: substLam[0],
+              param: substParam[0]
+            },
+            'ok'
+          ];
     })
     // 適用だけ
     .with([{ Atype: 'lam' }, { Atype: 'var', var: before }], ([la]) => {
       log(100, 'subst', 3);
 
-      const applyRet = subst(la.ret);
-      return {
-        Atype: 'lam',
-        var: la.var,
-        ret: applyRet === 'muri' ? la.ret : applyRet
-      };
+      const applyRet = substI(la.ret);
+      return applyRet[1] === 'muri'
+        ? [
+            {
+              Atype: 'lam',
+              var: la.var,
+              ret: la.ret
+            },
+            'compromise'
+          ]
+        : [
+            {
+              Atype: 'lam',
+              var: la.var,
+              ret: applyRet[0]
+            },
+            applyRet[1]
+          ];
     })
     .with([{ Atype: 'var' }, { Atype: 'var', var: before }], () => {
       log(100, 'subst', 3.5);
 
-      return t;
+      return [t, 'ok'];
     })
     .with([P._, { Atype: 'var', var: before }], () => {
       log(100, 'subst', 3);
 
-      return t;
+      return [t, 'ok'];
     })
     // Var
     .with([{ Atype: 'var' }, P._], ([va, a]) => {
       log(100, 'subst', 4);
 
-      if (va.var === before) return a;
-      return va;
+      if (va.var === before) return [a, 'ok'];
+      return [va, 'ok'];
     })
     .with([{ Atype: 'lam' }, P._], ([la, a]) => {
       log(100, 'subst', 5);
 
-      if (before === la.var) return t;
-      if (!freeValue(la.ret).includes(before)) return t;
+      if (before === la.var) return [t, 'ok'];
+      if (!freeValue(la.ret).includes(before)) return [t, 'ok'];
       // これは before がないとき簡単に返してるだけ
 
       // これ uuid にしたのでいらなく内科 la のなかで定義されている var が after に入っていることはない
       // if (freeValue(a).includes(la.var)) {
       // }
-      const t1 = subst(la.ret, before, a);
-      return t1 === 'muri'
-        ? t
-        : {
-            Atype: 'lam',
-            var: la.var,
-            ret: t1
-          };
+      const t1 = substI(la.ret, before, a);
+      return t1[1] === 'muri'
+        ? [t, 'compromise']
+        : [
+            {
+              Atype: 'lam',
+              var: la.var,
+              ret: t1[0]
+            },
+            t1[1]
+          ];
     })
     .with([P._, P._], () => {
       log(100, 'subst', 6);
 
-      return t;
+      return [t, 'ok'];
     })
     .exhaustive();
   // console.log('subst---------------------')
@@ -292,16 +327,23 @@ export function subst(
   return ret;
 }
 
-export function equal(l: Term, r: Term): boolean {
-  // return eq(normalized(l), normalized(r));
-  const hashl = objectHash(l);
-  const hashr = objectHash(r);
-  return hashl === hashr;
+export function subst(
+  t: Term,
+  maxCount: number = 100,
+  maxTimeMs: number = 100
+) {
+  maxSubstCount = maxCount;
+  maxSubstTime = maxTimeMs;
+  substCount = 0;
+  startTime = performance.now();
+  return substI(t);
 }
 
 export function completeSubst(t: Term): Term[] {
   substCount = 0;
   startTime = performance.now();
+  maxSubstCount = MAX_SUBST_COUNT_COMPLETE;
+  maxSubstTime = MAX_SUBST_TIME_COMPLETE;
   let count = 0;
   const acc: Term[] = [t];
   const hashAcc: string[] = [objectHash(t)];
@@ -311,9 +353,9 @@ export function completeSubst(t: Term): Term[] {
     (hashAcc.length < 2 || hashAcc.slice(-1)[0] !== hashAcc.slice(-2)[0])
   ) {
     // log(100, count, cloneDeep(acc));
-    const last = acc.slice(-1)[0];
-    const t1 = subst(last);
-    const next = t1 === 'muri' ? last : t1;
+    const last: Term = acc.slice(-1)[0];
+    const t1 = substI(last);
+    const next: Term = t1[1] === 'muri' ? last : t1[0];
     acc.push(next);
     hashAcc.push(objectHash(next));
     count += 1;
