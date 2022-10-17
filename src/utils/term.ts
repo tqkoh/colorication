@@ -142,7 +142,7 @@ export function subst(
     Atype: 'var',
     var: before
   }
-): Term {
+): Term | 'muri' {
   substCount += 1;
   {
     const now = performance.now();
@@ -153,7 +153,7 @@ export function subst(
     }
     if (substCount >= MAX_SUBST || now - startTime >= MAX_SUBST_TIME) {
       log(101, 'muri');
-      return t;
+      return 'muri';
     }
   }
   const sid = uuid();
@@ -170,30 +170,38 @@ export function subst(
       ([ap]) => {
         log(100, 'subst', 0);
 
-        // log(200, 't1 motomemasu');
-        const t1 = subst(ap.lam.ret, ap.lam.var, ap.param);
-        // log(200, 't1', t1);
-        // for (let i = 0; i < t1.length; i += 1) {
-        //   acc.push(t1[i]);
-        // }
-        // acc.push(t1);
-        if (t1.Atype === 'app') {
           // log(100, 't2 motomemasu');
           const t2 = subst(t1);
           // for (let i = 1; i < t2.length; i += 1) {
           //   acc.push(t2[i]);
-          // }
-          return t2;
+        const substRet = subst(ap.lam.ret, ap.lam.var, ap.param);
+        if (substRet === 'muri') {
+          // ap.lam.var を消しかけているけどやめないと未定義な変数として残っちゃう
+          return t;
+        }
+        if (substRet.Atype === 'app') {
+          const app = subst(substRet);
+          return app === 'muri' ? substRet : app;
           // log(200, 't2: ', t2);
         }
-        return t1;
+        return substRet;
       }
     )
     .with([{ Atype: 'app', lam: { Atype: 'lam' } }, P._], ([ap, a]) => {
       log(100, 'subst', 1);
 
       const substLam = subst(ap.lam, before, a);
+      if (substLam === 'muri') {
+        return t;
+      }
       const substParam = subst(ap.param, before, a);
+      if (substParam === 'muri') {
+        return {
+          Atype: 'app',
+          lam: substLam,
+          param: ap.param
+        };
+      }
       const app: Term = {
         Atype: 'app',
         lam: substLam,
@@ -208,19 +216,20 @@ export function subst(
       //     substParam
       //   )
       // );
-      return substApp;
+      return substApp === 'muri' ? app : substApp;
     })
     .with([{ Atype: 'app' }, P._], ([ap, a]) => {
       log(100, 'subst', 2);
 
       log(102, sid, ap.lam);
       const substLam = subst(ap.lam, before, a);
+      if (substLam === 'muri') return t;
       log(103, sid, substLam);
       const substParam = subst(ap.param, before, a);
       const app: Term = {
         Atype: 'app',
         lam: substLam,
-        param: substParam
+        param: substParam === 'muri' ? ap.param : substParam
       };
       // acc.push(subst([app]));
       return app;
@@ -233,7 +242,7 @@ export function subst(
       return {
         Atype: 'lam',
         var: la.var,
-        ret: applyRet
+        ret: applyRet === 'muri' ? la.ret : applyRet
       };
     })
     .with([{ Atype: 'var' }, { Atype: 'var', var: before }], () => {
@@ -258,27 +267,19 @@ export function subst(
 
       if (before === la.var) return t;
       if (!freeValue(la.ret).includes(before)) return t;
+      // これは before がないとき簡単に返してるだけ
 
-      if (freeValue(a).includes(la.var)) {
-        const newId = uuid();
-        return {
-          Atype: 'lam',
-          var: newId,
-          ret: subst(
-            subst(la.ret, la.var, {
-              Atype: 'var',
-              var: newId
-            }),
-            before,
-            a
-          )
-        };
-      }
-      return {
-        Atype: 'lam',
-        var: la.var,
-        ret: subst(la.ret, before, a)
-      };
+      // これ uuid にしたのでいらなく内科 la のなかで定義されている var が after に入っていることはない
+      // if (freeValue(a).includes(la.var)) {
+      // }
+      const t1 = subst(la.ret, before, a);
+      return t1 === 'muri'
+        ? t
+        : {
+            Atype: 'lam',
+            var: la.var,
+            ret: t1
+          };
     })
     .with([P._, P._], () => {
       log(100, 'subst', 6);
@@ -314,7 +315,9 @@ export function completeSubst(t: Term): Term[] {
     (hashAcc.length < 2 || hashAcc.slice(-1)[0] !== hashAcc.slice(-2)[0])
   ) {
     // log(100, count, cloneDeep(acc));
-    const next = subst(acc.slice(-1)[0]);
+    const last = acc.slice(-1)[0];
+    const t1 = subst(last);
+    const next = t1 === 'muri' ? last : t1;
     acc.push(next);
     hashAcc.push(objectHash(next));
     count += 1;
