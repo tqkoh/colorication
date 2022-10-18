@@ -212,7 +212,7 @@ function substI(
         param: substParam[0]
       };
       // acc.push(app);
-      const substApp = substI(app0);
+      const applied = substI(app0); // 0
       // acc.push(
       //   subst(
       //     [subst([ap.lam.ret], before, a)],
@@ -220,10 +220,10 @@ function substI(
       //     substParam
       //   )
       // );
-      return substApp[1] === 'muri' ? [app0, 'compromise'] : substApp;
+      return applied[1] === 'muri' ? [app0, 'compromise'] : applied;
     })
     .with([{ Atype: 'app' }, P._], ([ap, a]) => {
-      log(100, 'subst', 2);
+      log(100, 'subst', 1.5);
 
       log(102, sid, ap.lam);
       const substLam = substI(ap.lam, before, a);
@@ -252,7 +252,7 @@ function substI(
     })
     // 適用だけ
     .with([{ Atype: 'lam' }, { Atype: 'var', var: before }], ([la]) => {
-      log(100, 'subst', 3);
+      log(100, 'subst', 2);
 
       const applyRet = substI(la.ret);
       return applyRet[1] === 'muri'
@@ -272,11 +272,6 @@ function substI(
             },
             applyRet[1]
           ];
-    })
-    .with([{ Atype: 'var' }, { Atype: 'var', var: before }], () => {
-      log(100, 'subst', 3.5);
-
-      return [t, 'ok'];
     })
     .with([P._, { Atype: 'var', var: before }], () => {
       log(100, 'subst', 3);

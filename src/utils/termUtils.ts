@@ -117,6 +117,7 @@ function isTimes(t: Term, f: string, x: string): number {
   log(200, 'isTimes', isTimesCount, t);
   isTimesCount += 1;
   if (MAX_ISTIMES_COUNT < isTimesCount) return -2;
+  if (t.Atype === 'lam') return -1;
   if (t.Atype === 'var' && t.var === x) return 0;
   if (t.Atype === 'app' && t.lam.Atype === 'var' && t.lam.var === f) {
     const p = isTimes(t.param, f, x);
