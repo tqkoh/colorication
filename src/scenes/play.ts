@@ -1241,6 +1241,9 @@ export default class Play extends Phaser.Scene {
     const focus = this.currentMap.squares[this.focusi][this.focusj];
     let afterMap: GameMap;
     if (focus.Atype === 'block' && focus.block === 'return_title') {
+      this.currentMap.starti = this.playeri;
+      this.currentMap.startj = this.playerj;
+      this.currentMap.startd = this.playerDirection;
       this.scene.start('title');
       return;
     }
