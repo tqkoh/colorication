@@ -1,4 +1,4 @@
-import objectHash from 'object-hash';
+import hash from 'object-hash';
 import { match, P } from 'ts-pattern';
 import { v4 as uuid } from 'uuid';
 import { log } from './deb';
@@ -341,7 +341,7 @@ export function completeSubst(t: Term): Term[] {
   maxSubstTime = MAX_SUBST_TIME_COMPLETE;
   let count = 0;
   const acc: Term[] = [t];
-  const hashAcc: string[] = [objectHash(t)];
+  const hashAcc: string[] = [hash(t)];
 
   while (
     count < MAX_COMPLETE_SUBST &&
@@ -352,7 +352,7 @@ export function completeSubst(t: Term): Term[] {
     const t1 = substI(last);
     const next: Term = t1[1] === 'muri' ? last : t1[0];
     acc.push(next);
-    hashAcc.push(objectHash(next));
+    hashAcc.push(hash(next));
     count += 1;
   }
 

@@ -1,6 +1,6 @@
 import { Howl } from 'howler';
 import { cloneDeep } from 'lodash';
-import objectHash from 'object-hash';
+import hash from 'object-hash';
 import Phaser from 'phaser';
 import { match, P } from 'ts-pattern';
 import { isDown, justDown, keysFrom } from '../data/keyConfig';
@@ -469,7 +469,7 @@ export default class Play extends Phaser.Scene {
 
     const abst =
       s.name.length < 3 ? s.name : [s.name[0]].concat(codesFrom('.'));
-    const handle = `name_${objectHash(abst)}`;
+    const handle = `name_${hash(abst)}`;
     if (abst.length === 2) log(10, 'abst:', abst);
 
     if (!this.textures.exists(handle)) {
@@ -513,7 +513,7 @@ export default class Play extends Phaser.Scene {
         this.clipSquare.name.length < 3
           ? this.clipSquare.name
           : [this.clipSquare.name[0]].concat(codesFrom('.'));
-      const handle = `name_${objectHash(abst)}`;
+      const handle = `name_${hash(abst)}`;
       if (!this.textures.exists(handle)) {
         this.font?.loadImageFrom(
           abst,
@@ -1674,11 +1674,11 @@ export default class Play extends Phaser.Scene {
         }
         // eslint-disable-next-line no-param-reassign
         s.name = asCodes(s.term);
-        const hash: string = s.name.length ? objectHash(s.name) : squareHash(s);
-        const handle = coloredHandleFrom(s.term, hash);
+        const hsh: string = s.name.length ? hash(s.name) : squareHash(s);
+        const handle = coloredHandleFrom(s.term, hsh);
 
         if (!this.textures.exists(handle)) {
-          this.createColoredTermImage(s.term, hash, handle);
+          this.createColoredTermImage(s.term, hsh, handle);
         }
         return handle;
       })
@@ -1777,7 +1777,7 @@ export default class Play extends Phaser.Scene {
         {
           const abst =
             s.name.length < 3 ? s.name : [s.name[0]].concat(codesFrom('.'));
-          const handle = `name_${objectHash(abst)}`;
+          const handle = `name_${hash(abst)}`;
           if (abst.length === 2) log(10, 'abst:', abst);
 
           if (!this.textures.exists(handle)) {
