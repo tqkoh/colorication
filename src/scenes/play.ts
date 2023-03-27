@@ -1582,8 +1582,8 @@ export default class Play extends Phaser.Scene {
     }
   }
 
-  createColoredTermImage(t: Term, hash: string, handle: string) {
-    const deltaH = deltaHFrom(hash);
+  createColoredTermImage(t: Term, hsh: string, handle: string) {
+    const deltaH = deltaHFrom(hsh);
     const originalTexture = this.textures.get(t.Atype);
     const originalTextureImage = originalTexture.getSourceImage();
     const h = originalTextureImage.height;

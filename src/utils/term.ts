@@ -1,3 +1,4 @@
+import { cloneDeep } from 'lodash';
 import hash from 'object-hash';
 import { match, P } from 'ts-pattern';
 import { v4 as uuid } from 'uuid';
@@ -5,7 +6,7 @@ import { log } from './deb';
 
 const MAX_COMPLETE_SUBST = 2000;
 const LOG_SUBST_COUNT_EVERY = 10;
-const MAX_SUBST_COUNT_COMPLETE = 2000;
+const MAX_SUBST_COUNT_COMPLETE = 2000; // 2000;
 const MAX_SUBST_TIME_COMPLETE = 1000;
 
 type Term =
@@ -162,7 +163,7 @@ function substI(
     }
   }
   const sid = uuid();
-  log(100, `subst-${sid}: {`); // , cloneDeep(acc), before, after
+  log(100, `subst-${sid}: {`, cloneDeep(t), before, after); // , cloneDeep(acc), before, after
 
   const ret = match<[Term, Term], [Term, SubstStatus]>([t, after])
     // app の場合、subst した後適用する。(lam の返り値の中の引数を、適用するものでさらに subst する)
@@ -175,14 +176,21 @@ function substI(
       ([ap]) => {
         log(100, 'subst', 0);
 
-        const substRet = substI(ap.lam.ret, ap.lam.var, ap.param);
+        const substRet = substI(ap.lam.ret, ap.lam.var, ap.param); // 適用を置換で行う
         if (substRet[1] === 'muri') {
-          // ap.lam.var を消しかけているけどやめないと未定義な変数として残っちゃう
+          // 置換中止。 ap.lam.var を消しかけているけどやめないと未定義な変数として残っちゃう
           return [t, 'compromise'];
         }
+        if (substRet[1] === 'compromise') {
+          return substRet;
+        }
+
         if (substRet[0].Atype === 'app') {
-          const app = substI(substRet[0]);
-          return app[1] === 'muri' ? [substRet[0], 'compromise'] : app;
+          const applied = substI(substRet[0]);
+          if (applied[1] === 'muri') {
+            return [substRet[0], 'compromise'];
+          }
+          return applied;
           // log(200, 't2: ', t2);
         }
         return substRet;
@@ -191,10 +199,12 @@ function substI(
     .with([{ Atype: 'app', lam: { Atype: 'lam' } }, P._], ([ap, a]) => {
       log(100, 'subst', 1);
 
+      let status: SubstStatus = 'ok';
       const substLam = substI(ap.lam, before, a);
       if (substLam[1] === 'muri') {
-        return [t, 'compromise'];
+        return [t, 'muri'];
       }
+      if (substLam[1] === 'compromise') status = 'compromise';
       const substParam = substI(ap.param, before, a);
       if (substParam[1] === 'muri') {
         return [
@@ -203,16 +213,21 @@ function substI(
             lam: substLam[0],
             param: ap.param
           },
-          'compromise'
+          'muri'
         ];
       }
-      const app0: Term = {
+      if (substParam[1] === 'compromise') status = 'compromise';
+      const app: Term = {
         Atype: 'app',
         lam: substLam[0],
         param: substParam[0]
       };
       // acc.push(app);
-      const applied = substI(app0); // 0
+      const applied = substI(app); // 0
+      if (applied[1] === 'muri') {
+        return [app, 'compromise'];
+      }
+      if (applied[1] === 'compromise') status = 'compromise';
       // acc.push(
       //   subst(
       //     [subst([ap.lam.ret], before, a)],
@@ -220,35 +235,45 @@ function substI(
       //     substParam
       //   )
       // );
-      return applied[1] === 'muri' ? [app0, 'compromise'] : applied;
+      return [applied[0], status];
     })
     .with([{ Atype: 'app' }, P._], ([ap, a]) => {
       log(100, 'subst', 1.5);
 
       log(102, sid, ap.lam);
-      const substLam = substI(ap.lam, before, a);
+      let status: SubstStatus = 'ok';
+      const substLam = substI(ap.lam, before, a); // koko
       if (substLam[1] === 'muri') {
-        return [t, 'compromise'];
+        return [t, 'muri']; // 置換できなかったら戻さなきゃだめ
       }
+      if (substLam[1] === 'compromise') status = 'compromise';
       log(103, sid, substLam[0]);
+
       const substParam = substI(ap.param, before, a);
-      return substParam[1] === 'muri'
-        ? [
-            {
-              Atype: 'app',
-              lam: substLam[0],
-              param: ap.param
-            },
-            'compromise'
-          ]
-        : [
-            {
-              Atype: 'app',
-              lam: substLam[0],
-              param: substParam[0]
-            },
-            'ok'
-          ];
+      if (substParam[1] === 'muri') {
+        return [
+          {
+            Atype: 'app',
+            lam: substLam[0],
+            param: ap.param
+          },
+          'muri' // 置換できなかったら戻さなきゃだめ
+        ];
+      }
+      if (substParam[1] === 'compromise') status = 'compromise';
+
+      const app: Term = {
+        Atype: 'app',
+        lam: substLam[0],
+        param: substParam[0]
+      };
+      const applied = substI(app);
+      if (applied[1] === 'muri') {
+        return [app, 'compromise'];
+      }
+      if (applied[1] === 'compromise') status = 'compromise';
+
+      return [app, status];
     })
     // 適用だけ
     .with([{ Atype: 'lam' }, { Atype: 'var', var: before }], ([la]) => {
@@ -257,12 +282,8 @@ function substI(
       const applyRet = substI(la.ret);
       return applyRet[1] === 'muri'
         ? [
-            {
-              Atype: 'lam',
-              var: la.var,
-              ret: la.ret
-            },
-            'compromise'
+            la,
+            'compromise' // 妥協。適用はできなくても適用前のを残していい
           ]
         : [
             {
@@ -297,7 +318,7 @@ function substI(
       // }
       const t1 = substI(la.ret, before, a);
       return t1[1] === 'muri'
-        ? [t, 'compromise']
+        ? [t, 'muri'] // 置換できなかったら戻す
         : [
             {
               Atype: 'lam',
@@ -318,7 +339,7 @@ function substI(
   // console.log('b', before)
   // console.log('a', after)
   // console.log('-----------return: ', ret)
-  log(100, `} subst-${sid}`); // , cloneDeep(ret)
+  log(100, `} subst-${sid}`, cloneDeep(ret)); // , cloneDeep(ret)
   return ret;
 }
 
