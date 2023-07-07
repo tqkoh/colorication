@@ -1586,6 +1586,9 @@ export default class Play extends Phaser.Scene {
     const h = originalTextureImage.height;
     const w = originalTextureImage.width;
     const newTexture = this.textures.createCanvas(handle, w, h);
+    if (newTexture == null) {
+      return;
+    }
     const context = newTexture.getContext();
 
     log(10, deltaH, originalTexture, h, w);
@@ -1594,7 +1597,7 @@ export default class Play extends Phaser.Scene {
     // const n = pixels.data.length / 4;
     for (let i = 0; i < h; i += 1) {
       for (let j = 0; j < w; j += 1) {
-        const rgb = this.textures.getPixel(j, i, t.Atype);
+        const rgb = this.textures.getPixel(j, i, t.Atype) || Phaser.Display.Color.RGBStringToColor('#000000');
         const r = rgb.red;
         const g = rgb.green;
         const b = rgb.blue;
@@ -1679,10 +1682,10 @@ export default class Play extends Phaser.Scene {
         }
         return handle;
       })
-      .with({ Atype: P._ }, () => 'air')
+      .with(P._, () => 'air')
       .exhaustive();
   }
-
+  
   initDrawing() {
     this.font = new FontForPhaser(this.textures, 'font', 10);
 
