@@ -20,7 +20,7 @@ class FontForPhaser extends Font {
       fImage.push([]);
       for (let j = 0; j < w; j += 1) {
         const c = textures.getPixel(j, i, fontTexture);
-        if (c.alpha) fImage[i].push(true);
+        if (c && c.alpha) fImage[i].push(true);
         else fImage[i].push(false);
       }
     }
@@ -45,6 +45,9 @@ class FontForPhaser extends Font {
       const h = image.length;
       const w = image[0].length;
       const newTexture = this.textures.createCanvas(handle, w, h);
+      if (!newTexture) {
+        throw new Error('newTexture is null');
+      }
       const context = newTexture.getContext();
       // let tex = this.textures.get("menu_pastet").getDataSourceImage();
       // let im = new Image();
