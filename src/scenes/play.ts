@@ -20,7 +20,6 @@ import {
   Direction,
   GameMap,
   Square,
-  squaresFromStage,
   squaresFromTerm,
   wallSquare
 } from './play/gamemap';
@@ -1258,11 +1257,8 @@ export default class Play extends Phaser.Scene {
     if (focus.Atype === 'map') {
       afterMap = focus.map;
     } else if (focus.Atype === 'stage') {
-      const st = squaresFromStage(focus.stage);
-      log(10, st);
-      if (!focus.map) {
-        focus.map = new GameMap(squaresFromStage(focus.stage));
-      }
+      // reset
+      focus.map = cloneDeep(focus.stage);
       afterMap = focus.map;
     } else if (
       focus.Atype === 'term' &&
@@ -1887,7 +1883,6 @@ export default class Play extends Phaser.Scene {
 
   preload() {
     log(10, 'Play.preload');
-    this.init({ mode: 'sandbox' });
     this.cameras.main.setBackgroundColor(
       `rgba(${WHITE[0]},${WHITE[1]},${WHITE[2]},1)`
     );

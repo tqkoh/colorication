@@ -1,5 +1,10 @@
-import { randomized } from '../../../../../utils/term';
-import { Stage } from '../../../gamemap';
+import {
+  Square,
+  airSquare as a,
+  parentSquare as p,
+  startSquare as s
+} from '../../../gamemap';
+import { Stage } from '../../../stage';
 
 /*
 1 コメを置くだけ。中身は見れない
@@ -10,9 +15,23 @@ import { Stage } from '../../../gamemap';
 (locked) Lam 2 (Lam 1 (Lam 0 (Var 0)))
 */
 
-const stage0: Stage = {
-  name: '0. place it',
-  tests: [
+const ids: Square = {
+  Atype: 'term',
+  term: {
+    Atype: 'lam',
+    var: '0',
+    ret: { Atype: 'var', var: '0' }
+  },
+  name: [],
+  movable: true,
+  collidable: true,
+  locked: true,
+  image: []
+}
+
+const stage0 = new Stage(
+  '0.',
+  [
     {
       input: [],
       output: {
@@ -30,59 +49,12 @@ const stage0: Stage = {
       }
     }
   ],
-  terms: [
-    {
-      Atype: 'term',
-      term: randomized({
-        Atype: 'lam',
-        var: '0',
-        ret: { Atype: 'var', var: '0' }
-      }),
-      name: [],
-      movable: true,
-      collidable: true,
-      locked: true,
-      image: []
-    },
-    {
-      Atype: 'term',
-      term: randomized({
-        Atype: 'lam',
-        var: '1',
-        ret: {
-          Atype: 'lam',
-          var: '0',
-          ret: { Atype: 'var', var: '0' }
-        }
-      }),
-      name: [],
-      movable: true,
-      collidable: true,
-      locked: true,
-      image: []
-    },
-    {
-      Atype: 'term',
-      term: randomized({
-        Atype: 'lam',
-        var: '2',
-        ret: {
-          Atype: 'lam',
-          var: '1',
-          ret: {
-            Atype: 'lam',
-            var: '0',
-            ret: { Atype: 'var', var: '0' }
-          }
-        }
-      }),
-      name: [],
-      movable: true,
-      collidable: true,
-      locked: true,
-      image: []
-    }
+  [
+    [p(), s(), a(), a(), a()],
+    [a(), a(), a(), a(), a()],
+    [a(), a(), a(), ids, a()],
+    [a(), a(), a(), a(), a()]
   ]
-};
+);
 
 export default stage0;

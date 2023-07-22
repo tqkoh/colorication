@@ -1,8 +1,8 @@
 import { codesFrom } from '../../../../utils/font';
 import {
+  Square,
   airSquare as a,
   parentSquare as p,
-  Square,
   startSquare as s
 } from '../../gamemap';
 import stage0 from './world0/stage0';
