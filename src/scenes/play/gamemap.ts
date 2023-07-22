@@ -4,7 +4,7 @@ import { cloneDeep } from 'lodash';
 import Phaser from 'phaser';
 import { log } from '../../utils/deb';
 import { codesFrom } from '../../utils/font';
-import Term from '../../utils/term';
+import Term, { randomized } from '../../utils/term';
 
 export type Direction = 'right' | 'down' | 'left' | 'up';
 
@@ -386,7 +386,7 @@ export function squaresFromTerm(t: Term): Square[][] {
   throw new Error('var cant become map');
 }
 
-export function cloneSquare(s: Square, addMovable: boolean = true): Square {
+export function cloneSquare(s: Square, addMovable: boolean = true, randomize = false): Square {
   if (s.Atype === 'air' || s.Atype === 'block') {
     return {
       ...s,
@@ -403,14 +403,22 @@ export function cloneSquare(s: Square, addMovable: boolean = true): Square {
   }
 
   log(10, s.map);
+
+
   const newMap = new GameMap(
-    s.map.squares.map((col) => col.map((sq) => cloneSquare(sq, false))),
+    s.map.squares.map((col) => col.map((sq) => cloneSquare(sq, false, randomize))),
     s.map
   );
-  const ret: Square = {
+  const ret: Square = s.Atype === 'term' && randomize ? {
+    ...s,
+    term: randomized(s.term),
+    map: undefined,
+    movable: s.movable || addMovable,
+    image: []
+  } : {
     ...s,
     map: newMap,
-    movable: addMovable,
+    movable: s.movable || addMovable,
     image: []
   };
   return ret;

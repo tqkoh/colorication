@@ -1,8 +1,9 @@
 import hash from 'object-hash';
 import { match } from 'ts-pattern';
+import { v4 as uuid } from 'uuid';
 import { log } from './deb';
 import { codesFrom } from './font';
-import Term, { normalized, randomized, subst } from './term';
+import Term, { completeSubst, normalized, randomized } from './term';
 
 import { Square } from '../scenes/play/gamemap';
 
@@ -12,6 +13,42 @@ const MAX_REDUCE_TERM_COUNT = 500;
 let depth = 0;
 let count = 0;
 
+// copy のためにクローンする。変数が被らないように freeValue 以外はランダムな id にする
+export function cloneTerm(t: Term): Term{
+  return match<Term, Term>(t)
+    .with({ Atype: 'var' }, (va) => ({
+        Atype: 'var',
+        var: va.var
+      }))
+    .with({ Atype: 'app' }, (ap) => ({
+        Atype: 'app',
+        lam: cloneTerm(ap.lam),
+        param: cloneTerm(ap.param)
+      }))
+    .with({ Atype: 'lam' }, (la) => {
+      const newId = uuid()
+      const r = completeSubst({
+        Atype: 'app',
+        lam: {
+          Atype: 'lam',
+          var: la.var,
+          ret: cloneTerm(la.ret)
+        },
+        param: {
+          Atype: 'var',
+          var: newId
+        }
+      })
+      return {
+        Atype: 'lam',
+        var: newId,
+        ret: r[r.length - 1]
+      }
+    })
+    .exhaustive();
+}
+
+// equal のためなどに打ち切っているだけ
 function reduceTerm(t: Term): Term {
   depth += 1;
   log(100, 'reduceTerm', depth, count);
@@ -60,6 +97,7 @@ export function squareHash(s: Square): string {
     //   ...s,
     //   term: normalized(s.term)
     // };
+    // var を normalized すると全同じ hash になるため
     if (s.term.Atype === 'var') {
       return hash({ term: s.term });
     }
