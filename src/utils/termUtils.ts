@@ -3,7 +3,7 @@ import { match } from 'ts-pattern';
 import { v4 as uuid } from 'uuid';
 import { log } from './deb';
 import { codesFrom } from './font';
-import Term, { completeSubst, normalized, randomized } from './term';
+import Term, { completeSubst, normalized, randomized, subst } from './term';
 
 import { Square } from '../scenes/play/gamemap';
 
