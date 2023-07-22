@@ -43,11 +43,11 @@ export function keysFrom(
   s: Phaser.Scene,
   keys: number[]
 ): Phaser.Input.Keyboard.Key[] {
-  const {keyboard} = s.input
+  const { keyboard } = s.input;
   if (keyboard) {
     return keys.map((key: number) => keyboard.addKey(key));
   }
-  throw new Error('input.keyboard is null');    
+  throw new Error('input.keyboard is null');
 }
 
 export function justDown(keys: Phaser.Input.Keyboard.Key[]): boolean {

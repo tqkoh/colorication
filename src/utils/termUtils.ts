@@ -14,19 +14,19 @@ let depth = 0;
 let count = 0;
 
 // copy のためにクローンする。変数が被らないように freeValue 以外はランダムな id にする
-export function cloneTerm(t: Term): Term{
+export function cloneTerm(t: Term): Term {
   return match<Term, Term>(t)
     .with({ Atype: 'var' }, (va) => ({
-        Atype: 'var',
-        var: va.var
-      }))
+      Atype: 'var',
+      var: va.var
+    }))
     .with({ Atype: 'app' }, (ap) => ({
-        Atype: 'app',
-        lam: cloneTerm(ap.lam),
-        param: cloneTerm(ap.param)
-      }))
+      Atype: 'app',
+      lam: cloneTerm(ap.lam),
+      param: cloneTerm(ap.param)
+    }))
     .with({ Atype: 'lam' }, (la) => {
-      const newId = uuid()
+      const newId = uuid();
       const r = completeSubst({
         Atype: 'app',
         lam: {
@@ -38,12 +38,12 @@ export function cloneTerm(t: Term): Term{
           Atype: 'var',
           var: newId
         }
-      })
+      });
       return {
         Atype: 'lam',
         var: newId,
         ret: r[r.length - 1]
-      }
+      };
     })
     .exhaustive();
 }

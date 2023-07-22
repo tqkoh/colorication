@@ -24,7 +24,7 @@ import {
   squaresFromTerm,
   wallSquare
 } from './play/gamemap';
-import mapRoot from './play/maps/root';
+import mapRoot, { sandboxRoot } from './play/maps/root';
 // const completeSubst = subst;
 
 type MainState =
@@ -259,6 +259,8 @@ export default class Play extends Phaser.Scene {
 
   sEnter: Howl;
 
+  allowedShift: boolean;
+
   constructor() {
     super({ key: 'play' });
     this.keys = {
@@ -280,13 +282,16 @@ export default class Play extends Phaser.Scene {
     };
     this.mainState = 'operating';
     this.gMenuElements = [];
-    this.map = new GameMap(mapRoot);
+    this.allowedShift = false;
+    this.map = new GameMap(sandboxRoot);
     this.currentMap = this.map; // ref
     this.front = [];
     this.currentSquare = [
       {
         Atype: 'air',
-        name: codesFrom('WASD to move, use shift to just turn'),
+        name: codesFrom(
+          `WASD to move${this.allowedShift ? ', use shift to just turn' : ''}`
+        ),
         collidable: false,
         movable: false,
         locked: false,
@@ -336,7 +341,8 @@ export default class Play extends Phaser.Scene {
     });
   }
 
-  init() {
+  init(data: { mode: 'puzzle' | 'sandbox' }) {
+    log(1, 'nu', data);
     this.keys = {
       Enter: [],
       Ctrl: [],
@@ -356,12 +362,15 @@ export default class Play extends Phaser.Scene {
     };
     this.mainState = 'operating';
     this.gMenuElements = [];
-    // this.map = new GameMap(mapRoot);
-    // this.currentMap = this.map; // ref
+    this.allowedShift = data.mode === 'sandbox';
+    this.map = new GameMap(data.mode === 'sandbox' ? sandboxRoot : mapRoot);
+    this.currentMap = this.map; // ref
     this.currentSquare = [
       {
         Atype: 'air',
-        name: codesFrom('WASD to move, use shift to just turn'),
+        name: codesFrom(
+          `WASD to move${this.allowedShift ? ', use shift to just turn' : ''}`
+        ),
         collidable: false,
         movable: false,
         locked: false,
@@ -781,7 +790,7 @@ export default class Play extends Phaser.Scene {
       }
       this.updatePlayerAndFocus();
     }
-    if (!shift) {
+    if (!shift || !this.allowedShift) {
       this.moveOn();
     }
   }
@@ -1035,7 +1044,9 @@ export default class Play extends Phaser.Scene {
     }
     this.removeSquareImage(this.focusi, this.focusj);
     this.currentMap.squares[this.focusi][this.focusj] = cloneSquare(
-      this.clipSquare, true, true
+      this.clipSquare,
+      true,
+      true
     );
     this.addSquareImage(this.focusi, this.focusj);
   }
@@ -1597,7 +1608,9 @@ export default class Play extends Phaser.Scene {
     // const n = pixels.data.length / 4;
     for (let i = 0; i < h; i += 1) {
       for (let j = 0; j < w; j += 1) {
-        const rgb = this.textures.getPixel(j, i, t.Atype) || Phaser.Display.Color.RGBStringToColor('#000000');
+        const rgb =
+          this.textures.getPixel(j, i, t.Atype) ||
+          Phaser.Display.Color.RGBStringToColor('#000000');
         const r = rgb.red;
         const g = rgb.green;
         const b = rgb.blue;
@@ -1686,7 +1699,7 @@ export default class Play extends Phaser.Scene {
       .with(P._, () => 'air')
       .exhaustive();
   }
-  
+
   initDrawing() {
     this.font = new FontForPhaser(this.textures, 'font', 10);
 
@@ -1874,7 +1887,7 @@ export default class Play extends Phaser.Scene {
 
   preload() {
     log(10, 'Play.preload');
-    this.init();
+    this.init({ mode: 'sandbox' });
     this.cameras.main.setBackgroundColor(
       `rgba(${WHITE[0]},${WHITE[1]},${WHITE[2]},1)`
     );

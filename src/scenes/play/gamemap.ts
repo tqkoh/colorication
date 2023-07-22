@@ -386,7 +386,11 @@ export function squaresFromTerm(t: Term): Square[][] {
   throw new Error('var cant become map');
 }
 
-export function cloneSquare(s: Square, addMovable: boolean = true, randomize = false): Square {
+export function cloneSquare(
+  s: Square,
+  addMovable: boolean = true,
+  randomize = false
+): Square {
   if (s.Atype === 'air' || s.Atype === 'block') {
     return {
       ...s,
@@ -404,22 +408,26 @@ export function cloneSquare(s: Square, addMovable: boolean = true, randomize = f
 
   log(10, s.map);
 
-
   const newMap = new GameMap(
-    s.map.squares.map((col) => col.map((sq) => cloneSquare(sq, false, randomize))),
+    s.map.squares.map((col) =>
+      col.map((sq) => cloneSquare(sq, false, randomize))
+    ),
     s.map
   );
-  const ret: Square = s.Atype === 'term' && randomize ? {
-    ...s,
-    term: randomized(s.term),
-    map: undefined,
-    movable: s.movable || addMovable,
-    image: []
-  } : {
-    ...s,
-    map: newMap,
-    movable: s.movable || addMovable,
-    image: []
-  };
+  const ret: Square =
+    s.Atype === 'term' && randomize
+      ? {
+          ...s,
+          term: randomized(s.term),
+          map: undefined,
+          movable: s.movable || addMovable,
+          image: []
+        }
+      : {
+          ...s,
+          map: newMap,
+          movable: s.movable || addMovable,
+          image: []
+        };
   return ret;
 }
