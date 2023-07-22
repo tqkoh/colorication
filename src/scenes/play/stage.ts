@@ -1,6 +1,5 @@
-import { log } from "../../utils/deb";
-import { GameMap, Square } from "./gamemap";
-
+import { log } from '../../utils/deb';
+import { GameMap, Square } from './gamemap';
 
 export type Test = {
   input: Square[];
@@ -13,9 +12,9 @@ export class Stage extends GameMap {
   name: string;
 
   constructor(name: string, tests: Test[], squares: Square[][]) {
-    log(10, "constructor of Stage: squares:", squares)
+    log(10, 'constructor of Stage: squares:', squares);
     super(squares);
     this.name = name;
     this.tests = tests;
   }
-};
+}

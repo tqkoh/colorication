@@ -63,7 +63,7 @@ export class GameMap {
       this.startd = 'right';
     }
     this.squares = cloneDeep(squares);
-    log(10, "constructor of GameMap: clone squares", squares);
+    log(10, 'constructor of GameMap: clone squares', squares);
     this.h = squares.length;
     this.w = this.h ? squares[0].length : 0;
     for (let i = 0; i < squares.length; i += 1) {
@@ -88,7 +88,6 @@ export class GameMap {
     this.parentMap = parent;
   }
 }
-
 
 export const airSquareI: Square = {
   Atype: 'air',
@@ -169,7 +168,6 @@ export function startSquare() {
 // }
 
 // todo: History
-
 
 function squaresFromLam(v: string, r: Term) {
   const h = 5;

@@ -14,6 +14,8 @@ export interface KeyConfig {
   C: number[];
   V: number[];
   Q: number[];
+  Z: number[];
+  R: number[];
   F2: number[];
   Del: number[];
 }
@@ -34,6 +36,8 @@ export const defaultKeyConfig: KeyConfig = {
   C: [k.C],
   V: [k.V],
   Q: [k.Q],
+  Z: [k.Z],
+  R: [k.R],
   F2: [k.F2],
   Del: [k.DELETE]
 };

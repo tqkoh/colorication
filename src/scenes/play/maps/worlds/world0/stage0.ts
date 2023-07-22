@@ -27,7 +27,7 @@ const ids: Square = {
   collidable: true,
   locked: true,
   image: []
-}
+};
 
 const stage0 = new Stage(
   '0.',
@@ -53,7 +53,8 @@ const stage0 = new Stage(
     [p(), s(), a(), a(), a()],
     [a(), a(), a(), a(), a()],
     [a(), a(), a(), ids, a()],
-    [a(), a(), a(), a(), a()]
+    [a(), a(), a(), a(), a()],
+    [a(), a(), a(), a(), a()],
   ]
 );
 
