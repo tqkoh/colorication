@@ -182,7 +182,7 @@ function substI(
         }
         if (substRet[0].Atype === 'app') {
           const app = substI(substRet[0]);
-          return app[1] === 'muri' ? [substRet[0], 'compromise'] : app;
+          return app[1] === 'muri' ? [t, 'compromise'] : app;
           // log(200, 't2: ', t2);
         }
         return substRet;

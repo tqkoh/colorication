@@ -1035,7 +1035,7 @@ export default class Play extends Phaser.Scene {
     }
     this.removeSquareImage(this.focusi, this.focusj);
     this.currentMap.squares[this.focusi][this.focusj] = cloneSquare(
-      this.clipSquare
+      this.clipSquare, true, true
     );
     this.addSquareImage(this.focusi, this.focusj);
   }
@@ -1676,6 +1676,7 @@ export default class Play extends Phaser.Scene {
         s.name = asCodes(s.term);
         const hash: string = s.name.length ? objectHash(s.name) : squareHash(s);
         const handle = coloredHandleFrom(s.term, hash);
+        log(10, handle);
 
         if (!this.textures.exists(handle)) {
           this.createColoredTermImage(s.term, hash, handle);
