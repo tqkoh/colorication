@@ -20,11 +20,10 @@ import {
   Direction,
   GameMap,
   Square,
-  squaresFromStage,
   squaresFromTerm,
   wallSquare
 } from './play/gamemap';
-import mapRoot from './play/maps/root';
+import mapRoot, { sandboxRoot } from './play/maps/root';
 // const completeSubst = subst;
 
 type MainState =
@@ -171,6 +170,8 @@ export default class Play extends Phaser.Scene {
     C: Phaser.Input.Keyboard.Key[];
     V: Phaser.Input.Keyboard.Key[];
     Q: Phaser.Input.Keyboard.Key[];
+    Z: Phaser.Input.Keyboard.Key[];
+    R: Phaser.Input.Keyboard.Key[];
     F2: Phaser.Input.Keyboard.Key[];
     Del: Phaser.Input.Keyboard.Key[];
   };
@@ -212,6 +213,8 @@ export default class Play extends Phaser.Scene {
   menuX: number;
 
   selected: number;
+
+  entering: boolean; // map に入ろうとするとき一回目はぶつかる
 
   keepingPressingFrame: number;
 
@@ -259,6 +262,8 @@ export default class Play extends Phaser.Scene {
 
   sEnter: Howl;
 
+  allowedCommands: boolean;
+
   constructor() {
     super({ key: 'play' });
     this.keys = {
@@ -275,18 +280,25 @@ export default class Play extends Phaser.Scene {
       C: [],
       V: [],
       Q: [],
+      Z: [],
+      R: [],
       F2: [],
       Del: []
     };
     this.mainState = 'operating';
     this.gMenuElements = [];
-    this.map = new GameMap(mapRoot);
+    this.allowedCommands = false;
+    this.map = new GameMap(sandboxRoot);
     this.currentMap = this.map; // ref
     this.front = [];
     this.currentSquare = [
       {
         Atype: 'air',
-        name: codesFrom('WASD to move, use shift to just turn'),
+        name: codesFrom(
+          `WASD to move${
+            this.allowedCommands ? ', use shift to just turn' : ''
+          }`
+        ),
         collidable: false,
         movable: false,
         locked: false,
@@ -295,6 +307,7 @@ export default class Play extends Phaser.Scene {
     ];
     this.clipSquare = airSquare();
     this.modifiedTerm = [];
+    this.entering = false;
     this.playeri = this.currentMap.starti;
     this.playerj = this.currentMap.startj;
     this.focusi = this.currentMap.starti;
@@ -336,7 +349,8 @@ export default class Play extends Phaser.Scene {
     });
   }
 
-  init() {
+  init(data: { mode: 'puzzle' | 'sandbox' }) {
+    log(1, 'nu', data);
     this.keys = {
       Enter: [],
       Ctrl: [],
@@ -351,17 +365,24 @@ export default class Play extends Phaser.Scene {
       C: [],
       V: [],
       Q: [],
+      Z: [],
+      R: [],
       F2: [],
       Del: []
     };
     this.mainState = 'operating';
     this.gMenuElements = [];
-    // this.map = new GameMap(mapRoot);
-    // this.currentMap = this.map; // ref
+    this.allowedCommands = data.mode === 'sandbox';
+    this.map = new GameMap(data.mode === 'sandbox' ? sandboxRoot : mapRoot);
+    this.currentMap = this.map; // ref
     this.currentSquare = [
       {
         Atype: 'air',
-        name: codesFrom('WASD to move, use shift to just turn'),
+        name: codesFrom(
+          `WASD to move${
+            this.allowedCommands ? ', use shift to just turn' : ''
+          }`
+        ),
         collidable: false,
         movable: false,
         locked: false,
@@ -757,17 +778,35 @@ export default class Play extends Phaser.Scene {
       this.front[1].Atype === 'term' &&
       this.front[1].movable
     ) {
+      this.entering = false;
       this.execApply();
       this.moveToPosition(this.focusi, this.focusj);
     } else if (this.front[0].movable && this.front[1].Atype === 'air') {
+      this.entering = false;
       this.moveBlock();
       this.moveToPosition(this.focusi, this.focusj);
       log(10, this.currentMap);
+    } else if (
+      this.front[0].Atype === 'map' ||
+      this.front[0].Atype === 'stage' ||
+      (this.front[0].Atype === 'block' &&
+        (this.front[0].block === 'parent' ||
+          this.front[0].block === 'return_title'))
+    ) {
+      if (!this.entering) {
+        this.entering = true;
+        this.sCollide.play();
+      } else {
+        this.entering = false;
+        this.execEnter();
+      }
     } else if (this.front[0].collidable) {
       log(10, 'collide');
+      this.entering = false;
       this.sCollide.play();
     } else {
       log(10, 'move');
+      this.entering = false;
       this.moveToPosition(this.focusi, this.focusj);
     }
   }
@@ -781,7 +820,7 @@ export default class Play extends Phaser.Scene {
       }
       this.updatePlayerAndFocus();
     }
-    if (!shift) {
+    if (!shift || !this.allowedCommands) {
       this.moveOn();
     }
   }
@@ -1035,7 +1074,9 @@ export default class Play extends Phaser.Scene {
     }
     this.removeSquareImage(this.focusi, this.focusj);
     this.currentMap.squares[this.focusi][this.focusj] = cloneSquare(
-      this.clipSquare, true, true
+      this.clipSquare,
+      true,
+      true
     );
     this.addSquareImage(this.focusi, this.focusj);
   }
@@ -1247,11 +1288,8 @@ export default class Play extends Phaser.Scene {
     if (focus.Atype === 'map') {
       afterMap = focus.map;
     } else if (focus.Atype === 'stage') {
-      const st = squaresFromStage(focus.stage);
-      log(10, st);
-      if (!focus.map) {
-        focus.map = new GameMap(squaresFromStage(focus.stage));
-      }
+      // reset
+      focus.map = cloneDeep(focus.stage);
       afterMap = focus.map;
     } else if (
       focus.Atype === 'term' &&
@@ -1531,23 +1569,29 @@ export default class Play extends Phaser.Scene {
     if (justDown(this.keys.Escape)) {
       this.closeMenu();
     }
-    if (justDown(this.keys.C)) {
+    if (justDown(this.keys.R)) {
+      this.focusi = 0;
+      this.focusj = 0;
+      this.execEnter();
+      this.execEnter();
+    }
+    if (this.allowedCommands && justDown(this.keys.C)) {
       this.execCopy();
       this.closeMenu();
     }
-    if (justDown(this.keys.Del)) {
+    if (this.allowedCommands && justDown(this.keys.Del)) {
       this.execDelete();
       this.closeMenu();
     }
-    if (justDown(this.keys.E)) {
+    if (this.allowedCommands && justDown(this.keys.E)) {
       this.execNew();
       this.closeMenu();
     }
-    if (justDown(this.keys.V)) {
+    if (this.allowedCommands && justDown(this.keys.V)) {
       this.execPaste();
       this.closeMenu();
     }
-    if (justDown(this.keys.Q)) {
+    if (this.allowedCommands && justDown(this.keys.Q)) {
       this.execApply(
         this.focusnexti,
         this.focusnextj,
@@ -1556,7 +1600,7 @@ export default class Play extends Phaser.Scene {
       );
       this.closeMenu();
     }
-    if (justDown(this.keys.F2)) {
+    if (this.allowedCommands && justDown(this.keys.F2)) {
       this.front = [wallSquare(), wallSquare()];
       if (
         this.focusi >= 0 &&
@@ -1597,7 +1641,9 @@ export default class Play extends Phaser.Scene {
     // const n = pixels.data.length / 4;
     for (let i = 0; i < h; i += 1) {
       for (let j = 0; j < w; j += 1) {
-        const rgb = this.textures.getPixel(j, i, t.Atype) || Phaser.Display.Color.RGBStringToColor('#000000');
+        const rgb =
+          this.textures.getPixel(j, i, t.Atype) ||
+          Phaser.Display.Color.RGBStringToColor('#000000');
         const r = rgb.red;
         const g = rgb.green;
         const b = rgb.blue;
@@ -1686,7 +1732,7 @@ export default class Play extends Phaser.Scene {
       .with(P._, () => 'air')
       .exhaustive();
   }
-  
+
   initDrawing() {
     this.font = new FontForPhaser(this.textures, 'font', 10);
 
@@ -1874,7 +1920,6 @@ export default class Play extends Phaser.Scene {
 
   preload() {
     log(10, 'Play.preload');
-    this.init();
     this.cameras.main.setBackgroundColor(
       `rgba(${WHITE[0]},${WHITE[1]},${WHITE[2]},1)`
     );
@@ -1892,6 +1937,8 @@ export default class Play extends Phaser.Scene {
     this.keys.C = keysFrom(this, globalThis.keyConfig.C);
     this.keys.V = keysFrom(this, globalThis.keyConfig.V);
     this.keys.Q = keysFrom(this, globalThis.keyConfig.Q);
+    this.keys.Z = keysFrom(this, globalThis.keyConfig.Z);
+    this.keys.R = keysFrom(this, globalThis.keyConfig.R);
     this.keys.F2 = keysFrom(this, globalThis.keyConfig.F2);
     this.keys.Del = keysFrom(this, globalThis.keyConfig.Del);
 
@@ -1972,7 +2019,7 @@ export default class Play extends Phaser.Scene {
           this.handleMenu();
         } else {
           this.handleMovement();
-          if (justDown(this.keys.Enter)) {
+          if (this.allowedCommands && justDown(this.keys.Enter)) {
             this.openMenu();
           }
         }

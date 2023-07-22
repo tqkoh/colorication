@@ -1,5 +1,5 @@
 import { codesFrom } from '../../../utils/font';
-import { airSquare as a, GameMap, Square, startSquare as s } from '../gamemap';
+import { GameMap, Square, airSquare as a, startSquare as s } from '../gamemap';
 import mapWorld0 from './worlds/world0';
 
 const wo0: Square = {
@@ -25,6 +25,15 @@ const mapRoot: Square[][] = [
   [rtt, s(), a(), a(), a(), a(), a(), a(), a(), a(), a()],
   [a(), a(), a(), a(), a(), a(), a(), a(), a(), a(), a()],
   [a(), wo0, a(), a(), a(), a(), a(), a(), a(), a(), a()],
+  [a(), a(), a(), a(), a(), a(), a(), a(), a(), a(), a()],
+  [a(), a(), a(), a(), a(), a(), a(), a(), a(), a(), a()],
+  [a(), a(), a(), a(), a(), a(), a(), a(), a(), a(), a()]
+];
+
+export const sandboxRoot: Square[][] = [
+  [rtt, s(), a(), a(), a(), a(), a(), a(), a(), a(), a()],
+  [a(), a(), a(), a(), a(), a(), a(), a(), a(), a(), a()],
+  [a(), a(), a(), a(), a(), a(), a(), a(), a(), a(), a()],
   [a(), a(), a(), a(), a(), a(), a(), a(), a(), a(), a()],
   [a(), a(), a(), a(), a(), a(), a(), a(), a(), a(), a()],
   [a(), a(), a(), a(), a(), a(), a(), a(), a(), a(), a()]

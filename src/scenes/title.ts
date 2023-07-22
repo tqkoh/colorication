@@ -18,12 +18,13 @@ const TITLE_ARROW_POS = [127 + TITLE_ARROW_H / 2, 212 + TITLE_ARROW_W / 2];
 const BGM_VOLUME = 0.6;
 
 const menu = {
-  play: 0,
-  options: 1,
+  puzzle: 0,
+  sandbox: 1,
+  options: 2,
 
-  size: 2
+  size: 3
 } as const;
-type Selected = 0 | 1;
+type Selected = 0 | 1 | 2;
 
 export default class Title extends Phaser.Scene {
   keys: {
@@ -83,7 +84,7 @@ export default class Title extends Phaser.Scene {
     this.fading = false;
     this.fadingStart = 0;
 
-    this.selected = menu.play;
+    this.selected = menu.puzzle;
   }
 
   init() {
@@ -97,7 +98,7 @@ export default class Title extends Phaser.Scene {
     this.fading = false;
     this.fadingStart = 0;
 
-    this.selected = menu.play;
+    this.selected = menu.puzzle;
   }
 
   preload() {
@@ -150,7 +151,9 @@ export default class Title extends Phaser.Scene {
       // this.sTitleIntro.volume(volume);
       // this.sTitleLoop.volume(volume);
       if (el > FADEOUT_LENGTH) {
-        this.scene.start('play');
+        this.scene.start('play', {
+          mode: this.selected === menu.puzzle ? 'puzzle' : 'sandbox'
+        });
         this.sTitleIntro.stop();
         this.sTitleLoop.stop();
       }
@@ -176,7 +179,7 @@ export default class Title extends Phaser.Scene {
       }
       if (justDown(this.keys.enter)) {
         log(10, 'enter');
-        if (this.selected === menu.play) {
+        if (this.selected === menu.puzzle || this.selected === menu.sandbox) {
           this.cameras.main.fadeOut(
             FADEOUT_LENGTH / 2,
             WHITE[0],
