@@ -69,11 +69,11 @@ const menuElementMessages: string[] = [
   'close  <ESC>',
   'copy     <c>',
   'delete <Del>',
-  'enter    <e>',
+  'enter    <\n>',
   'memo    <F2>',
-  'new      <n>',
+  'new      <e>',
   'paste    <v>',
-  'leave    <e>'
+  'leave       '
 ];
 
 function menuFromSquare(s: Square): MenuElement[] {
@@ -178,6 +178,8 @@ export default class Play extends Phaser.Scene {
 
   mainState: MainState;
 
+  mode: 'puzzle' | 'sandbox';
+
   map: GameMap;
 
   currentMap: GameMap;
@@ -266,6 +268,7 @@ export default class Play extends Phaser.Scene {
 
   constructor() {
     super({ key: 'play' });
+    this.mode = 'sandbox';
     this.keys = {
       Enter: [],
       Ctrl: [],
@@ -295,8 +298,8 @@ export default class Play extends Phaser.Scene {
       {
         Atype: 'air',
         name: codesFrom(
-          `WASD to move${
-            this.allowedCommands ? ', use shift to just turn' : ''
+          `${
+            this.allowedCommands ? 'WASD to move, use shift to just turn' : ''
           }`
         ),
         collidable: false,
@@ -350,6 +353,7 @@ export default class Play extends Phaser.Scene {
   }
 
   init(data: { mode: 'puzzle' | 'sandbox' }) {
+    this.mode = data.mode;
     log(1, 'nu', data);
     this.keys = {
       Enter: [],
@@ -379,8 +383,8 @@ export default class Play extends Phaser.Scene {
       {
         Atype: 'air',
         name: codesFrom(
-          `WASD to move${
-            this.allowedCommands ? ', use shift to just turn' : ''
+          `${
+            this.allowedCommands ? 'WASD to move, use shift to just turn' : ''
           }`
         ),
         collidable: false,
@@ -458,6 +462,7 @@ export default class Play extends Phaser.Scene {
     const fy = this.mapOriginy + this.focusi * 16;
     const fx = this.mapOriginx + this.focusj * 16;
     this.gImageFocus?.setY(fy + 8).setX(fx + 8);
+    if (this.mode === 'puzzle') this.gImageFocus?.setAlpha(0);
   }
 
   removeSquareImage(i: number, j: number) {
@@ -787,7 +792,7 @@ export default class Play extends Phaser.Scene {
         j === this.currentMap.w
           ? wallSquare()
           : this.currentMap.squares[i][j];
-      log(99, i, j, c.Atype, c.movable);
+      log(99, i, j, c, c.movable);
       if (c.Atype === 'air') {
         this.entering = false;
         for (let d = n - 1; d >= 1; d -= 1) {
@@ -809,31 +814,36 @@ export default class Play extends Phaser.Scene {
         result = 'move';
         break;
       } else if (!c.movable) {
-        if (
-          this.currentMap.squares[ci + di * (n - 1)][cj + dj * (n - 1)]
-            .Atype === 'term' &&
-          this.currentMap.squares[ci + di * (n - 2)][cj + dj * (n - 2)]
-            .Atype === 'term'
-        ) {
-          this.entering = false;
-          this.execApply(
-            ci + di * (n - 2),
-            cj + dj * (n - 2),
-            ci + di * (n - 1),
-            cj + dj * (n - 1)
-          );
-          for (let d = n - 3; d >= 1; d -= 1) {
-            this.moveBlock(
-              ci + di * d,
-              cj + dj * d,
-              ci + di * (d + 1),
-              cj + dj * (d + 1)
+        for (let m = n - 1; m >= 1; m -= 1) {
+          if (
+            this.currentMap.squares[ci + di * m][cj + dj * m].Atype ===
+              'term' &&
+            this.currentMap.squares[ci + di * (m - 1)][cj + dj * (m - 1)]
+              .Atype === 'term'
+          ) {
+            this.entering = false;
+            this.execApply(
+              ci + di * (m - 1),
+              cj + dj * (m - 1),
+              ci + di * m,
+              cj + dj * m
             );
+            for (let d = m - 2; d >= 1; d -= 1) {
+              this.moveBlock(
+                ci + di * d,
+                cj + dj * d,
+                ci + di * (d + 1),
+                cj + dj * (d + 1)
+              );
+            }
+            this.moveToPosition(ci + di, cj + dj);
+            result = 'apply';
+            break;
           }
-          this.moveToPosition(ci + di, cj + dj);
-          result = 'apply';
-          break;
-        } else if (
+        }
+        if (result === 'apply') break;
+
+        if (
           // this.front[0] は this.currentMap.squares[ci + di][cj + dj]
           !this.front[0].locked &&
           (this.front[0].Atype === 'map' ||
@@ -1669,10 +1679,13 @@ export default class Play extends Phaser.Scene {
       this.closeMenu();
     }
     if (justDown(this.keys.R)) {
-      this.focusi = 0;
-      this.focusj = 0;
-      this.execEnter();
-      this.execEnter();
+      if (this.currentSquare.slice(-1)[0].Atype === 'stage') {
+        this.focusi = 0;
+        this.focusj = 0;
+        this.execEnter();
+        this.execEnter();
+        this.sEnter.play();
+      }
     }
     if (this.allowedCommands && justDown(this.keys.C)) {
       this.execCopy();
@@ -1957,6 +1970,7 @@ export default class Play extends Phaser.Scene {
     this.gImagePlayer = this.add.image(px + 8, py + 8, 'player');
     this.gImagePlayer.setDepth(90);
     this.gImageFocus = this.add.image(px + 16 + 8, py + 8, 'focus');
+    if (this.mode === 'puzzle') this.gImageFocus.setAlpha(0);
     this.gImageFocus.setDepth(90);
 
     // menu
