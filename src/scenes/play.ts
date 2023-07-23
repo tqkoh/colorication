@@ -588,12 +588,7 @@ export default class Play extends Phaser.Scene {
 
   front: Square[];
 
-  execApply(
-    xi: number,
-    xj: number ,
-    fi: number,
-    fj: number
-  ) {
+  execApply(xi: number, xj: number, fi: number, fj: number) {
     log(xi, xj, fi, fj);
     const front = [wallSquare(), wallSquare()];
     if (
@@ -692,7 +687,10 @@ export default class Play extends Phaser.Scene {
     if (fromi < 0 || this.currentMap.h <= fromi) return;
     if (fromj < 0 || this.currentMap.w <= fromj) return;
 
-    if (this.currentMap.squares[fromi][fromj].movable && this.currentMap.squares[toi][toj].Atype === 'air') {
+    if (
+      this.currentMap.squares[fromi][fromj].movable &&
+      this.currentMap.squares[toi][toj].Atype === 'air'
+    ) {
       log(10, 'moveblock');
       for (
         let k = 0;
@@ -772,7 +770,7 @@ export default class Play extends Phaser.Scene {
     if (this.playerDirection === 'up') di = -1;
     const ci = this.playeri;
     const cj = this.playerj;
-    log(99, ci, cj, di, dj)
+    log(99, ci, cj, di, dj);
     let n = 0;
     let result: string = 'collide';
     while (n < 10) {
@@ -783,17 +781,23 @@ export default class Play extends Phaser.Scene {
         break;
 
       const c =
-        i === -1 || i === this.currentMap.h || j === -1 || j === this.currentMap.w
+        i === -1 ||
+        i === this.currentMap.h ||
+        j === -1 ||
+        j === this.currentMap.w
           ? wallSquare()
           : this.currentMap.squares[i][j];
-      log(99, i,j,c.Atype, c.movable);
+      log(99, i, j, c.Atype, c.movable);
       if (c.Atype === 'air') {
         this.entering = false;
         for (let d = n - 1; d >= 1; d -= 1) {
-          log(9,ci + di * d,
+          log(
+            9,
+            ci + di * d,
             cj + dj * d,
             ci + di * (d + 1),
-            cj + dj * (d + 1));
+            cj + dj * (d + 1)
+          );
           this.moveBlock(
             ci + di * d,
             cj + dj * d,
@@ -831,11 +835,14 @@ export default class Play extends Phaser.Scene {
           break;
         } else if (
           // this.front[0] は this.currentMap.squares[ci + di][cj + dj]
-          this.front[0].Atype === 'map' ||
-          this.front[0].Atype === 'stage' ||
-          (this.front[0].Atype === 'block' &&
-            (this.front[0].block === 'parent' ||
-              this.front[0].block === 'return_title'))
+          !this.front[0].locked &&
+          (this.front[0].Atype === 'map' ||
+            this.front[0].Atype === 'stage' ||
+            (this.front[0].Atype === 'term' &&
+              this.front[0].term.Atype !== 'var') ||
+            (this.front[0].Atype === 'block' &&
+              (this.front[0].block === 'parent' ||
+                this.front[0].block === 'return_title')))
         ) {
           if (!this.entering) {
             this.entering = true;
@@ -853,7 +860,7 @@ export default class Play extends Phaser.Scene {
     if (result === 'collide') {
       this.sCollide.play();
     }
-    log(10,'result:', result);
+    log(10, 'result:', result);
 
     // log(
     //   10,
@@ -1693,7 +1700,12 @@ export default class Play extends Phaser.Scene {
       this.closeMenu();
     }
     if (this.allowedCommands && justDown(this.keys.F2)) {
-      this.moveBlock(this.focusnexti, this.focusnextj, this.focusi, this.focusj);
+      this.moveBlock(
+        this.focusnexti,
+        this.focusnextj,
+        this.focusi,
+        this.focusj
+      );
     }
   }
 
