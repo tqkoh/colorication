@@ -15,7 +15,7 @@ const rtt: Square = {
   Atype: 'block',
   block: 'return_title',
   name: [],
-  movable: true,
+  movable: false,
   collidable: true,
   locked: false,
   image: []
