@@ -2,7 +2,8 @@ import {
   Square,
   airSquare as a,
   parentSquare as p,
-  startSquare as s
+  startSquare as s,
+  submitSquare as u
 } from '../../../gamemap';
 import { Stage } from '../../../stage';
 
@@ -52,7 +53,7 @@ const stage0 = new Stage(
   [
     [p(), s(), a(), a(), a()],
     [a(), a(), a(), a(), a()],
-    [a(), a(), a(), ids, a()],
+    [u(), a(), a(), ids, a()],
     [a(), a(), a(), a(), a()],
     [a(), a(), a(), a(), a()]
   ]

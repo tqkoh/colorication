@@ -116,6 +116,20 @@ export function parentSquare() {
   return lodash.cloneDeep(parentSquareI);
 }
 
+export const submitSquareI: Square = {
+  Atype: 'block',
+  block: 'submit',
+  name: [],
+  movable: false,
+  collidable: true,
+  locked: false,
+  image: []
+};
+
+export function submitSquare() {
+  return lodash.cloneDeep(submitSquareI);
+}
+
 export const wallSquareI: Square = {
   Atype: 'block',
   block: 'wall',

@@ -793,27 +793,7 @@ export default class Play extends Phaser.Scene {
           ? wallSquare()
           : this.currentMap.squares[i][j];
       log(99, i, j, c, c.movable);
-      if (c.Atype === 'air') {
-        this.entering = false;
-        for (let d = n - 1; d >= 1; d -= 1) {
-          log(
-            9,
-            ci + di * d,
-            cj + dj * d,
-            ci + di * (d + 1),
-            cj + dj * (d + 1)
-          );
-          this.moveBlock(
-            ci + di * d,
-            cj + dj * d,
-            ci + di * (d + 1),
-            cj + dj * (d + 1)
-          );
-        }
-        this.moveToPosition(ci + di, cj + dj);
-        result = 'move';
-        break;
-      } else if (!c.movable) {
+      if (c.Atype !== 'air' && !c.movable) {
         for (let m = n - 1; m >= 1; m -= 1) {
           if (
             this.currentMap.squares[ci + di * m][cj + dj * m].Atype ===
@@ -864,7 +844,27 @@ export default class Play extends Phaser.Scene {
           }
           result = 'enter';
           break;
+        } else break;
+      } else if (c.Atype === 'air') {
+        this.entering = false;
+        for (let d = n - 1; d >= 1; d -= 1) {
+          log(
+            9,
+            ci + di * d,
+            cj + dj * d,
+            ci + di * (d + 1),
+            cj + dj * (d + 1)
+          );
+          this.moveBlock(
+            ci + di * d,
+            cj + dj * d,
+            ci + di * (d + 1),
+            cj + dj * (d + 1)
+          );
         }
+        this.moveToPosition(ci + di, cj + dj);
+        result = 'move';
+        break;
       }
     }
     if (result === 'collide') {
