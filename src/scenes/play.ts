@@ -589,19 +589,20 @@ export default class Play extends Phaser.Scene {
   front: Square[];
 
   execApply(
-    xi: number = this.focusi,
-    xj: number = this.focusj,
-    fi: number = this.focusnexti,
-    fj: number = this.focusnextj
+    xi: number,
+    xj: number ,
+    fi: number,
+    fj: number
   ) {
-    this.front = [wallSquare(), wallSquare()];
+    log(xi, xj, fi, fj);
+    const front = [wallSquare(), wallSquare()];
     if (
       xi >= 0 &&
       xi < this.currentMap.h &&
       xj >= 0 &&
       xj < this.currentMap.w
     ) {
-      this.front[0] = this.currentMap.squares[xi][xj];
+      front[0] = this.currentMap.squares[xi][xj];
     }
     if (
       fi >= 0 &&
@@ -609,33 +610,33 @@ export default class Play extends Phaser.Scene {
       fj >= 0 &&
       fj < this.currentMap.w
     ) {
-      this.front[1] = this.currentMap.squares[fi][fj];
+      front[1] = this.currentMap.squares[fi][fj];
     }
     if (
-      this.front[0].Atype === 'term' &&
-      this.front[0].movable &&
-      this.front[1].Atype === 'term' &&
-      this.front[1].movable
+      front[0].Atype === 'term' &&
+      front[0].movable &&
+      front[1].Atype === 'term' &&
+      front[1].movable
     ) {
       log(10, 'apply');
-      for (let k = 0; k < this.front[0].image.length; k += 1) {
-        this.front[0].image[k].destroy();
+      for (let k = 0; k < front[0].image.length; k += 1) {
+        front[0].image[k].destroy();
       }
-      this.front[0].image = [];
+      front[0].image = [];
 
-      for (let k = 0; k < this.front[1].image.length; k += 1) {
-        this.front[1].image[k].destroy();
+      for (let k = 0; k < front[1].image.length; k += 1) {
+        front[1].image[k].destroy();
       }
-      this.front[1].image = [];
+      front[1].image = [];
 
       const app: Term = {
         Atype: 'app',
-        lam: this.front[1].term,
-        param: this.front[0].term
+        lam: front[1].term,
+        param: front[0].term
       };
 
       this.substProgress = completeSubst(app).reverse();
-      this.substProgress.push(this.front[1].term);
+      this.substProgress.push(front[1].term);
       log(8, 'left is newer', this.substProgress);
       {
         const y = 16 * fi;
@@ -669,15 +670,15 @@ export default class Play extends Phaser.Scene {
       this.checkChangeBackParent(fi, fj);
 
       this.currentMap.squares[fi][fj] = {
-        ...this.front[1],
+        ...front[1],
         map: undefined,
         Atype: 'term',
         term: cloneDeep(this.substProgress[0])
       };
       this.currentMap.squares[xi][xj] = airSquare();
 
-      this.front[0] = this.currentMap.squares[xi][xj];
-      this.front[1] = this.currentMap.squares[fi][fj];
+      front[0] = this.currentMap.squares[xi][xj];
+      front[1] = this.currentMap.squares[fi][fj];
 
       this.addSquareImage(xi, xj);
       this.addSquareImage(fi, fj);
@@ -687,57 +688,55 @@ export default class Play extends Phaser.Scene {
     }
   }
 
-  moveBlock() {
-    if (this.front[0].movable && this.front[1].Atype === 'air') {
+  moveBlock(fromi: number, fromj: number, toi: number, toj: number) {
+    if (fromi < 0 || this.currentMap.h <= fromi) return;
+    if (fromj < 0 || this.currentMap.w <= fromj) return;
+
+    if (this.currentMap.squares[fromi][fromj].movable && this.currentMap.squares[toi][toj].Atype === 'air') {
       log(10, 'moveblock');
       for (
         let k = 0;
-        k < this.currentMap.squares[this.focusi][this.focusj].image.length;
+        k < this.currentMap.squares[fromi][fromj].image.length;
         k += 1
       ) {
-        this.currentMap.squares[this.focusi][this.focusj].image[k].destroy();
+        this.currentMap.squares[fromi][fromj].image[k].destroy();
       }
       for (
         let k = 0;
-        k <
-        this.currentMap.squares[this.focusnexti][this.focusnextj].image.length;
+        k < this.currentMap.squares[toi][toj].image.length;
         k += 1
       ) {
-        this.currentMap.squares[this.focusnexti][this.focusnextj].image[
-          k
-        ].destroy();
+        this.currentMap.squares[toi][toj].image[k].destroy();
       }
-      this.currentMap.squares[this.focusi][this.focusj].image = [];
-      this.currentMap.squares[this.focusnexti][this.focusnextj].image = [];
-      this.currentMap.squares[this.focusi][this.focusj] = airSquare();
-      [this.currentMap.squares[this.focusnexti][this.focusnextj]] = this.front;
-      this.front[0] = this.currentMap.squares[this.focusi][this.focusj];
-      this.front[1] = this.currentMap.squares[this.focusnexti][this.focusnextj];
+      this.currentMap.squares[toi][toj] = this.currentMap.squares[fromi][fromj];
+      this.currentMap.squares[fromi][fromj].image = [];
+      this.currentMap.squares[toi][toj].image = [];
+      this.currentMap.squares[fromi][fromj] = airSquare();
 
-      this.checkChangeBackParent(this.focusi, this.focusj);
-      this.checkChangeBackParent(this.focusnexti, this.focusnextj);
+      this.checkChangeBackParent(fromi, fromj);
+      this.checkChangeBackParent(toi, toj);
 
-      this.addSquareImage(this.focusi, this.focusj);
-      this.addSquareImage(this.focusnexti, this.focusnextj);
-      if (this.front[1].image.length > 0) {
-        const y = 16 * this.focusnexti;
-        const x = 16 * this.focusnextj;
-        this.front[1].image[0]
+      this.addSquareImage(fromi, fromj);
+      this.addSquareImage(toi, toj);
+      if (this.currentMap.squares[toi][toj].image.length > 0) {
+        const y = 16 * toi;
+        const x = 16 * toj;
+        this.currentMap.squares[toi][toj].image[0]
           .setY(this.mapOriginy + y + 8)
           .setX(this.mapOriginx + x + 8);
       }
-      if (this.front[1].image.length > 1) {
-        const y = 16 * this.focusnexti;
-        const x = 16 * this.focusnextj;
-        this.front[1].image[1]
+      if (this.currentMap.squares[toi][toj].image.length > 1) {
+        const y = 16 * toi;
+        const x = 16 * toj;
+        this.currentMap.squares[toi][toj].image[1]
           .setY(this.mapOriginy + y + 8)
           .setX(this.mapOriginx + x + 8);
       }
-      if (this.front[1].image.length > 2) {
+      if (this.currentMap.squares[toi][toj].image.length > 2) {
         // locked
-        const y = 16 * this.focusnexti;
-        const x = 16 * this.focusnextj;
-        this.front[1].image[2]
+        const y = 16 * toi;
+        const x = 16 * toj;
+        this.currentMap.squares[toi][toj].image[2]
           .setY(this.mapOriginy + y)
           .setX(this.mapOriginx + x + 1);
       }
@@ -764,51 +763,144 @@ export default class Play extends Phaser.Scene {
     ) {
       this.front[1] = this.currentMap.squares[this.focusnexti][this.focusnextj];
     }
-    log(
-      10,
-      this.focusi,
-      this.focusj,
-      this.focusnexti,
-      this.focusnextj,
-      this.front[0].collidable
-    );
-    if (
-      this.front[0].Atype === 'term' &&
-      this.front[0].movable &&
-      this.front[1].Atype === 'term' &&
-      this.front[1].movable
-    ) {
-      this.entering = false;
-      this.execApply();
-      this.moveToPosition(this.focusi, this.focusj);
-    } else if (this.front[0].movable && this.front[1].Atype === 'air') {
-      this.entering = false;
-      this.moveBlock();
-      this.moveToPosition(this.focusi, this.focusj);
-      log(10, this.currentMap);
-    } else if (
-      this.front[0].Atype === 'map' ||
-      this.front[0].Atype === 'stage' ||
-      (this.front[0].Atype === 'block' &&
-        (this.front[0].block === 'parent' ||
-          this.front[0].block === 'return_title'))
-    ) {
-      if (!this.entering) {
-        this.entering = true;
-        this.sCollide.play();
-      } else {
+
+    let di = 0;
+    let dj = 0;
+    if (this.playerDirection === 'right') dj = 1;
+    if (this.playerDirection === 'down') di = 1;
+    if (this.playerDirection === 'left') dj = -1;
+    if (this.playerDirection === 'up') di = -1;
+    const ci = this.playeri;
+    const cj = this.playerj;
+    log(99, ci, cj, di, dj)
+    let n = 0;
+    let result: string = 'collide';
+    while (n < 10) {
+      n += 1;
+      const i = ci + di * n;
+      const j = cj + dj * n;
+      if (i < -1 || this.currentMap.h < i || j < -1 || this.currentMap.w < j)
+        break;
+
+      const c =
+        i === -1 || i === this.currentMap.h || j === -1 || j === this.currentMap.w
+          ? wallSquare()
+          : this.currentMap.squares[i][j];
+      log(99, i,j,c.Atype, c.movable);
+      if (c.Atype === 'air') {
         this.entering = false;
-        this.execEnter();
+        for (let d = n - 1; d >= 1; d -= 1) {
+          log(9,ci + di * d,
+            cj + dj * d,
+            ci + di * (d + 1),
+            cj + dj * (d + 1));
+          this.moveBlock(
+            ci + di * d,
+            cj + dj * d,
+            ci + di * (d + 1),
+            cj + dj * (d + 1)
+          );
+        }
+        this.moveToPosition(ci + di, cj + dj);
+        result = 'move';
+        break;
+      } else if (!c.movable) {
+        if (
+          this.currentMap.squares[ci + di * (n - 1)][cj + dj * (n - 1)]
+            .Atype === 'term' &&
+          this.currentMap.squares[ci + di * (n - 2)][cj + dj * (n - 2)]
+            .Atype === 'term'
+        ) {
+          this.entering = false;
+          this.execApply(
+            ci + di * (n - 2),
+            cj + dj * (n - 2),
+            ci + di * (n - 1),
+            cj + dj * (n - 1)
+          );
+          for (let d = n - 3; d >= 1; d -= 1) {
+            this.moveBlock(
+              ci + di * d,
+              cj + dj * d,
+              ci + di * (d + 1),
+              cj + dj * (d + 1)
+            );
+          }
+          this.moveToPosition(ci + di, cj + dj);
+          result = 'apply';
+          break;
+        } else if (
+          // this.front[0] は this.currentMap.squares[ci + di][cj + dj]
+          this.front[0].Atype === 'map' ||
+          this.front[0].Atype === 'stage' ||
+          (this.front[0].Atype === 'block' &&
+            (this.front[0].block === 'parent' ||
+              this.front[0].block === 'return_title'))
+        ) {
+          if (!this.entering) {
+            this.entering = true;
+            this.sCollide.play();
+          } else {
+            this.entering = false;
+            this.sEnter.play();
+            this.execEnter();
+          }
+          result = 'enter';
+          break;
+        }
       }
-    } else if (this.front[0].collidable) {
-      log(10, 'collide');
-      this.entering = false;
-      this.sCollide.play();
-    } else {
-      log(10, 'move');
-      this.entering = false;
-      this.moveToPosition(this.focusi, this.focusj);
     }
+    if (result === 'collide') {
+      this.sCollide.play();
+    }
+    log(10,'result:', result);
+
+    // log(
+    //   10,
+    //   this.focusi,
+    //   this.focusj,
+    //   this.focusnexti,
+    //   this.focusnextj,
+    //   this.front[0].collidable
+    // );
+    // if (
+    //   this.front[0].Atype === 'term' &&
+    //   this.front[0].movable &&
+    //   this.front[1].Atype === 'term' &&
+    //   this.front[1].movable
+    // ) {
+    //   this.entering = false;
+    //   this.execApply();
+    //   this.moveToPosition(this.focusi, this.focusj);
+    // } else if (this.front[0].movable && this.front[1].Atype === 'air') {
+    //   this.entering = false;
+    //   this.moveBlock(this.focusi, this.focusj, this.focusnexti, this.focusnextj);
+    //   this.moveToPosition(this.focusi, this.focusj);
+    //   log(10, this.currentMap);
+    // } else if (
+    //   this.front[0].Atype === 'map' ||
+    //   this.front[0].Atype === 'stage' ||
+    //   (this.front[0].Atype === 'block' &&
+    //     (this.front[0].block === 'parent' ||
+    //       this.front[0].block === 'return_title'))
+    // ) {
+    //   if (!this.entering) {
+    //     this.entering = true;
+    //     this.sCollide.play(); // change to entering sound
+    //   } else {
+    //     this.entering = false;
+    //     this.sEnter.play();
+    //     this.execEnter();
+    //   }
+    // } else if (this.front[0].collidable) {
+    //   log(10, 'collide');
+    //   this.entering = false;
+    //   this.sCollide.play();
+    // } else {
+    //   log(10, 'move');
+    //   this.entering = false;
+    //   this.moveToPosition(this.focusi, this.focusj);
+    // }
   }
 
   moveToDirection(d: Direction, shift: boolean) {
@@ -1601,25 +1693,7 @@ export default class Play extends Phaser.Scene {
       this.closeMenu();
     }
     if (this.allowedCommands && justDown(this.keys.F2)) {
-      this.front = [wallSquare(), wallSquare()];
-      if (
-        this.focusi >= 0 &&
-        this.focusi < this.currentMap.h &&
-        this.focusj >= 0 &&
-        this.focusj < this.currentMap.w
-      ) {
-        this.front[0] = this.currentMap.squares[this.focusi][this.focusj];
-      }
-      if (
-        this.focusnexti >= 0 &&
-        this.focusnexti < this.currentMap.h &&
-        this.focusnextj >= 0 &&
-        this.focusnextj < this.currentMap.w
-      ) {
-        this.front[1] =
-          this.currentMap.squares[this.focusnexti][this.focusnextj];
-      }
-      this.moveBlock();
+      this.moveBlock(this.focusnexti, this.focusnextj, this.focusi, this.focusj);
     }
   }
 
