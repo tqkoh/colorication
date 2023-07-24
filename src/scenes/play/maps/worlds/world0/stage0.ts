@@ -2,7 +2,8 @@ import {
   Square,
   airSquare as a,
   parentSquare as p,
-  startSquare as s
+  startSquare as s,
+  submitSquare as u
 } from '../../../gamemap';
 import { Stage } from '../../../stage';
 
@@ -29,17 +30,128 @@ const ids: Square = {
   image: []
 };
 
+const zrs: Square = {
+  Atype: 'term',
+  term: {
+    Atype: 'lam',
+    var: '0',
+    ret: {
+      Atype: 'lam',
+      var: '1',
+      ret: { Atype: 'var', var: '1' }
+    }
+  },
+  name: [],
+  movable: true,
+  collidable: true,
+  locked: true,
+  image: []
+};
+
 const stage0 = new Stage(
   '0.',
   [
     {
-      input: [],
+      input: [
+        {
+          Atype: 'term',
+          term: {
+            Atype: 'lam',
+            var: '0',
+            ret: {
+              Atype: 'lam',
+              var: '1',
+              ret: { Atype: 'var', var: '1' }
+            }
+          },
+          name: [],
+          movable: false,
+          collidable: true,
+          locked: true,
+          image: []
+        },
+        {
+          Atype: 'term',
+          term: {
+            Atype: 'lam',
+            var: '0',
+            ret: {
+              Atype: 'lam',
+              var: '1',
+              ret: { Atype: 'var', var: '1' }
+            }
+          },
+          name: [],
+          movable: false,
+          collidable: true,
+          locked: true,
+          image: []
+        }
+      ],
       output: {
         Atype: 'term',
         term: {
           Atype: 'lam',
           var: '0',
-          ret: { Atype: 'var', var: '0' }
+          ret: {
+            Atype: 'lam',
+            var: '1',
+            ret: { Atype: 'var', var: '1' }
+          }
+        },
+        name: [],
+        movable: false,
+        collidable: true,
+        locked: true,
+        image: []
+      }
+    },
+    {
+      input: [
+        {
+          Atype: 'term',
+          term: {
+            Atype: 'lam',
+            var: '0',
+            ret: {
+              Atype: 'var',
+              var: '0'
+            }
+          },
+          name: [],
+          movable: false,
+          collidable: true,
+          locked: true,
+          image: []
+        },
+        {
+          Atype: 'term',
+          term: {
+            Atype: 'lam',
+            var: '0',
+            ret: {
+              Atype: 'lam',
+              var: '1',
+              ret: { Atype: 'var', var: '1' }
+            }
+          },
+          name: [],
+          movable: false,
+          collidable: true,
+          locked: true,
+          image: []
+        }
+      ],
+      output: {
+        Atype: 'term',
+        term: {
+          Atype: 'lam',
+          var: '0',
+          ret: {
+            Atype: 'lam',
+            var: '1',
+            ret: { Atype: 'var', var: '1' }
+          }
         },
         name: [],
         movable: false,
@@ -51,9 +163,26 @@ const stage0 = new Stage(
   ],
   [
     [p(), s(), a(), a(), a()],
-    [a(), a(), a(), a(), a()],
     [a(), a(), a(), ids, a()],
-    [a(), a(), a(), a(), a()],
+    [
+      u(),
+      a(),
+      a(),
+      a(),
+      {
+        Atype: 'term',
+        term: {
+          Atype: 'var',
+          var: '0'
+        },
+        name: [],
+        movable: false,
+        collidable: true,
+        locked: false,
+        image: []
+      }
+    ],
+    [a(), a(), a(), zrs, a()],
     [a(), a(), a(), a(), a()]
   ]
 );

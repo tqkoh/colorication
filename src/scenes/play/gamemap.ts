@@ -20,10 +20,11 @@ export type Block =
   | 'down'
   | 'wall'
   | 'lam_var'
-  | 'lam_ret';
+  | 'lam_ret'
+  | 'notblock';
 
 export type Square = (
-  | { Atype: 'air' }
+  | { Atype: 'air'; airtype: 'normal' | 'out' }
   | { Atype: 'term'; term: Term; map?: GameMap }
   | { Atype: 'map'; map: GameMap }
   | { Atype: 'stage'; stage: Stage; map?: GameMap }
@@ -91,6 +92,7 @@ export class GameMap {
 
 export const airSquareI: Square = {
   Atype: 'air',
+  airtype: 'normal',
   name: [],
   movable: false,
   collidable: false,
@@ -100,6 +102,20 @@ export const airSquareI: Square = {
 
 export function airSquare() {
   return lodash.cloneDeep(airSquareI);
+}
+
+export const airOutSquareI: Square = {
+  Atype: 'air',
+  airtype: 'out',
+  name: [],
+  movable: false,
+  collidable: false,
+  locked: false,
+  image: []
+};
+
+export function airOutSquare() {
+  return lodash.cloneDeep(airOutSquareI);
 }
 
 export const parentSquareI: Square = {
@@ -116,13 +132,27 @@ export function parentSquare() {
   return lodash.cloneDeep(parentSquareI);
 }
 
+export const submitSquareI: Square = {
+  Atype: 'block',
+  block: 'submit',
+  name: [],
+  movable: false,
+  collidable: true,
+  locked: false,
+  image: []
+};
+
+export function submitSquare() {
+  return lodash.cloneDeep(submitSquareI);
+}
+
 export const wallSquareI: Square = {
   Atype: 'block',
   block: 'wall',
   name: [],
   movable: false,
   collidable: true,
-  locked: true,
+  locked: false,
   image: []
 };
 
