@@ -1,5 +1,5 @@
 import { log } from '../../utils/deb';
-import { GameMap, Square, airSquare, wallSquare } from './gamemap';
+import { GameMap, Square, airOutSquare, wallSquare } from './gamemap';
 
 export type SquareWithCoords = {
   square: Square;
@@ -28,13 +28,13 @@ export class Stage extends GameMap {
     const s: Square[][] = [];
     for (let i = 0; i < squares.length; i += 1) {
       s.push([]);
-      for (let j = 0; j < 2; j += 1) s[i].push(airSquare());
+      for (let j = 0; j < 2; j += 1) s[i].push(airOutSquare());
       s[i].push(wallSquare());
       for (let j = 0; j < squares[i].length; j += 1) s[i].push(squares[i][j]);
       if (tests.length && tests[0].input.length) {
         s[i].push(wallSquare());
         for (let k = 0; k < tests[0].input.length + 1; k += 1)
-          s[i].push(airSquare());
+          s[i].push(airOutSquare());
       }
     }
     for (let i = 0; i < tests.length; i += 1) {
@@ -45,6 +45,14 @@ export class Stage extends GameMap {
         for (let j = 0; j < tests[i].input.length; j += 1) {
           s[ci][squares[0].length + j + 4] = tests[i].input[j];
         }
+      }
+    }
+    if (s.length % 2 === 0) {
+      s.push(new Array<Square>(s[0].length).fill(wallSquare()));
+    }
+    if (s[0].length % 2 === 0) {
+      for (let i = 0; i < s.length; i += 1) {
+        s[i].push(wallSquare());
       }
     }
 

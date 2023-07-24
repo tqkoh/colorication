@@ -17,6 +17,7 @@ import {
 } from '../utils/termUtils';
 import {
   airSquare,
+  Block,
   cloneSquare,
   Direction,
   GameMap,
@@ -304,6 +305,7 @@ export default class Play extends Phaser.Scene {
     this.currentSquares = [
       {
         Atype: 'air',
+        airtype: 'normal',
         name: codesFrom(
           `${
             this.allowedCommands ? 'WASD to move, use shift to just turn' : ''
@@ -393,6 +395,7 @@ export default class Play extends Phaser.Scene {
     this.currentSquares = [
       {
         Atype: 'air',
+        airtype: 'normal',
         name: codesFrom(
           `${
             this.allowedCommands ? 'WASD to move, use shift to just turn' : ''
@@ -495,13 +498,7 @@ export default class Play extends Phaser.Scene {
         .image(
           this.mapOriginx + x + 8,
           this.mapOriginy + y + 8,
-          this.imageHandleFromSquare(
-            s,
-            i,
-            j,
-            this.currentMap.h,
-            this.currentMap.w
-          )
+          this.imageHandleFromSquare(s, i, j)
         )
 
         .setDepth(-10)
@@ -543,7 +540,7 @@ export default class Play extends Phaser.Scene {
         .image(
           globalThis.screenw - 15,
           15,
-          this.imageHandleFromSquare(this.clipSquare, 1, 1, 3, 3)
+          this.imageHandleFromSquare(this.clipSquare, 1, 1)
         )
         .setDepth(0)
     );
@@ -671,9 +668,7 @@ export default class Play extends Phaser.Scene {
                   image: []
                 },
                 fi,
-                fj,
-                this.currentMap.h,
-                this.currentMap.w
+                fj
               )
             )
             .setDepth(10 + i)
@@ -1389,9 +1384,7 @@ export default class Play extends Phaser.Scene {
                 image: []
               },
               this.focusi,
-              this.focusj,
-              this.currentMap.h,
-              this.currentMap.w
+              this.focusj
             )
           )
           .setDepth(10 + i)
@@ -1531,13 +1524,7 @@ export default class Play extends Phaser.Scene {
           .image(
             x,
             y,
-            this.imageHandleFromSquare(
-              this.currentSquares.slice(-1)[0],
-              1,
-              1,
-              3,
-              3
-            )
+            this.imageHandleFromSquare(this.currentSquares.slice(-1)[0], 1, 1)
           )
           .setScale(7)
           .setAlpha(afterLeave ? 0.2 : 0.5)
@@ -1577,13 +1564,7 @@ export default class Play extends Phaser.Scene {
           this.add.image(
             this.mapOriginx + x + 8,
             this.mapOriginy + y + 8,
-            this.imageHandleFromSquare(
-              airSquare(),
-              i,
-              j,
-              this.currentMap.h,
-              this.currentMap.w
-            )
+            this.imageHandleFromSquare(airSquare(), i, j)
           )
         );
         this.gMapBackAir[i][j]?.setDepth(-11);
@@ -1804,28 +1785,33 @@ export default class Play extends Phaser.Scene {
     newTexture.refresh();
   }
 
-  imageHandleFromSquare(
-    s: Square,
-    i: number,
-    j: number,
-    h: number,
-    w: number
-  ): string {
+  blockType(i: number, j: number): Block {
+    if (i < 0 || this.currentMap.h <= i || j < 0 || this.currentMap.w <= j)
+      return 'wall';
+    const s = this.currentMap.squares[i][j];
+    if (s.Atype === 'block') return s.block;
+    return 'notblock';
+  }
+
+  imageHandleFromSquare(s: Square, i: number, j: number): string {
     return match(s)
+      .with({ Atype: 'air', airtype: 'out' }, () => 'out')
       .with({ Atype: 'air' }, () => {
         let ret = 'air';
-        if (j === 0) {
+        if (this.blockType(i, j - 1) === 'wall') {
           ret += 'l';
         }
-        if (j === w - 1) {
+        if (this.blockType(i, j + 1) === 'wall') {
           ret += 'r';
         }
-        if (i === 0) {
+        if (this.blockType(i - 1, j) === 'wall') {
           ret += 't';
         }
-        if (i === h - 1) {
+        if (this.blockType(i + 1, j) === 'wall') {
           ret += 'b';
         }
+        if (ret.length > 5) return 'airrb';
+        log(100, ret, i, j, s.Atype, this.currentMap.squares[i][j].Atype);
         return ret;
       })
       .with({ Atype: 'map' }, () => 'block')
@@ -1835,11 +1821,7 @@ export default class Play extends Phaser.Scene {
       .with({ Atype: 'block', block: 'equal' }, () => 'equal')
       .with({ Atype: 'block', block: 'place' }, () => 'place')
       .with({ Atype: 'block', block: 'submit' }, () => 'submit')
-      .with({ Atype: 'block', block: 'wall' }, () => {
-        if (j === 0) return 'walll';
-        if (j === w - 1) return 'wallr';
-        return 'wall';
-      }) // reset, parent
+      .with({ Atype: 'block', block: 'wall' }, () => 'wall') // reset, parent
       .with({ Atype: 'block', block: 'lam_var' }, () => 'lam_var')
       .with({ Atype: 'block', block: 'lam_ret' }, () => 'lam_ret')
       .with({ Atype: 'block', block: 'parent' }, () => 'parent')
@@ -1941,13 +1923,7 @@ export default class Play extends Phaser.Scene {
             .image(
               this.mapOriginx + x + 8,
               this.mapOriginy + y + 8,
-              this.imageHandleFromSquare(
-                s,
-                i,
-                j,
-                this.currentMap.h,
-                this.currentMap.w
-              )
+              this.imageHandleFromSquare(s, i, j)
             )
             .setDepth(-10)
         );
@@ -1980,13 +1956,7 @@ export default class Play extends Phaser.Scene {
           this.add.image(
             this.mapOriginx + x + 8,
             this.mapOriginy + y + 8,
-            this.imageHandleFromSquare(
-              airSquare(),
-              i,
-              j,
-              this.currentMap.h,
-              this.currentMap.w
-            )
+            this.imageHandleFromSquare(airSquare(), i, j)
           )
         );
         this.gMapBackAir[i][j]?.setDepth(-11);
@@ -2099,6 +2069,9 @@ export default class Play extends Phaser.Scene {
     this.load.image('airlb', 'assets/images/airlb.png');
     this.load.image('airlt', 'assets/images/airlt.png');
     this.load.image('airrt', 'assets/images/airrt.png');
+    this.load.image('airlr', 'assets/images/airlr.png');
+    this.load.image('airtb', 'assets/images/airtb.png');
+    this.load.image('airout', 'assets/images/out.png');
     this.load.image('player', 'assets/images/player.png');
     this.load.image('focus', 'assets/images/focus.png');
     this.load.image('out', 'assets/images/out.png');
