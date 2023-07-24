@@ -9,7 +9,7 @@ export type Test = {
 export class Stage extends GameMap {
   tests: Test[];
 
-  inputCoords: [number, number][] = [];
+  inputCoords: [number, number][][] = [];
 
   outputCoords: [number, number][] = [];
 

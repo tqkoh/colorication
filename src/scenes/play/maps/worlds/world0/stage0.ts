@@ -30,6 +30,24 @@ const ids: Square = {
   image: []
 };
 
+const zrs: Square = {
+  Atype: 'term',
+  term: {
+    Atype: 'lam',
+    var: '0',
+    ret: {
+      Atype: 'lam',
+      var: '1',
+      ret: { Atype: 'var', var: '1' }
+    }
+  },
+  name: [],
+  movable: true,
+  collidable: true,
+  locked: true,
+  image: []
+};
+
 const stage0 = new Stage(
   '0.',
   [
@@ -70,9 +88,9 @@ const stage0 = new Stage(
   ],
   [
     [p(), s(), a(), a(), a()],
-    [a(), a(), a(), a(), a()],
-    [u(), a(), a(), ids, a()],
-    [a(), a(), a(), a(), a()],
+    [a(), a(), a(), ids, a()],
+    [u(), a(), a(), a(), a()],
+    [a(), a(), a(), zrs, a()],
     [a(), a(), a(), a(), a()]
   ]
 );
