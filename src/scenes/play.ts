@@ -339,7 +339,7 @@ export default class Play extends Phaser.Scene {
     this.gAnimationApply = [];
     this.gMapBackAir = [];
     this.animationApplyFrame = 0;
-    this.submitTestCount = 0;
+    this.submitTestCount = [0,0];
     this.submitPhase = 'input';
     this.animationSubmitFrame = 0;
 
@@ -2116,7 +2116,7 @@ export default class Play extends Phaser.Scene {
     }
   }
 
-  submitTestCount: number;
+  submitTestCount: [number, number]; // test, apply
 
   submitPhase: SubmitAnimationPhase;
 
@@ -2124,6 +2124,7 @@ export default class Play extends Phaser.Scene {
 
   updateAnimationSubmit() {
     const currentSquare = this.currentSquares.slice(-1)[0];
+    if (currentSquare.Atype !== 'stage') return;
     log(100, 'animationsubmit\n', currentSquare, this.front);
     if (
       currentSquare.Atype !== 'stage' ||
@@ -2137,7 +2138,7 @@ export default class Play extends Phaser.Scene {
     const s = currentSquare.stage;
     switch (this.submitPhase) {
       case 'input': {
-        if (this.submitTestCount === s.tests.length) {
+        if (this.submitTestCount[0] === s.tests.length) {
           log(8, 'ac');
           this.mainState = 'clearAnimating';
           break;
@@ -2147,27 +2148,37 @@ export default class Play extends Phaser.Scene {
         if (this.animationSubmitFrame < 120) {
           // TODO 定数にしてアニメーション追加
           this.animationSubmitFrame = 0;
-          this.submitTestCount = 0;
+          this.submitTestCount = [0, 0];
           this.submitPhase = 'apply';
           break;
         }
         break;
       }
       case 'apply': {
-        if (this.submitTestCount === s.tests.length) {
+        if (this.submitTestCount[0] === s.tests.length) {
           this.mainState = 'clearAnimating';
         } else {
           this.saveState = this.mainState;
           this.execApply(
             this.focusi,
             this.focusj,
-            this.focusnexti,
-            this.focusnextj
+            currentSquare.stage.inputCoords[this.submitTestCount[0]][
+              this.submitTestCount[1]
+            ][0],
+            currentSquare.stage.inputCoords[this.submitTestCount[0]][
+              this.submitTestCount[1]
+            ][1]
           );
           log(100, equal(this.front[0].term, this.front[1].term));
           this.animationSubmitFrame = 0;
-          this.submitTestCount += 1;
-          this.submitPhase = 'input';
+          this.submitTestCount[1] += 1;
+          if (
+            this.submitTestCount[1] ===
+            currentSquare.stage.tests[this.submitTestCount[0]].input.length
+          ) {
+            this.submitTestCount[0] += 1;
+            this.submitTestCount[1] = 0;
+          }
         }
         break;
       }

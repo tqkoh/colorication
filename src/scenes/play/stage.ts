@@ -1,24 +1,17 @@
 import { log } from '../../utils/deb';
 import { GameMap, Square, airOutSquare, wallSquare } from './gamemap';
 
-export type SquareWithCoords = {
-  square: Square;
-  i: number;
-  j: number;
-};
-
 export type Test = {
   input: Square[];
   output: Square;
 };
 
-export type TestWithCoords = {
-  input: SquareWithCoords[];
-  output: SquareWithCoords;
-};
-
 export class Stage extends GameMap {
   tests: Test[];
+
+  inputCoords: [number, number][] = [];
+
+  outputCoords: [number, number][] = [];
 
   name: string;
 
@@ -37,13 +30,21 @@ export class Stage extends GameMap {
           s[i].push(airOutSquare());
       }
     }
+
+    const inputCoords: [number, number][][] = [];
+
+    const outputCoords: [number, number][] = [];
+
     for (let i = 0; i < tests.length; i += 1) {
+      inputCoords.push([]);
       const ci = Math.floor(squares.length / 2) - (tests.length - 1);
       log(8, ci);
       s[ci][1] = tests[i].output;
+      outputCoords.push([ci, 1]);
       if (tests[i].input.length) {
         for (let j = 0; j < tests[i].input.length; j += 1) {
           s[ci][squares[0].length + j + 4] = tests[i].input[j];
+          inputCoords[j].push([ci, squares[0].length + j + 4]);
         }
       }
     }
@@ -59,5 +60,7 @@ export class Stage extends GameMap {
     super(s);
     this.name = name;
     this.tests = tests;
+    this.inputCoords = inputCoords;
+    this.outputCoords = outputCoords;
   }
 }
