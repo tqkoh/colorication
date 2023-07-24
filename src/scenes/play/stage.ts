@@ -37,17 +37,18 @@ export class Stage extends GameMap {
 
     for (let i = 0; i < tests.length; i += 1) {
       inputCoords.push([]);
-      const ci = Math.floor(squares.length / 2) - (tests.length - 1);
+      const ci = Math.floor(squares.length / 2) - (tests.length - 1) + i * 2;
       log(8, ci);
       s[ci][1] = tests[i].output;
       outputCoords.push([ci, 1]);
       if (tests[i].input.length) {
         for (let j = 0; j < tests[i].input.length; j += 1) {
           s[ci][squares[0].length + j + 4] = tests[i].input[j];
-          inputCoords[j].push([ci, squares[0].length + j + 4]);
+          inputCoords[i].push([ci, squares[0].length + j + 4]);
         }
       }
     }
+    log(100, 'tests', inputCoords, outputCoords);
     if (s.length % 2 === 0) {
       s.push(new Array<Square>(s[0].length).fill(wallSquare()));
     }

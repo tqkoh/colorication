@@ -2144,6 +2144,12 @@ export default class Play extends Phaser.Scene {
 
   animationSubmitFrame: number;
 
+  subAnimTargets: {
+    image: Phaser.GameObjects.Image;
+    from: [number, number];
+    to: [number, number];
+  }[] = [];
+
   updateAnimationSubmit() {
     const currentSquare = this.currentSquares.slice(-1)[0];
     if (currentSquare.Atype !== 'stage') return;
@@ -2162,10 +2168,60 @@ export default class Play extends Phaser.Scene {
       case 'input': {
         this.animationSubmitFrame += 1;
 
-        if (this.animationSubmitFrame < 120) {
-          // TODO 定数にしてアニメーション追加
+        if (this.submitTestCount[0] === s.tests.length) {
+          log(8, 'status:ac');
+          this.mainState = 'clearAnimating';
+          break;
+        }
+
+        log(
+          99,
+          s.inputCoords,
+          this.submitTestCount[0],
+          this.submitTestCount[1],
+          0
+        );
+        if (this.animationSubmitFrame === 1) {
+          for (
+            let i = 0;
+            i < s.inputCoords[this.submitTestCount[0]].length;
+            i += 1
+          ) {
+            const t =
+              this.currentMap.squares[
+                s.inputCoords[this.submitTestCount[0]][i][0]
+              ][s.inputCoords[this.submitTestCount[0]][i][1]];
+            for (let j = 0; j < t.image.length; j += 1) {
+              this.subAnimTargets.push({
+                image: t.image[j],
+                from: [t.image[j].y, t.image[j].x],
+                to: [
+                  this.mapOriginy + 16 * this.focusnexti + 8,
+                  this.mapOriginx + 16 * this.focusnextj + 8
+                ]
+              });
+            }
+          }
+        }
+
+        // eslint-disable-next-line no-restricted-syntax
+        for (const t of this.subAnimTargets) {
+          t.image.setY(
+            t.from[0] + ((t.to[0] - t.from[0]) * this.animationSubmitFrame) / 30
+          );
+          t.image.setX(
+            t.from[1] + ((t.to[1] - t.from[1]) * this.animationSubmitFrame) / 30
+          );
+        }
+
+        if (this.animationSubmitFrame > 30) {
+          // eslint-disable-next-line no-restricted-syntax
+          for (const t of this.subAnimTargets) {
+            t.image.setY(t.from[0]);
+            t.image.setX(t.from[1]);
+          }
+
           this.animationSubmitFrame = 0;
-          this.submitTestCount = [0, -1];
           this.submitPhase = 'apply';
           break;
         }
@@ -2222,6 +2278,7 @@ export default class Play extends Phaser.Scene {
               this.submitTestCount[0] += 1;
               this.submitTestCount[1] = 0;
               this.submitPhase = 'input';
+              break;
             }
           }
 
@@ -2252,6 +2309,14 @@ export default class Play extends Phaser.Scene {
     }
   }
 
+  updateAnimationClear() {
+    this.removeSquareImage(this.focusnexti, this.focusnextj);
+    this.currentMap.squares[this.focusnexti][this.focusnextj] = airSquare();
+    this.addSquareImage(this.focusnexti, this.focusnextj);
+
+    this.mainState = 'operating';
+  }
+
   update() {
     switch (this.mainState) {
       case 'operating': {
@@ -2275,12 +2340,7 @@ export default class Play extends Phaser.Scene {
         break;
       }
       case 'clearAnimating': {
-        this.removeSquareImage(this.focusnexti, this.focusnextj);
-        this.currentMap.squares[this.focusnexti][this.focusnextj] =
-          submitSquare();
-        this.addSquareImage(this.focusnexti, this.focusnextj);
-
-        this.mainState = 'operating';
+        this.updateAnimationClear();
         break;
       }
       default: {

@@ -84,6 +84,40 @@ const stage0 = new Stage(
         locked: true,
         image: []
       }
+    },
+    {
+      input: [
+        {
+          Atype: 'term',
+          term: {
+            Atype: 'lam',
+            var: '0',
+            ret: {
+              Atype: 'lam',
+              var: '1',
+              ret: { Atype: 'var', var: '1' }
+            }
+          },
+          name: [],
+          movable: false,
+          collidable: true,
+          locked: true,
+          image: []
+        }
+      ],
+      output: {
+        Atype: 'term',
+        term: {
+          Atype: 'lam',
+          var: '0',
+          ret: { Atype: 'var', var: '0' }
+        },
+        name: [],
+        movable: false,
+        collidable: true,
+        locked: true,
+        image: []
+      }
     }
   ],
   [
