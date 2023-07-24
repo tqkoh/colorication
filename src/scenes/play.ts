@@ -12,6 +12,7 @@ import {
   asCodes,
   coloredHandleFrom,
   deltaHFrom,
+  equal,
   squareHash
 } from '../utils/termUtils';
 import {
@@ -30,7 +31,10 @@ type MainState =
   | 'operating'
   | 'applyAnimating'
   | 'submitAnimating'
+  | 'clearAnimating'
   | 'clipboardAnimating';
+
+type SubmitAnimationPhase = 'input' | 'apply';
 
 const menuElement = {
   close: 0,
@@ -178,13 +182,15 @@ export default class Play extends Phaser.Scene {
 
   mainState: MainState;
 
+  saveState: MainState;
+
   mode: 'puzzle' | 'sandbox';
 
   map: GameMap;
 
   currentMap: GameMap;
 
-  currentSquare: Square[];
+  currentSquares: Square[];
 
   clipSquare: Square;
 
@@ -289,12 +295,13 @@ export default class Play extends Phaser.Scene {
       Del: []
     };
     this.mainState = 'operating';
+    this.saveState = 'operating';
     this.gMenuElements = [];
     this.allowedCommands = false;
     this.map = new GameMap(sandboxRoot);
     this.currentMap = this.map; // ref
     this.front = [];
-    this.currentSquare = [
+    this.currentSquares = [
       {
         Atype: 'air',
         name: codesFrom(
@@ -330,6 +337,9 @@ export default class Play extends Phaser.Scene {
     this.gAnimationApply = [];
     this.gMapBackAir = [];
     this.animationApplyFrame = 0;
+    this.submitTestCount = 0;
+    this.submitPhase = 'input';
+    this.animationSubmitFrame = 0;
 
     const H = globalThis.screenh - 31;
     const W = globalThis.screenw;
@@ -375,11 +385,12 @@ export default class Play extends Phaser.Scene {
       Del: []
     };
     this.mainState = 'operating';
+    this.saveState = 'operating';
     this.gMenuElements = [];
     this.allowedCommands = data.mode === 'sandbox';
     this.map = new GameMap(data.mode === 'sandbox' ? sandboxRoot : mapRoot);
     this.currentMap = this.map; // ref
-    this.currentSquare = [
+    this.currentSquares = [
       {
         Atype: 'air',
         name: codesFrom(
@@ -421,6 +432,9 @@ export default class Play extends Phaser.Scene {
     this.gAnimationApply = [];
     this.gMapBackAir = [];
     this.animationApplyFrame = 0;
+    this.submitTestCount = 0;
+    this.submitPhase = 'input';
+    this.animationSubmitFrame = 0;
 
     const H = globalThis.screenh - 31;
     const W = globalThis.screenw;
@@ -573,8 +587,8 @@ export default class Play extends Phaser.Scene {
   }
 
   checkChangeBackParent(i: number, j: number) {
-    if (!this.currentSquare.length) return;
-    const current = this.currentSquare.slice(-1)[0];
+    if (!this.currentSquares.length) return;
+    const current = this.currentSquares.slice(-1)[0];
     if (current.Atype !== 'term') return;
     if (current.term.Atype === 'lam') {
       if (i === 2 && j === 1 && this.gMapBackParent) {
@@ -785,23 +799,21 @@ export default class Play extends Phaser.Scene {
       if (i < -1 || this.currentMap.h < i || j < -1 || this.currentMap.w < j)
         break;
 
-      const c =
+      const edge =
         i === -1 ||
         i === this.currentMap.h ||
         j === -1 ||
-        j === this.currentMap.w
-          ? wallSquare()
-          : this.currentMap.squares[i][j];
+        j === this.currentMap.w;
+      const c = edge ? wallSquare() : this.currentMap.squares[i][j];
       log(99, i, j, c, c.movable);
       if (c.Atype !== 'air' && !c.movable) {
-        for (let m = n - 1; m >= 1; m -= 1) {
-          if (
-            this.currentMap.squares[ci + di * m][cj + dj * m].Atype ===
-              'term' &&
-            this.currentMap.squares[ci + di * (m - 1)][cj + dj * (m - 1)]
-              .Atype === 'term'
-          ) {
+        for (let m = n - (edge ? 1 : 0); m >= 1; m -= 1) {
+          const f = this.currentMap.squares[ci + di * m][cj + dj * m];
+          const x =
+            this.currentMap.squares[ci + di * (m - 1)][cj + dj * (m - 1)];
+          if (f.Atype === 'term' && x.Atype === 'term') {
             this.entering = false;
+            this.saveState = 'operating';
             this.execApply(
               ci + di * (m - 1),
               cj + dj * (m - 1),
@@ -819,9 +831,28 @@ export default class Play extends Phaser.Scene {
             this.moveToPosition(ci + di, cj + dj);
             result = 'apply';
             break;
+          } else if (
+            f.Atype === 'block' &&
+            f.block === 'submit' &&
+            x.Atype === 'term'
+          ) {
+            this.entering = false;
+            this.removeSquareImage(ci + di * m, cj + dj * m);
+            this.currentMap.squares[ci + di * m][cj + dj * m] = cloneSquare(x);
+            this.addSquareImage(ci + di * m, cj + dj * m);
+
+            this.submitTestCount = 0;
+            this.animationSubmitFrame = 0;
+            this.submitPhase = 'input';
+            this.mainState = 'submitAnimating';
+
+            this.front[1] =
+              this.currentMap.squares[this.focusnexti][this.focusnextj];
+            result = 'submit';
+            break;
           }
         }
-        if (result === 'apply') break;
+        if (result === 'apply' || result === 'submit') break;
 
         if (
           // this.front[0] は this.currentMap.squares[ci + di][cj + dj]
@@ -1191,8 +1222,8 @@ export default class Play extends Phaser.Scene {
   }
 
   leaveCheck() {
-    log(9, this.currentSquare);
-    return match(this.currentSquare.slice(-1)[0])
+    log(9, this.currentSquares);
+    return match(this.currentSquares.slice(-1)[0])
       .with({ Atype: 'term', term: { Atype: 'lam' } }, () => {
         if (this.currentMap.squares[2][1].Atype !== 'term') {
           if (
@@ -1446,9 +1477,9 @@ export default class Play extends Phaser.Scene {
     this.currentMap.startd = this.playerDirection;
 
     if (focus.Atype === 'block' && focus.block === 'parent') {
-      this.currentSquare.pop();
+      this.currentSquares.pop();
     } else {
-      this.currentSquare.push(focus);
+      this.currentSquares.push(focus);
     }
     this.currentMap = afterMap;
     {
@@ -1490,8 +1521,8 @@ export default class Play extends Phaser.Scene {
       // this.gMapBackground.strokeRectShape(this.gMapBackgroundShape);
       this.gMapBackground.fillRectShape(this.gMapBackgroundShape);
     }
-    if (this.currentSquare.length) {
-      const current = this.currentSquare.slice(-1)[0];
+    if (this.currentSquares.length) {
+      const current = this.currentSquares.slice(-1)[0];
       if (current.Atype === 'term') {
         const y = 31 + (globalThis.screenh - 31) / 2;
         const x = globalThis.screenw / 2;
@@ -1501,7 +1532,7 @@ export default class Play extends Phaser.Scene {
             x,
             y,
             this.imageHandleFromSquare(
-              this.currentSquare.slice(-1)[0],
+              this.currentSquares.slice(-1)[0],
               1,
               1,
               3,
@@ -1516,11 +1547,11 @@ export default class Play extends Phaser.Scene {
 
     // add next map
 
-    if (this.currentSquare.length) {
-      const handle = `mapname_${this.currentSquare.slice(-1)[0].name}`;
+    if (this.currentSquares.length) {
+      const handle = `mapname_${this.currentSquares.slice(-1)[0].name}`;
       if (!this.textures.exists(handle)) {
         this.font?.loadImageFrom(
-          this.currentSquare.slice(-1)[0].name,
+          this.currentSquares.slice(-1)[0].name,
           handle,
           1
         );
@@ -1530,7 +1561,7 @@ export default class Play extends Phaser.Scene {
       this.gMapName = this.add
         .image(10 + w / 2, 15, handle)
         .setAlpha(
-          afterLeave && this.currentSquare.slice(-1)[0].Atype === 'term'
+          afterLeave && this.currentSquares.slice(-1)[0].Atype === 'term'
             ? 0.3
             : 1
         );
@@ -1679,7 +1710,7 @@ export default class Play extends Phaser.Scene {
       this.closeMenu();
     }
     if (justDown(this.keys.R)) {
-      if (this.currentSquare.slice(-1)[0].Atype === 'stage') {
+      if (this.currentSquares.slice(-1)[0].Atype === 'stage') {
         this.focusi = 0;
         this.focusj = 0;
         this.execEnter();
@@ -1704,6 +1735,7 @@ export default class Play extends Phaser.Scene {
       this.closeMenu();
     }
     if (this.allowedCommands && justDown(this.keys.Q)) {
+      this.saveState = 'operating';
       this.execApply(
         this.focusnexti,
         this.focusnextj,
@@ -1884,11 +1916,11 @@ export default class Play extends Phaser.Scene {
     this.gMapBackground.fillRectShape(this.gMapBackgroundShape);
     this.gMapBackground.setDepth(-90);
 
-    if (this.currentSquare.length) {
-      const handle = `mapname_${this.currentSquare.slice(-1)[0].name}`;
+    if (this.currentSquares.length) {
+      const handle = `mapname_${this.currentSquares.slice(-1)[0].name}`;
       if (!this.textures.exists(handle)) {
         this.font?.loadImageFrom(
-          this.currentSquare.slice(-1)[0].name,
+          this.currentSquares.slice(-1)[0].name,
           handle,
           1
         );
@@ -2093,7 +2125,7 @@ export default class Play extends Phaser.Scene {
 
   updateAnimationApply() {
     if (!this.gAnimationApply.length) {
-      this.mainState = 'operating';
+      this.mainState = this.saveState;
       return;
     }
     this.animationApplyFrame += 1;
@@ -2108,6 +2140,67 @@ export default class Play extends Phaser.Scene {
     if (this.animationApplyFrame % ANIMATION_APPLY_PER === 0) {
       this.gAnimationApply.slice(-1)[0].destroy();
       this.gAnimationApply.pop();
+    }
+  }
+
+  submitTestCount: number;
+
+  submitPhase: SubmitAnimationPhase;
+
+  animationSubmitFrame: number;
+
+  updateAnimationSubmit() {
+    const currentSquare = this.currentSquares.slice(-1)[0];
+    log(100, 'animationsubmit\n', currentSquare, this.front);
+    if (
+      currentSquare.Atype !== 'stage' ||
+      this.front[0].Atype !== 'term' ||
+      this.front[1].Atype !== 'term'
+    ) {
+      this.mainState = 'operating';
+      return;
+    }
+    log(101, 'animationsubmit\n', currentSquare, this.front);
+    const s = currentSquare.stage;
+    switch (this.submitPhase) {
+      case 'input': {
+        if (this.submitTestCount === s.tests.length) {
+          log(8, 'ac');
+          this.mainState = 'clearAnimating';
+          break;
+        }
+        this.animationSubmitFrame += 1;
+
+        if (this.animationSubmitFrame < 120) {
+          // TODO 定数にしてアニメーション追加
+          this.animationSubmitFrame = 0;
+          this.submitTestCount = 0;
+          this.submitPhase = 'apply';
+          break;
+        }
+        break;
+      }
+      case 'apply': {
+        if (this.submitTestCount === s.tests.length) {
+          this.mainState = 'clearAnimating';
+        } else {
+          this.saveState = this.mainState;
+          this.execApply(
+            this.focusi,
+            this.focusj,
+            this.focusnexti,
+            this.focusnextj
+          );
+          log(100, equal(this.front[0].term, this.front[1].term));
+          this.animationSubmitFrame = 0;
+          this.submitTestCount += 1;
+          this.submitPhase = 'input';
+        }
+        break;
+      }
+      default: {
+        break;
+      }
     }
   }
 
@@ -2127,6 +2220,10 @@ export default class Play extends Phaser.Scene {
       }
       case 'applyAnimating': {
         this.updateAnimationApply();
+        break;
+      }
+      case 'submitAnimating': {
+        this.updateAnimationSubmit();
         break;
       }
       default: {
