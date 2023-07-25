@@ -1,3 +1,4 @@
+import { randomized } from '../../../../../utils/term';
 import {
   Square,
   airSquare as a,
@@ -45,6 +46,19 @@ const zrs: Square = {
   movable: true,
   collidable: true,
   locked: true,
+  image: []
+};
+
+const ins: Square = {
+  Atype: 'term',
+  term: randomized({
+    Atype: 'var',
+    var: '0'
+  }),
+  name: [],
+  movable: false,
+  collidable: true,
+  locked: false,
   image: []
 };
 
@@ -164,24 +178,7 @@ const stage0 = new Stage(
   [
     [p(), s(), a(), a(), a()],
     [a(), a(), a(), ids, a()],
-    [
-      u(),
-      a(),
-      a(),
-      a(),
-      {
-        Atype: 'term',
-        term: {
-          Atype: 'var',
-          var: '0'
-        },
-        name: [],
-        movable: false,
-        collidable: true,
-        locked: false,
-        image: []
-      }
-    ],
+    [u(), a(), a(), a(), ins],
     [a(), a(), a(), zrs, a()],
     [a(), a(), a(), a(), a()]
   ]
