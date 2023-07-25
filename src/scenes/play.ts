@@ -27,6 +27,7 @@ import {
   wallSquare
 } from './play/gamemap';
 import mapRoot, { sandboxRoot } from './play/maps/root';
+import { Stage } from './play/stage';
 // const completeSubst = subst;
 
 type MainState =
@@ -36,7 +37,7 @@ type MainState =
   | 'clearAnimating'
   | 'clipboardAnimating';
 
-type SubmitAnimationPhase = 'input' | 'apply' | 'wa';
+type SubmitAnimationPhase = 'input' | 'apply' | 'wa' | 'ac';
 
 const menuElement = {
   close: 0,
@@ -160,6 +161,8 @@ const SQUARE_NAME_ALPHA = 150;
 const ANIMATION_APPLY_PER = 20;
 const ANIMATION_INPUT_LENGTH = 30;
 const ANIMATION_WA_LENGTH = 60;
+const ANIMATION_AC_LENGTH = 60;
+const ANIMATION_AC_INTERVAL = 10;
 const MOVEMENT_CYCLE = 30;
 // const LONG_PRESS = 12;
 
@@ -2109,6 +2112,8 @@ export default class Play extends Phaser.Scene {
     this.load.image('lam_ret', 'assets/images/lam_ret.png');
     this.load.image('parent', 'assets/images/parent.png');
     this.load.image('locked', 'assets/images/locked.png');
+    this.load.image('ac', 'assets/images/ac.png');
+    this.load.image('wa', 'assets/images/wa.png');
     this.load.image('font', 'assets/images/font.png');
 
     this.load.audio('collide', 'assets/sounds/collide.mp3');
@@ -2164,11 +2169,70 @@ export default class Play extends Phaser.Scene {
     to: [number, number];
   }[] = [];
 
+  setInputAnimationTargets(s: Stage) {
+    if (this.submitTestCount[0] === s.tests.length) {
+      log(8, 'status:ac');
+      this.mainState = 'clearAnimating';
+      return;
+    }
+
+    log(1, 'testcount', this.submitTestCount);
+    log(8.5, s.inputCoords[this.submitTestCount[0]][this.submitTestCount[1]]);
+
+    this.subAnimTargets = [];
+    const t =
+      this.currentMap.squares[
+        s.inputCoords[this.submitTestCount[0]][this.submitTestCount[1]][0]
+      ][s.inputCoords[this.submitTestCount[0]][this.submitTestCount[1]][1]];
+    log(123, t);
+    let vari = 0;
+    let varj = 0;
+    if (this.submitTestCount[1] === 0) {
+      for (let i = 0; i < this.currentMap.h; i += 1) {
+        for (let j = 0; j < this.currentMap.w; j += 1) {
+          const c = this.currentMap.squares[i][j];
+          if (
+            c.Atype === 'term' &&
+            c.term.Atype === 'var' &&
+            c.movable === false
+          ) {
+            vari = i;
+            varj = j;
+            break;
+          }
+        }
+      }
+    }
+
+    for (let j = 0; j < t.image.length; j += 1) {
+      this.subAnimTargets.push({
+        image: t.image[j],
+        from: [t.image[j].y, t.image[j].x],
+        to:
+          this.submitTestCount[1] > 0
+            ? [
+                this.mapOriginy + 16 * this.focusnexti + 8,
+                this.mapOriginx + 16 * this.focusnextj + 8
+              ]
+            : [this.mapOriginy + 16 * vari + 8, this.mapOriginx + 16 * varj + 8]
+      });
+    }
+    log(8.6, this.subAnimTargets);
+  }
+
+  gTestResult: Phaser.GameObjects.Image[] = [];
+
+  deleteGTestResult() {
+    for (let i = 0; i < this.gTestResult.length; i += 1) {
+      this.gTestResult[i].destroy();
+    }
+    this.gTestResult = [];
+  }
+
   updateAnimationSubmit() {
     log(100, this.submitPhase);
     const currentSquare = this.currentSquares.slice(-1)[0];
     if (currentSquare.Atype !== 'stage') return;
-    log(100, 'animationsubmit\n', currentSquare, this.front);
     if (
       currentSquare.Atype !== 'stage' ||
       this.front[0].Atype !== 'term' ||
@@ -2177,7 +2241,6 @@ export default class Play extends Phaser.Scene {
       this.mainState = 'operating';
       return;
     }
-    log(101, 'animationsubmit\n', currentSquare, this.front);
     const s = currentSquare.stage;
     switch (this.submitPhase) {
       case 'input': {
@@ -2189,15 +2252,7 @@ export default class Play extends Phaser.Scene {
           break;
         }
 
-        log(
-          99,
-          s.inputCoords,
-          this.submitTestCount[0],
-          this.submitTestCount[1],
-          0
-        );
         if (this.animationSubmitFrame === 1) {
-          log(120);
           // input の、次の x に行く
           this.submitTestCount[1] += 1;
 
@@ -2215,6 +2270,7 @@ export default class Play extends Phaser.Scene {
                 submitSquare();
               this.addSquareImage(this.focusnexti, this.focusnextj);
               this.mainState = 'operating';
+              this.deleteGTestResult();
               break;
             }
             const f = this.currentMap.squares[this.focusnexti][this.focusnextj];
@@ -2225,16 +2281,31 @@ export default class Play extends Phaser.Scene {
                 submitSquare();
               this.addSquareImage(this.focusnexti, this.focusnextj);
               this.mainState = 'operating';
+              this.deleteGTestResult();
               break;
             }
             log(122);
+
             if (!equal(f.term, out.term)) {
               log(100, 'status: wa');
 
+              const y0 = 16 * s.outputCoords[this.submitTestCount[0]][0];
+              const x0 = 16 * s.outputCoords[this.submitTestCount[0]][1] + 13;
+              const y1 = 16 * this.focusnexti;
+              const x1 = 16 * this.focusnextj + 13;
+              this.gTestResult.push(
+                this.add
+                  .image(this.mapOriginx + x0, this.mapOriginy + y0, 'wa')
+                  .setDepth(-10)
+              );
+              this.gTestResult.push(
+                this.add
+                  .image(this.mapOriginx + x1, this.mapOriginy + y1, 'wa')
+                  .setDepth(-10)
+              );
+
               this.submitPhase = 'wa';
               this.animationSubmitFrame = 0;
-
-              break;
             } else {
               log(123);
               const x = this.currentMap.squares[this.focusi][this.focusj];
@@ -2245,91 +2316,33 @@ export default class Play extends Phaser.Scene {
                 cloneSquare(x);
               log(123.3);
               this.addSquareImage(this.focusnexti, this.focusnextj);
-              log(124);
 
-              log(87, x, f);
-              log(
-                87,
-                this.currentMap.squares[this.focusi][this.focusj],
-                this.currentMap.squares[this.focusnexti][this.focusnextj]
+              const y0 = 16 * s.outputCoords[this.submitTestCount[0]][0];
+              const x0 = 16 * s.outputCoords[this.submitTestCount[0]][1] + 13;
+              const y1 = 16 * this.focusnexti;
+              const x1 = 16 * this.focusnextj + 13;
+              this.gTestResult.push(
+                this.add
+                  .image(this.mapOriginx + x0 + 1, this.mapOriginy + y0, 'ac')
+                  .setDepth(-10)
               );
-              log(
-                89,
-                this.currentMap.squares[this.focusnexti][this.focusnextj]
-              );
-              log(
-                89,
-                this.currentMap.squares[this.focusnexti][this.focusnextj].image
-                  .length
-              );
-              log(
-                89,
-                this.currentMap.squares[this.focusnexti][this.focusnextj].image
-              );
-              log(
-                89,
-                this.currentMap.squares[this.focusnexti][this.focusnextj].image
-                  .length
+              this.gTestResult.push(
+                this.add
+                  .image(this.mapOriginx + x1 + 1, this.mapOriginy + y1, 'ac')
+                  .setDepth(-10)
               );
 
               this.submitTestCount[0] += 1;
-              this.submitTestCount[1] = 0;
-            }
-          }
+              this.submitTestCount[1] = -1;
 
-          if (this.submitTestCount[0] === s.tests.length) {
-            log(8, 'status:ac');
-            this.mainState = 'clearAnimating';
+              this.submitPhase = 'ac';
+              this.animationSubmitFrame = 0;
+            }
             break;
           }
 
-          log(1, 'testcount', this.submitTestCount);
-
-          this.subAnimTargets = [];
-          const t =
-            this.currentMap.squares[
-              s.inputCoords[this.submitTestCount[0]][this.submitTestCount[1]][0]
-            ][
-              s.inputCoords[this.submitTestCount[0]][this.submitTestCount[1]][1]
-            ];
-          log(123, t);
-          {
-            let vari = 0;
-            let varj = 0;
-            if (this.submitTestCount[1] === 0) {
-              for (let i = 0; i < this.currentMap.h; i += 1) {
-                for (let j = 0; j < this.currentMap.w; j += 1) {
-                  const c = this.currentMap.squares[i][j];
-                  if (
-                    c.Atype === 'term' &&
-                    c.term.Atype === 'var' &&
-                    c.movable === false
-                  ) {
-                    vari = i;
-                    varj = j;
-                    break;
-                  }
-                }
-              }
-            }
-
-            for (let j = 0; j < t.image.length; j += 1) {
-              this.subAnimTargets.push({
-                image: t.image[j],
-                from: [t.image[j].y, t.image[j].x],
-                to:
-                  this.submitTestCount[1] > 0
-                    ? [
-                        this.mapOriginy + 16 * this.focusnexti + 8,
-                        this.mapOriginx + 16 * this.focusnextj + 8
-                      ]
-                    : [
-                        this.mapOriginy + 16 * vari + 8,
-                        this.mapOriginx + 16 * varj + 8
-                      ]
-              });
-            }
-          }
+          this.setInputAnimationTargets(s);
+          log(100, 'subanimtargets', this.subAnimTargets);
         }
 
         // eslint-disable-next-line no-restricted-syntax
@@ -2397,10 +2410,41 @@ export default class Play extends Phaser.Scene {
           this.saveTargets = [];
 
           this.mainState = 'operating';
+          this.deleteGTestResult();
+        }
+        break;
+      }
+      case 'ac': {
+        const c = this.currentSquares.slice(-1)[0];
+        if (c.Atype !== 'stage') {
+          this.submitPhase = 'input';
+          break;
+        }
+
+        this.animationSubmitFrame += 1;
+
+        if (
+          this.animationSubmitFrame >
+          ANIMATION_AC_LENGTH + ANIMATION_AC_INTERVAL
+        ) {
+          this.submitPhase = 'input';
+          this.animationSubmitFrame = 0;
+          this.deleteGTestResult();
+        } else if (this.animationSubmitFrame > ANIMATION_AC_LENGTH) {
+          this.deleteGTestResult();
+
+          const y = 16 * this.focusnexti + 8;
+          const x = 16 * this.focusnextj + 8;
+          this.gTestResult.push(
+            this.add
+              .image(this.mapOriginx + x, this.mapOriginy + y, 'air')
+              .setDepth(-10)
+          );
         }
         break;
       }
       default: {
+        this.submitPhase = 'input';
         break;
       }
     }
@@ -2410,12 +2454,15 @@ export default class Play extends Phaser.Scene {
     this.removeSquareImage(this.focusnexti, this.focusnextj);
     this.currentMap.squares[this.focusnexti][this.focusnextj] = airSquare();
     this.addSquareImage(this.focusnexti, this.focusnextj);
+    this.deleteGTestResult();
 
     // eslint-disable-next-line no-restricted-syntax
     for (const t of this.saveTargets) {
       t.image.setY(t.from[0]).setX(t.from[1]).setAlpha(1);
     }
     this.saveTargets = [];
+
+    this.moveOn();
 
     this.mainState = 'operating';
   }
