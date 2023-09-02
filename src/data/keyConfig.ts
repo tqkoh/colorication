@@ -23,10 +23,10 @@ export interface KeyConfig {
 const k = Phaser.Input.Keyboard.KeyCodes;
 
 export const defaultKeyConfig: KeyConfig = {
-  Enter: [k.ENTER],
+  Enter: [k.ENTER, k.J],
   Ctrl: [k.CTRL],
   Shift: [k.SHIFT],
-  Escape: [k.ESC],
+  Escape: [k.ESC, k.K],
   W: [k.W, k.UP],
   A: [k.A, k.LEFT],
   S: [k.S, k.DOWN],
@@ -39,7 +39,7 @@ export const defaultKeyConfig: KeyConfig = {
   Z: [k.Z],
   R: [k.R],
   F2: [k.F2],
-  Del: [k.DELETE]
+  Del: [k.DELETE, k.X]
 };
 
 // possibly null error

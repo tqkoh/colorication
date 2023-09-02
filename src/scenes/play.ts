@@ -21,6 +21,7 @@ import {
   cloneSquare,
   Direction,
   GameMap,
+  opposite,
   Square,
   squaresFromTerm,
   submitSquare,
@@ -163,6 +164,7 @@ const ANIMATION_INPUT_LENGTH = 30;
 const ANIMATION_WA_LENGTH = 60;
 const ANIMATION_AC_LENGTH = 60;
 const ANIMATION_AC_INTERVAL = 10;
+const ANIMATION_CLEAR_LENGTH = 100;
 const MOVEMENT_CYCLE = 30;
 // const LONG_PRESS = 12;
 
@@ -277,6 +279,14 @@ export default class Play extends Phaser.Scene {
 
   sEnter: Howl;
 
+  sPuzzle: Howl;
+
+  sOk: Howl;
+
+  sNg: Howl;
+
+  sClear: Howl;
+
   allowedCommands: boolean;
 
   constructor() {
@@ -344,10 +354,11 @@ export default class Play extends Phaser.Scene {
     this.substProgress = [];
     this.gAnimationApply = [];
     this.gMapBackAir = [];
-    this.animationApplyFrame = 0;
     this.submitTestCount = [0, 0];
     this.submitPhase = 'input';
+    this.animationApplyFrame = 0;
     this.animationSubmitFrame = 0;
+    this.animationClearFrame = 0;
 
     const H = globalThis.screenh - 31;
     const W = globalThis.screenw;
@@ -368,9 +379,24 @@ export default class Play extends Phaser.Scene {
     this.sEnter = new Howl({
       src: ['assets/sounds/enter.mp3']
     });
+    this.sPuzzle = new Howl({
+      src: ['assets/sounds/puzzle.mp3'],
+      loop: true
+    });
+    this.sOk = new Howl({
+      src: ['assets/sounds/ok.mp3']
+    })
+    this.sNg = new Howl({
+      src: ['assets/sounds/ng.mp3']
+    })
+    this.sClear = new Howl({
+      src: ['assets/sounds/clear.mp3']
+    })
   }
 
   init(data: { mode: 'puzzle' | 'sandbox' }) {
+    this.sPuzzle.play();
+
     this.mode = data.mode;
     log(1, 'nu', data);
     this.keys = {
@@ -440,10 +466,11 @@ export default class Play extends Phaser.Scene {
     this.substProgress = [];
     this.gAnimationApply = [];
     this.gMapBackAir = [];
-    this.animationApplyFrame = 0;
     this.submitTestCount = [0, 0];
     this.submitPhase = 'input';
+    this.animationApplyFrame = 0;
     this.animationSubmitFrame = 0;
+    this.animationClearFrame = 0;
 
     const H = globalThis.screenh - 31;
     const W = globalThis.screenw;
@@ -586,10 +613,11 @@ export default class Play extends Phaser.Scene {
     }
   }
 
-  moveToPosition(nexti: number, nextj: number) {
+  moveToPosition(nexti: number, nextj: number, nextd: Direction = this.playerDirection) {
     this.playeri = nexti;
     this.playerj = nextj;
-    log(10, this.playeri, this.playerj);
+    this.playerDirection = nextd;
+    log(10, this.playeri, this.playerj, this.playerDirection);
     this.updatePlayerAndFocus();
   }
 
@@ -1439,6 +1467,7 @@ export default class Play extends Phaser.Scene {
     const focus = this.currentMap.squares[this.focusi][this.focusj];
     let afterMap: GameMap;
     if (focus.Atype === 'block' && focus.block === 'return_title') {
+      this.sPuzzle.stop();
       this.scene.start('title');
       return;
     }
@@ -2157,6 +2186,8 @@ export default class Play extends Phaser.Scene {
 
   animationSubmitFrame: number;
 
+  animationClearFrame: number;
+
   subAnimTargets: {
     image: Phaser.GameObjects.Image;
     from: [number, number];
@@ -2173,6 +2204,7 @@ export default class Play extends Phaser.Scene {
     if (this.submitTestCount[0] === s.tests.length) {
       log(8, 'status:ac');
       this.mainState = 'clearAnimating';
+      this.animationClearFrame = 0;
       return;
     }
 
@@ -2249,6 +2281,7 @@ export default class Play extends Phaser.Scene {
         if (this.submitTestCount[0] === s.tests.length) {
           log(8, 'status:ac');
           this.mainState = 'clearAnimating';
+          this.animationClearFrame = 0;
           break;
         }
 
@@ -2397,6 +2430,9 @@ export default class Play extends Phaser.Scene {
       case 'wa': {
         this.animationSubmitFrame += 1;
 
+        if (this.animationSubmitFrame === 1) {
+          this.sNg.play();
+        }
         if (this.animationSubmitFrame > ANIMATION_WA_LENGTH) {
           this.removeSquareImage(this.focusnexti, this.focusnextj);
           this.currentMap.squares[this.focusnexti][this.focusnextj] =
@@ -2423,6 +2459,9 @@ export default class Play extends Phaser.Scene {
 
         this.animationSubmitFrame += 1;
 
+        if (this.animationSubmitFrame === 1) {
+          this.sOk.play();
+        }
         if (
           this.animationSubmitFrame >
           ANIMATION_AC_LENGTH + ANIMATION_AC_INTERVAL
@@ -2450,21 +2489,31 @@ export default class Play extends Phaser.Scene {
     }
   }
 
+
   updateAnimationClear() {
-    this.removeSquareImage(this.focusnexti, this.focusnextj);
-    this.currentMap.squares[this.focusnexti][this.focusnextj] = airSquare();
-    this.addSquareImage(this.focusnexti, this.focusnextj);
-    this.deleteGTestResult();
+    this.animationClearFrame += 1;
 
-    // eslint-disable-next-line no-restricted-syntax
-    for (const t of this.saveTargets) {
-      t.image.setY(t.from[0]).setX(t.from[1]).setAlpha(1);
+    if (this.animationClearFrame === 1) {
+      this.sClear.play();
+
+      this.removeSquareImage(this.focusnexti, this.focusnextj);
+      this.currentMap.squares[this.focusnexti][this.focusnextj] = airSquare();
+      this.addSquareImage(this.focusnexti, this.focusnextj);
+      this.deleteGTestResult();
+  
+      // eslint-disable-next-line no-restricted-syntax
+      for (const t of this.saveTargets) {
+        t.image.setY(t.from[0]).setX(t.from[1]).setAlpha(1);
+      }
+      this.saveTargets = [];
+  
+      this.moveOn();
     }
-    this.saveTargets = [];
-
-    this.moveOn();
-
-    this.mainState = 'operating';
+    if (this.animationClearFrame > ANIMATION_CLEAR_LENGTH) {
+      this.mainState = 'operating';
+      this.moveToPosition(this.currentMap.starti, this.currentMap.startj, opposite(this.currentMap.startd));
+      this.execEnter();
+    }
   }
 
   update() {

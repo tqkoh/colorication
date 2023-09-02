@@ -8,6 +8,21 @@ import { Stage } from './stage';
 
 export type Direction = 'right' | 'down' | 'left' | 'up';
 
+export function opposite(d: Direction): Direction {
+  switch (d) {
+    case 'up':
+      return 'down';
+    case 'down':
+      return 'up';
+    case 'left':
+      return 'right';
+    case 'right':
+      return 'left';
+    default:
+      return 'left';
+  }
+}
+
 export type Block =
   | 'start'
   | 'parent'
