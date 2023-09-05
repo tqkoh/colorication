@@ -164,7 +164,7 @@ const ANIMATION_INPUT_LENGTH = 30;
 const ANIMATION_WA_LENGTH = 60;
 const ANIMATION_AC_LENGTH = 60;
 const ANIMATION_AC_INTERVAL = 10;
-const ANIMATION_CLEAR_LENGTH = 100;
+const ANIMATION_CLEAR_LENGTH = 90;
 const MOVEMENT_CYCLE = 30;
 // const LONG_PRESS = 12;
 
@@ -385,13 +385,13 @@ export default class Play extends Phaser.Scene {
     });
     this.sOk = new Howl({
       src: ['assets/sounds/ok.mp3']
-    })
+    });
     this.sNg = new Howl({
       src: ['assets/sounds/ng.mp3']
-    })
+    });
     this.sClear = new Howl({
       src: ['assets/sounds/clear.mp3']
-    })
+    });
   }
 
   init(data: { mode: 'puzzle' | 'sandbox' }) {
@@ -613,7 +613,11 @@ export default class Play extends Phaser.Scene {
     }
   }
 
-  moveToPosition(nexti: number, nextj: number, nextd: Direction = this.playerDirection) {
+  moveToPosition(
+    nexti: number,
+    nextj: number,
+    nextd: Direction = this.playerDirection
+  ) {
     this.playeri = nexti;
     this.playerj = nextj;
     this.playerDirection = nextd;
@@ -855,7 +859,7 @@ export default class Play extends Phaser.Scene {
           const f = this.currentMap.squares[ci + di * m][cj + dj * m];
           const x =
             this.currentMap.squares[ci + di * (m - 1)][cj + dj * (m - 1)];
-          if (f.Atype === 'term' && x.Atype === 'term') {
+          if (f.Atype === 'term' && x.Atype === 'term' && f.movable === true) {
             this.entering = false;
             this.saveState = 'operating';
             this.execApply(
@@ -2489,7 +2493,6 @@ export default class Play extends Phaser.Scene {
     }
   }
 
-
   updateAnimationClear() {
     this.animationClearFrame += 1;
 
@@ -2500,18 +2503,22 @@ export default class Play extends Phaser.Scene {
       this.currentMap.squares[this.focusnexti][this.focusnextj] = airSquare();
       this.addSquareImage(this.focusnexti, this.focusnextj);
       this.deleteGTestResult();
-  
+
       // eslint-disable-next-line no-restricted-syntax
       for (const t of this.saveTargets) {
         t.image.setY(t.from[0]).setX(t.from[1]).setAlpha(1);
       }
       this.saveTargets = [];
-  
+
       this.moveOn();
     }
     if (this.animationClearFrame > ANIMATION_CLEAR_LENGTH) {
       this.mainState = 'operating';
-      this.moveToPosition(this.currentMap.starti, this.currentMap.startj, opposite(this.currentMap.startd));
+      this.moveToPosition(
+        this.currentMap.starti,
+        this.currentMap.startj,
+        opposite(this.currentMap.startd)
+      );
       this.execEnter();
     }
   }
