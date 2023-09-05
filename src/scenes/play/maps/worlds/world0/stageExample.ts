@@ -54,7 +54,7 @@ const ins: Square = {
 };
 
 const stageExample = new Stage(
-  '0.',
+  'ex',
   [
     {
       input: [
