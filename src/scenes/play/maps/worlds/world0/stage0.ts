@@ -50,8 +50,8 @@ const stage0: Stage = new Stage(
     [a(), a(), a(), a(), a()],
     [u(), a(), a(), ids, a()],
     [a(), a(), a(), a(), a()],
-    [a(), a(), a(), a(), a()],
+    [a(), a(), a(), a(), a()]
   ]
-)
+);
 
 export default stage0;

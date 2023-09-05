@@ -381,7 +381,8 @@ export default class Play extends Phaser.Scene {
     });
     this.sPuzzle = new Howl({
       src: ['assets/sounds/puzzle.mp3'],
-      loop: true
+      loop: true,
+      volume: 0 // dtm kondo
     });
     this.sOk = new Howl({
       src: ['assets/sounds/ok.mp3']
@@ -522,7 +523,7 @@ export default class Play extends Phaser.Scene {
     this.currentMap.squares[i][j].image = [];
   }
 
-  addSquareImage(i: number, j: number) {
+  addSquareImage(i: number, j: number, alpha: number = 1) {
     const y = 16 * i;
     const x = 16 * j;
     const s = this.currentMap.squares[i][j];
@@ -535,7 +536,7 @@ export default class Play extends Phaser.Scene {
           this.mapOriginy + y + 8,
           this.imageHandleFromSquare(s, i, j)
         )
-
+        .setAlpha(alpha)
         .setDepth(-10)
     );
     log(89, s.image);
@@ -559,12 +560,14 @@ export default class Play extends Phaser.Scene {
     s.image.push(
       this.add
         .image(this.mapOriginx + x + 8, this.mapOriginy + y + 8, handle)
+        .setAlpha(alpha)
         .setDepth(-9)
     );
     if (s.locked) {
       s.image.push(
         this.add
           .image(this.mapOriginx + x + 1, this.mapOriginy + y, 'locked')
+          .setAlpha(alpha)
           .setDepth(100)
       );
     }
@@ -887,7 +890,7 @@ export default class Play extends Phaser.Scene {
             this.entering = false;
             this.removeSquareImage(ci + di * m, cj + dj * m);
             this.currentMap.squares[ci + di * m][cj + dj * m] = cloneSquare(x);
-            this.addSquareImage(ci + di * m, cj + dj * m);
+            this.addSquareImage(ci + di * m, cj + dj * m, 0.5);
 
             this.submitTestCount = [0, -1];
             this.animationSubmitFrame = 0;
@@ -2221,6 +2224,7 @@ export default class Play extends Phaser.Scene {
         s.inputCoords[this.submitTestCount[0]][this.submitTestCount[1]][0]
       ][s.inputCoords[this.submitTestCount[0]][this.submitTestCount[1]][1]];
     log(123, t);
+    // この部屋の var の座標
     let vari = 0;
     let varj = 0;
     if (this.submitTestCount[1] === 0) {
@@ -2241,16 +2245,23 @@ export default class Play extends Phaser.Scene {
     }
 
     for (let j = 0; j < t.image.length; j += 1) {
+      // locked マークをずらす
+      const dy = j > 1 ? -7 : 0;
+      const dx = j > 1 ? -6 : 0;
       this.subAnimTargets.push({
         image: t.image[j],
         from: [t.image[j].y, t.image[j].x],
         to:
+          // eslint-disable-next-line no-nested-ternary
           this.submitTestCount[1] > 0
             ? [
-                this.mapOriginy + 16 * this.focusnexti + 8,
-                this.mapOriginx + 16 * this.focusnextj + 8
+                this.mapOriginy + 16 * this.focusnexti + 8 + dy,
+                this.mapOriginx + 16 * this.focusnextj + 8 + dx
               ]
-            : [this.mapOriginy + 16 * vari + 8, this.mapOriginx + 16 * varj + 8]
+            : [
+                this.mapOriginy + 16 * vari + 8 + dy,
+                this.mapOriginx + 16 * varj + 8 + dx
+              ]
       });
     }
     log(8.6, this.subAnimTargets);
@@ -2352,7 +2363,7 @@ export default class Play extends Phaser.Scene {
               this.currentMap.squares[this.focusnexti][this.focusnextj] =
                 cloneSquare(x);
               log(123.3);
-              this.addSquareImage(this.focusnexti, this.focusnextj);
+              this.addSquareImage(this.focusnexti, this.focusnextj, 0.7);
 
               const y0 = 16 * s.outputCoords[this.submitTestCount[0]][0];
               const x0 = 16 * s.outputCoords[this.submitTestCount[0]][1] + 13;
