@@ -8,22 +8,13 @@ import {
 } from '../../../gamemap';
 import { Stage } from '../../../stage';
 
-/*
-1 コメを置くだけ。中身は見れない
-(locked) Lam 0 (Var 0)
---
-(locked) Lam 0 (Var 0)
-(locked) Lam 1 (Lam 0 (Var 0)
-(locked) Lam 2 (Lam 1 (Lam 0 (Var 0)))
-*/
-
 const ids: Square = {
   Atype: 'term',
-  term: {
+  term: randomized({
     Atype: 'lam',
     var: '0',
     ret: { Atype: 'var', var: '0' }
-  },
+  }),
   name: [],
   movable: true,
   collidable: true,
@@ -33,7 +24,7 @@ const ids: Square = {
 
 const zrs: Square = {
   Atype: 'term',
-  term: {
+  term: randomized({
     Atype: 'lam',
     var: '0',
     ret: {
@@ -41,7 +32,7 @@ const zrs: Square = {
       var: '1',
       ret: { Atype: 'var', var: '1' }
     }
-  },
+  }),
   name: [],
   movable: true,
   collidable: true,
@@ -62,8 +53,8 @@ const ins: Square = {
   image: []
 };
 
-const stage0 = new Stage(
-  '0.',
+const stageExample = new Stage(
+  'ex',
   [
     {
       input: [
@@ -184,4 +175,4 @@ const stage0 = new Stage(
   ]
 );
 
-export default stage0;
+export default stageExample;

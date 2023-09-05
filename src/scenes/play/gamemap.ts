@@ -8,6 +8,21 @@ import { Stage } from './stage';
 
 export type Direction = 'right' | 'down' | 'left' | 'up';
 
+export function opposite(d: Direction): Direction {
+  switch (d) {
+    case 'up':
+      return 'down';
+    case 'down':
+      return 'up';
+    case 'left':
+      return 'right';
+    case 'right':
+      return 'left';
+    default:
+      return 'left';
+  }
+}
+
 export type Block =
   | 'start'
   | 'parent'
@@ -62,6 +77,37 @@ export class GameMap {
       this.starti = -1;
       this.startj = -1;
       this.startd = 'right';
+      for (let i = 0; i < squares.length; i += 1) {
+        for (let j = 0; j < squares[i].length; j += 1) {
+          const s = squares[i][j];
+          if (s.Atype === 'block' && s.block === 'parent') {
+            // 4 方向確認して start があればその方向を startd にする
+            const d = [
+              [0, 1],
+              [1, 0],
+              [0, -1],
+              [-1, 0]
+            ];
+            for (let k = 0; k < 4; k += 1) {
+              const ni = i + d[k][0];
+              const nj = j + d[k][1];
+              if (
+                ni >= 0 &&
+                ni < squares.length &&
+                nj >= 0 &&
+                nj < squares[ni].length
+              ) {
+                const sn = squares[ni][nj];
+                if (sn.Atype === 'block' && sn.block === 'start') {
+                  this.starti = ni;
+                  this.startj = nj;
+                  this.startd = ['right', 'down', 'left', 'up'][k] as Direction;
+                }
+              }
+            }
+          }
+        }
+      }
     }
     this.squares = cloneDeep(squares);
     log(10, 'constructor of GameMap: clone squares', squares);

@@ -1,28 +1,38 @@
 import { codesFrom } from '../../../../utils/font';
 import {
   Square,
-  airSquare as a,
-  parentSquare as p,
-  startSquare as s
+  airSquare as ai,
+  parentSquare as pa,
+  startSquare as st
 } from '../../gamemap';
-import stage0 from './world0/stage0';
+import { Stage } from '../../stage';
+import stageCombination from './world0/stageCombination';
+import stageExample from './world0/stageExample';
+import stageRegulation from './world0/stageRegulation';
+import stageStairs from './world0/stageStairs';
 
-const st0: Square = {
+const stages: Stage[] = [
+  stageExample,
+  stageRegulation,
+  stageCombination,
+  stageStairs
+];
+const s: Square[] = stages.map((stage) => ({
   Atype: 'stage',
-  stage: stage0,
-  name: codesFrom(stage0.name),
+  stage,
+  name: codesFrom(stage.name),
   movable: false,
   collidable: true,
   locked: false,
   image: []
-};
+}));
 
 const mapWorld0: Square[][] = [
-  [p(), s(), a(), a(), a(), a(), a(), a(), a(), a(), a()],
-  [a(), a(), a(), a(), a(), a(), a(), a(), a(), a(), a()],
-  [a(), st0, a(), a(), a(), a(), a(), a(), a(), a(), a()],
-  [a(), a(), a(), a(), a(), a(), a(), a(), a(), a(), a()],
-  [a(), a(), a(), a(), a(), a(), a(), a(), a(), a(), a()],
-  [a(), a(), a(), a(), a(), a(), a(), a(), a(), a(), a()]
+  [pa(), st(), ai(), ai(), s[0], ai(), ai(), ai(), ai(), ai(), ai()],
+  [ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai()],
+  [ai(), s[1], ai(), s[2], ai(), s[3], ai(), ai(), ai(), ai(), ai()],
+  [ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai()],
+  [ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai()],
+  [ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai()]
 ];
 export default mapWorld0;
