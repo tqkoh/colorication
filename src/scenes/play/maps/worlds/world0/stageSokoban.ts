@@ -4,7 +4,8 @@ import {
   airSquare as a,
   parentSquare as p,
   startSquare as s,
-  submitSquare as u
+  submitSquare as u,
+  wallSquare as w
 } from '../../../gamemap';
 import { Stage } from '../../../stage';
 
@@ -22,8 +23,8 @@ const ids: Square = {
   image: []
 };
 
-const stage0: Stage = new Stage(
-  '0.',
+const stageSokoban: Stage = new Stage(
+  '1. Sokoban',
   [
     {
       input: [],
@@ -46,12 +47,13 @@ const stage0: Stage = new Stage(
     }
   ],
   [
-    [p(), s(), a(), a(), a()],
-    [a(), a(), a(), a(), a()],
-    [u(), a(), a(), ids, a()],
-    [a(), a(), a(), a(), a()],
-    [a(), a(), a(), a(), a()]
+    [p(), s(), a(), w(), a(), a(), a()],
+    [a(), a(), a(), a(), a(), a(), a()],
+    [a(), a(), a(), a(), w(), w(), w()],
+    [u(), a(), w(), a(), a(), a(), a()],
+    [w(), w(), w(), a(), ids, a(), a()],
+    [w(), w(), w(), w(), w(), a(), a()]
   ]
 );
 
-export default stage0;
+export default stageSokoban;

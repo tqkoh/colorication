@@ -25,8 +25,8 @@ function i(): Square {
   };
 }
 
-const stage1: Stage = new Stage(
-  '1.',
+const stageStairs: Stage = new Stage(
+  '3. Stairs',
   [
     {
       input: [],
@@ -49,12 +49,11 @@ const stage1: Stage = new Stage(
     }
   ],
   [
-    [w(), a(), a(), a(), a(), w(), w()],
-    [w(), a(), a(), a(), a(), a(), a()],
-    [u(), a(), a(), w(), i(), i(), i()],
-    [w(), a(), a(), w(), a(), a(), w()],
-    [w(), w(), w(), w(), a(), s(), p()]
+    [w(), i(), i(), a(), a(), a(), a(), p()],
+    [w(), i(), a(), a(), i(), w(), a(), s()],
+    [u(), a(), a(), i(), i(), w(), a(), a()],
+    [w(), a(), i(), i(), i(), w(), a(), a()]
   ]
 );
 
-export default stage1;
+export default stageStairs;

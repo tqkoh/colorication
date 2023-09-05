@@ -324,7 +324,9 @@ export default class Play extends Phaser.Scene {
         airtype: 'normal',
         name: codesFrom(
           `${
-            this.allowedCommands ? 'WASD to move, use shift to just turn' : ''
+            this.allowedCommands
+              ? 'WASD to move, use shift to just turn'
+              : '                         WASD to move!'
           }`
         ),
         collidable: false,
@@ -431,7 +433,9 @@ export default class Play extends Phaser.Scene {
         airtype: 'normal',
         name: codesFrom(
           `${
-            this.allowedCommands ? 'WASD to move, use shift to just turn' : ''
+            this.allowedCommands
+              ? 'WASD to move, use shift to just turn'
+              : '                         WASD to move!'
           }`
         ),
         collidable: false,
@@ -2168,6 +2172,10 @@ export default class Play extends Phaser.Scene {
   }
 
   updateAnimationApply() {
+    if (this.gAnimationApply.length === 1) {
+      this.gAnimationApply.slice(-1)[0].destroy();
+      this.gAnimationApply.pop();
+    }
     if (!this.gAnimationApply.length) {
       this.mainState = this.saveState;
       return;
@@ -2531,6 +2539,7 @@ export default class Play extends Phaser.Scene {
         opposite(this.currentMap.startd)
       );
       this.execEnter();
+      this.currentMap.squares[this.focusi][this.focusj].movable = true;
     }
   }
 

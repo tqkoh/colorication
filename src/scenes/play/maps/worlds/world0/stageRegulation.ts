@@ -4,29 +4,26 @@ import {
   airSquare as a,
   parentSquare as p,
   startSquare as s,
-  submitSquare as u,
-  wallSquare as w
+  submitSquare as u
 } from '../../../gamemap';
 import { Stage } from '../../../stage';
 
-function i(): Square {
-  return {
-    Atype: 'term',
-    term: randomized({
-      Atype: 'lam',
-      var: '0',
-      ret: { Atype: 'var', var: '0' }
-    }),
-    name: [],
-    movable: true,
-    collidable: true,
-    locked: true,
-    image: []
-  };
-}
+const ids: Square = {
+  Atype: 'term',
+  term: randomized({
+    Atype: 'lam',
+    var: '0',
+    ret: { Atype: 'var', var: '0' }
+  }),
+  name: [],
+  movable: true,
+  collidable: true,
+  locked: true,
+  image: []
+};
 
-const stage2: Stage = new Stage(
-  '2.',
+const stageRegulation: Stage = new Stage(
+  '0. Regulation             press R to reset!',
   [
     {
       input: [],
@@ -49,11 +46,12 @@ const stage2: Stage = new Stage(
     }
   ],
   [
-    [w(), a(), i(), i(), i(), w(), a(), p()],
-    [u(), a(), a(), i(), i(), w(), a(), s()],
-    [w(), i(), a(), a(), i(), w(), a(), a()],
-    [w(), i(), i(), a(), a(), a(), a(), a()]
+    [p(), s(), a(), a(), a()],
+    [a(), a(), a(), a(), a()],
+    [u(), a(), a(), ids, a()],
+    [a(), a(), a(), a(), a()],
+    [a(), a(), a(), a(), a()]
   ]
 );
 
-export default stage2;
+export default stageRegulation;

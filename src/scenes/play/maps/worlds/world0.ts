@@ -6,12 +6,17 @@ import {
   startSquare as st
 } from '../../gamemap';
 import { Stage } from '../../stage';
-import stage0 from './world0/stage0';
-import stage1 from './world0/stage1';
-import stage2 from './world0/stage2';
+import stageCombination from './world0/stageCombination';
 import stageExample from './world0/stageExample';
+import stageRegulation from './world0/stageRegulation';
+import stageStairs from './world0/stageStairs';
 
-const stages: Stage[] = [stageExample, stage0, stage1, stage2];
+const stages: Stage[] = [
+  stageExample,
+  stageRegulation,
+  stageCombination,
+  stageStairs
+];
 const s: Square[] = stages.map((stage) => ({
   Atype: 'stage',
   stage,
