@@ -10,3 +10,5 @@ export function log(level: number, ...s: any[]) {
     deb(level, ...s);
   }
 }
+
+export const CLEAR_ALL = true;

@@ -1,3 +1,4 @@
+import { CLEAR_ALL } from '../../../utils/deb';
 import { codesFrom } from '../../../utils/font';
 import {
   GameMap,
@@ -16,8 +17,10 @@ import stageStairs from './stageStairs';
 
 const wo0: Square = {
   Atype: 'map',
-  map: new GameMap(mapColorication),
-  name: codesFrom('w0'),
+  map: new GameMap(mapColorication, undefined, () => {
+    // skills.enterTerm = true;
+  }),
+  name: codesFrom('Color'),
   movable: false,
   collidable: true,
   locked: false,
@@ -44,134 +47,23 @@ const s: Square[] = stages.map((stage) => ({
   Atype: 'stage',
   stage,
   name: codesFrom(stage.name),
-  movable: false,
+  movable: CLEAR_ALL,
   collidable: true,
   locked: false,
   image: []
 }));
 
+// prettier-ignore
 const mapRoot: Square[][] = [
-  [
-    ai(),
-    ai(),
-    ai(),
-    ai(),
-    ai(),
-    ai(),
-    wa(),
-    wa(),
-    wa(),
-    wa(),
-    wa(),
-    wa(),
-    wa()
-  ],
-  [
-    ai(),
-    ai(),
-    ai(),
-    ai(),
-    ai(),
-    ai(),
-    s[0],
-    ai(),
-    wa(),
-    wa(),
-    wa(),
-    wa(),
-    wa()
-  ],
-  [
-    ai(),
-    ai(),
-    ai(),
-    wa(),
-    wa(),
-    wa(),
-    ai(),
-    ai(),
-    wa(),
-    wa(),
-    wa(),
-    wa(),
-    wa()
-  ],
-  [
-    rett,
-    st(),
-    ai(),
-    wa(),
-    wa(),
-    wa(),
-    ai(),
-    ai(),
-    wa(),
-    ai(),
-    ai(),
-    ai(),
-    ai()
-  ],
+  [ai(), ai(), ai(), ai(), ai(), ai(), wa(), wa(), wa(), wa(), wa(), wa(), wa()],
+  [ai(), ai(), ai(), ai(), ai(), ai(), s[0], ai(), wa(), wa(), wa(), wa(), wa()],
+  [ai(), ai(), ai(), wa(), wa(), wa(), ai(), ai(), wa(), wa(), wa(), wa(), wa()],
+  [rett, st(), ai(), wa(), wa(), wa(), ai(), ai(), wa(), ai(), ai(), ai(), ai()],
   [ai(), ai(), ai(), wa(), ai(), s[1], ai(), ai(), wa(), ai(), ai(), ai(), wo0],
-  [
-    wa(),
-    wa(),
-    wa(),
-    wa(),
-    ai(),
-    ai(),
-    wa(),
-    wa(),
-    wa(),
-    ai(),
-    ai(),
-    ai(),
-    ai()
-  ],
-  [
-    wa(),
-    wa(),
-    wa(),
-    wa(),
-    ai(),
-    ai(),
-    wa(),
-    wa(),
-    wa(),
-    ai(),
-    ai(),
-    wa(),
-    wa()
-  ],
-  [
-    wa(),
-    wa(),
-    wa(),
-    wa(),
-    ai(),
-    s[2],
-    wa(),
-    ai(),
-    ai(),
-    s[4],
-    wa(),
-    wa(),
-    wa()
-  ],
-  [
-    wa(),
-    wa(),
-    wa(),
-    wa(),
-    wa(),
-    ai(),
-    ai(),
-    ai(),
-    wa(),
-    s[3],
-    wa(),
-    wa(),
-    wa()
-  ],
+  [wa(), wa(), wa(), wa(), ai(), ai(), wa(), wa(), wa(), ai(), ai(), ai(), ai()],
+  [wa(), wa(), wa(), wa(), ai(), ai(), wa(), wa(), wa(), ai(), ai(), wa(), wa()],
+  [wa(), wa(), wa(), wa(), ai(), s[2], wa(), ai(), ai(), s[4], wa(), wa(), wa()],
+  [wa(), wa(), wa(), wa(), wa(), ai(), ai(), ai(), wa(), s[3], wa(), wa(), wa()],
   [wa(), wa(), wa(), wa(), wa(), ai(), ai(), ai(), ai(), ai(), wa(), wa(), wa()]
 ];
 

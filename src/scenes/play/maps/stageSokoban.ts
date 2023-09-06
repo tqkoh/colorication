@@ -19,7 +19,7 @@ const ids: Square = {
   name: [],
   movable: true,
   collidable: true,
-  locked: true,
+  locked: false,
   image: []
 };
 
@@ -41,7 +41,7 @@ const stageSokoban: Stage = new Stage(
         name: [],
         movable: false,
         collidable: true,
-        locked: true,
+        locked: false,
         image: []
       }
     }

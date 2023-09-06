@@ -1,3 +1,4 @@
+import { CLEAR_ALL } from '../../../../utils/deb';
 import { codesFrom } from '../../../../utils/font';
 import {
   Square,
@@ -6,20 +7,18 @@ import {
   startSquare as st
 } from '../../gamemap';
 import { Stage } from '../../stage';
-import stageRegulation from '../stageRegulation';
+import stageColorication from './stageColorication';
 
-const stages: Stage[] = [stageRegulation];
+const stages: Stage[] = [stageColorication];
 const s: Square[] = stages.map((stage) => ({
   Atype: 'stage',
   stage,
   name: codesFrom(stage.name),
-  movable: false,
+  movable: CLEAR_ALL,
   collidable: true,
   locked: false,
   image: []
 }));
 
-const mapColorication: Square[][] = [
-  [pa(), st(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), s[0]]
-];
+const mapColorication: Square[][] = [[pa(), st(), ai(), ai(), s[0]]];
 export default mapColorication;

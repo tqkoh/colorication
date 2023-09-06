@@ -18,7 +18,7 @@ const ids: Square = {
   name: [],
   movable: true,
   collidable: true,
-  locked: true,
+  locked: false,
   image: []
 };
 
@@ -36,7 +36,7 @@ const zrs: Square = {
   name: [],
   movable: true,
   collidable: true,
-  locked: true,
+  locked: false,
   image: []
 };
 
@@ -107,7 +107,7 @@ const stageExample = new Stage(
         name: [],
         movable: false,
         collidable: true,
-        locked: true,
+        locked: false,
         image: []
       }
     },
@@ -126,7 +126,7 @@ const stageExample = new Stage(
           name: [],
           movable: false,
           collidable: true,
-          locked: true,
+          locked: false,
           image: []
         },
         {
@@ -143,7 +143,7 @@ const stageExample = new Stage(
           name: [],
           movable: false,
           collidable: true,
-          locked: true,
+          locked: false,
           image: []
         }
       ],
@@ -161,7 +161,7 @@ const stageExample = new Stage(
         name: [],
         movable: false,
         collidable: true,
-        locked: true,
+        locked: false,
         image: []
       }
     }

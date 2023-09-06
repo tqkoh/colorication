@@ -20,7 +20,7 @@ function i(): Square {
     name: [],
     movable: true,
     collidable: true,
-    locked: true,
+    locked: false,
     image: []
   };
 }
@@ -43,7 +43,7 @@ const stageCombination: Stage = new Stage(
         name: [],
         movable: false,
         collidable: true,
-        locked: true,
+        locked: false,
         image: []
       }
     }
