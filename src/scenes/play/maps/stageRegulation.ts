@@ -1,12 +1,12 @@
-import { randomized } from '../../../../../utils/term';
+import { randomized } from '../../../utils/term';
 import {
   Square,
   airSquare as a,
   parentSquare as p,
   startSquare as s,
   submitSquare as u
-} from '../../../gamemap';
-import { Stage } from '../../../stage';
+} from '../gamemap';
+import { Stage } from '../stage';
 
 const ids: Square = {
   Atype: 'term',

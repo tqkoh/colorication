@@ -27,7 +27,7 @@ import {
   submitSquare,
   wallSquare
 } from './play/gamemap';
-import mapRoot, { sandboxRoot } from './play/maps/root';
+import mapRoot, { sandboxRoot } from './play/maps/mapRoot';
 import { Stage } from './play/stage';
 // const completeSubst = subst;
 

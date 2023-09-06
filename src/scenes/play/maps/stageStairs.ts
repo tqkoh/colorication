@@ -1,4 +1,4 @@
-import { randomized } from '../../../../../utils/term';
+import { randomized } from '../../../utils/term';
 import {
   Square,
   airSquare as a,
@@ -6,8 +6,8 @@ import {
   startSquare as s,
   submitSquare as u,
   wallSquare as w
-} from '../../../gamemap';
-import { Stage } from '../../../stage';
+} from '../gamemap';
+import { Stage } from '../stage';
 
 function i(): Square {
   return {
