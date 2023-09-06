@@ -27,7 +27,8 @@ import {
   submitSquare,
   wallSquare
 } from './play/gamemap';
-import mapRoot, { sandboxRoot } from './play/maps/root';
+import mapRoot, { sandboxRoot } from './play/maps/mapRoot';
+import { skills } from './play/skills';
 import { Stage } from './play/stage';
 // const completeSubst = subst;
 
@@ -326,7 +327,7 @@ export default class Play extends Phaser.Scene {
           `${
             this.allowedCommands
               ? 'WASD to move, use shift to just turn'
-              : '                         WASD to move!'
+              : 'Beginning                 WASD to move!'
           }`
         ),
         collidable: false,
@@ -401,6 +402,7 @@ export default class Play extends Phaser.Scene {
     this.sPuzzle.play();
 
     this.mode = data.mode;
+    skills.init(data.mode);
     log(1, 'nu', data);
     this.keys = {
       Enter: [],
@@ -435,7 +437,7 @@ export default class Play extends Phaser.Scene {
           `${
             this.allowedCommands
               ? 'WASD to move, use shift to just turn'
-              : '                         WASD to move!'
+              : 'Beginning                 WASD to move!'
           }`
         ),
         collidable: false,
@@ -545,28 +547,34 @@ export default class Play extends Phaser.Scene {
     );
     log(89, s.image);
 
-    const abst =
-      s.name.length < 3 ? s.name : [s.name[0]].concat(codesFrom('.'));
-    const handle = `name_${objectHash(abst)}`;
-    if (abst.length === 2) log(10, 'abst:', abst);
+    if (
+      skills.seeNumber ||
+      (s.name.length > 1 && s.name[0] !== codesFrom('#')[0])
+    ) {
+      const abst =
+        s.name.length < 3 ? s.name : [s.name[0]].concat(codesFrom('.'));
+      const handle = `name_${objectHash(abst)}`;
+      if (abst.length === 2) log(10, 'abst:', abst);
 
-    if (!this.textures.exists(handle)) {
-      this.font?.loadImageFrom(
-        abst,
-        handle,
-        1,
-        SQUARE_NAME_COLOR[0],
-        SQUARE_NAME_COLOR[1],
-        SQUARE_NAME_COLOR[2],
-        SQUARE_NAME_ALPHA
+      if (!this.textures.exists(handle)) {
+        this.font?.loadImageFrom(
+          abst,
+          handle,
+          1,
+          SQUARE_NAME_COLOR[0],
+          SQUARE_NAME_COLOR[1],
+          SQUARE_NAME_COLOR[2],
+          SQUARE_NAME_ALPHA
+        );
+      }
+      s.image.push(
+        this.add
+          .image(this.mapOriginx + x + 8, this.mapOriginy + y + 8, handle)
+          .setAlpha(alpha)
+          .setDepth(-9)
       );
     }
-    s.image.push(
-      this.add
-        .image(this.mapOriginx + x + 8, this.mapOriginy + y + 8, handle)
-        .setAlpha(alpha)
-        .setDepth(-9)
-    );
+
     if (s.locked) {
       s.image.push(
         this.add
@@ -917,7 +925,8 @@ export default class Play extends Phaser.Scene {
           !this.front[0].locked &&
           (this.front[0].Atype === 'map' ||
             this.front[0].Atype === 'stage' ||
-            (this.front[0].Atype === 'term' &&
+            (skills.enterTerm &&
+              this.front[0].Atype === 'term' &&
               this.front[0].term.Atype !== 'var') ||
             (this.front[0].Atype === 'block' &&
               (this.front[0].block === 'parent' ||
@@ -1484,6 +1493,7 @@ export default class Play extends Phaser.Scene {
     }
     if (focus.Atype === 'map') {
       afterMap = focus.map;
+      focus.map.enter();
     } else if (focus.Atype === 'stage') {
       // reset
       focus.map = cloneDeep(focus.stage);

@@ -68,7 +68,15 @@ export class GameMap {
 
   startd: Direction;
 
-  constructor(squares: Square[][], from: GameMap | undefined = undefined) {
+  onEnter: Function;
+
+  constructor(
+    squares: Square[][],
+    from: GameMap | undefined = undefined,
+    onEnter: Function | undefined = undefined
+  ) {
+    if (onEnter) this.onEnter = onEnter;
+    else this.onEnter = () => {};
     if (from) {
       this.starti = from.starti;
       this.startj = from.startj;
@@ -129,6 +137,10 @@ export class GameMap {
       }
     }
     if (this.starti === -1) throw new Error('start does not exist');
+  }
+
+  enter() {
+    this.onEnter();
   }
 
   setParent(parent: GameMap) {
