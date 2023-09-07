@@ -21,7 +21,7 @@ const wo1: Square = {
   map: new GameMap(mapColorication, undefined, () => {
     // skills.enterTerm = true;
   }),
-  name: codesFrom('Color'),
+  name: codesFrom('Colorication'),
   movable: false,
   collidable: true,
   locked: false,

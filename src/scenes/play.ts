@@ -599,7 +599,7 @@ export default class Play extends Phaser.Scene {
         .image(
           globalThis.screenw - 15,
           15,
-          this.imageHandleFromSquare(this.clipSquare, 1, 1)
+          this.imageHandleFromSquare(this.clipSquare, -1, -1)
         )
         .setDepth(0)
     );
@@ -1521,7 +1521,11 @@ export default class Play extends Phaser.Scene {
         return;
       }
 
-      if (manual && afterMap.parentMap === undefined) {
+      if (
+        this.mode === 'puzzle' &&
+        manual &&
+        afterMap.parentMap === undefined
+      ) {
         this.sPuzzle.stop();
         this.scene.start('title');
         return;
@@ -1904,6 +1908,7 @@ export default class Play extends Phaser.Scene {
     return match(s)
       .with({ Atype: 'air', airtype: 'out' }, () => 'out')
       .with({ Atype: 'air' }, () => {
+        if (i < 0) return 'air';
         let ret = 'air';
         if (this.blockType(i, j - 1) === 'wall') {
           ret += 'l';
@@ -1917,8 +1922,7 @@ export default class Play extends Phaser.Scene {
         if (this.blockType(i + 1, j) === 'wall') {
           ret += 'b';
         }
-        if (ret.length > 5) return 'airrb';
-        log(100, ret, i, j, s.Atype, this.currentMap.squares[i][j].Atype);
+        // log(100, ret, i, j, s.Atype, this.currentMap.squares[i][j].Atype);
         return ret;
       })
       .with({ Atype: 'map' }, () => 'block')
@@ -2190,6 +2194,11 @@ export default class Play extends Phaser.Scene {
     this.load.image('airrt', 'assets/images/airrt.png');
     this.load.image('airlr', 'assets/images/airlr.png');
     this.load.image('airtb', 'assets/images/airtb.png');
+    this.load.image('airlrt', 'assets/images/airlrt.png');
+    this.load.image('airlrb', 'assets/images/airlrb.png');
+    this.load.image('airltb', 'assets/images/airltb.png');
+    this.load.image('airrtb', 'assets/images/airrtb.png');
+    this.load.image('airlrtb', 'assets/images/airlrtb.png');
     this.load.image('airout', 'assets/images/out.png');
     this.load.image('player', 'assets/images/player.png');
     this.load.image('focus', 'assets/images/focus.png');

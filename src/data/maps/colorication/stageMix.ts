@@ -9,6 +9,24 @@ import {
 import { Stage } from '../../../scenes/play/stage';
 import { randomized } from '../../../utils/term';
 
+const zrs: Square = {
+  Atype: 'term',
+  term: randomized({
+    Atype: 'lam',
+    var: '0',
+    ret: {
+      Atype: 'lam',
+      var: '1',
+      ret: { Atype: 'var', var: '1' }
+    }
+  }),
+  name: [],
+  movable: true,
+  collidable: true,
+  locked: false,
+  image: []
+};
+
 const ons: Square = {
   Atype: 'term',
   term: randomized({
@@ -31,27 +49,9 @@ const ons: Square = {
   image: []
 };
 
-const zrs: Square = {
-  Atype: 'term',
-  term: randomized({
-    Atype: 'lam',
-    var: '0',
-    ret: {
-      Atype: 'lam',
-      var: '1',
-      ret: { Atype: 'var', var: '1' }
-    }
-  }),
-  name: [],
-  movable: true,
-  collidable: true,
-  locked: false,
-  image: []
-};
-
-const stageColorication: Stage = new Stage(
+const stageMix: Stage = new Stage(
   10,
-  '0. Colorication',
+  '0. Mix',
   [
     {
       input: [],
@@ -83,4 +83,4 @@ const stageColorication: Stage = new Stage(
   ]
 );
 
-export default stageColorication;
+export default stageMix;
