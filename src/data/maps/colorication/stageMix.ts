@@ -51,7 +51,7 @@ const ons: Square = {
 
 const stageMix: Stage = new Stage(
   10,
-  '0. Mix',
+  '0.',
   [
     {
       input: [],

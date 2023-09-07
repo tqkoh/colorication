@@ -25,7 +25,7 @@ const ids: Square = {
 
 const stageSokoban: Stage = new Stage(
   1,
-  '1. Sokoban',
+  '1.',
   [
     {
       input: [],

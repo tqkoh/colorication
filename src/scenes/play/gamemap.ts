@@ -43,7 +43,7 @@ export type Square = (
   | { Atype: 'air'; airtype: 'normal' | 'out' }
   | { Atype: 'term'; term: Term; map?: GameMap }
   | { Atype: 'map'; map: GameMap }
-  | { Atype: 'stage'; stage: Stage; map?: GameMap }
+  | { Atype: 'stage'; stage: Stage; map?: GameMap; term?: Term }
   | { Atype: 'block'; block: Block }
 ) & {
   name: number[];

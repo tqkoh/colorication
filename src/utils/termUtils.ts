@@ -13,6 +13,10 @@ const MAX_REDUCE_TERM_COUNT = 500;
 let depth = 0;
 let count = 0;
 
+export function isTermSquare(s: Square) {
+  return s.Atype === 'term' || (s.Atype === 'stage' && s.term !== undefined);
+}
+
 // copy のためにクローンする。変数が被らないように freeValue 以外はランダムな id にする
 export function cloneTerm(t: Term): Term {
   return match<Term, Term>(t)
@@ -92,7 +96,10 @@ function reduceTerm(t: Term): Term {
 }
 
 export function squareHash(s: Square): string {
-  if (s.Atype === 'term') {
+  if (
+    (s.Atype === 'term' && s.term !== undefined) ||
+    (s.Atype === 'stage' && s.term !== undefined)
+  ) {
     // const ns: Square = {
     //   ...s,
     //   term: normalized(s.term)

@@ -90,7 +90,7 @@ function b(): Square {
 
 const stageDoNotMix: Stage = new Stage(
   11,
-  '1. Do not mix',
+  '1.',
   [
     {
       input: [],
@@ -118,13 +118,13 @@ const stageDoNotMix: Stage = new Stage(
     }
   ],
   [
-    [w(), w(), a(), a(), b(), a(), w(), a(), w(), w()],
-    [w(), a(), a(), w(), z(), o(), a(), a(), a(), w()],
-    [a(), a(), a(), a(), i(), a(), w(), a(), a(), a()],
-    [u(), a(), a(), w(), a(), w(), w(), w(), s(), p()],
-    [a(), a(), a(), a(), i(), a(), w(), a(), a(), a()],
-    [w(), a(), a(), w(), z(), o(), a(), a(), a(), w()],
-    [w(), w(), a(), a(), b(), a(), w(), a(), w(), w()]
+    [w(), w(), w(), a(), b(), a(), w(), w(), w()],
+    [w(), a(), a(), w(), z(), o(), a(), a(), w()],
+    [w(), a(), a(), a(), i(), a(), w(), a(), w()],
+    [u(), a(), a(), a(), a(), w(), w(), s(), p()],
+    [w(), a(), a(), a(), i(), a(), w(), a(), w()],
+    [w(), a(), a(), w(), z(), o(), a(), a(), w()],
+    [w(), w(), w(), a(), b(), a(), w(), w(), w()]
   ]
 );
 
