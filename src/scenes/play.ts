@@ -1521,7 +1521,11 @@ export default class Play extends Phaser.Scene {
         return;
       }
 
-      if (manual && afterMap.parentMap === undefined) {
+      if (
+        this.mode === 'puzzle' &&
+        manual &&
+        afterMap.parentMap === undefined
+      ) {
         this.sPuzzle.stop();
         this.scene.start('title');
         return;
