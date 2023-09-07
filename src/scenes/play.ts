@@ -8,7 +8,12 @@ import { mapRoot, sandboxRoot } from '../data/maps/mapBeginning';
 import { log } from '../utils/deb';
 import { codesFrom } from '../utils/font';
 import FontForPhaser from '../utils/fontForPhaser';
-import Term, { completeSubst, freeValue, randomized } from '../utils/term';
+import Term, {
+  completeSubst,
+  freeValue,
+  normalized,
+  randomized
+} from '../utils/term';
 import {
   asCodes,
   coloredHandleFrom,
@@ -1667,7 +1672,8 @@ export default class Play extends Phaser.Scene {
 
         const s = this.currentMap.squares[i][j];
         if (s.Atype === 'stage') {
-          s.movable = s.movable || globalThis.progress[s.stage.id];
+          s.movable =
+            s.movable || globalThis.progress[s.stage.id] !== undefined;
 
           if (s.movable) {
             s.image.push(
@@ -1675,6 +1681,7 @@ export default class Play extends Phaser.Scene {
                 .image(this.mapOriginx + x + 1, this.mapOriginy + y, 'ac')
                 .setDepth(-9)
             );
+            s.term = globalThis.progress[s.stage.id];
           }
         }
       }
@@ -1954,7 +1961,7 @@ export default class Play extends Phaser.Scene {
         s.name = asCodes(s.term);
         const hash: string = s.name.length ? objectHash(s.name) : squareHash(s);
         const handle = coloredHandleFrom(s.term, hash);
-        log(10, handle);
+        log(93, s.term, s.name, hash, handle);
 
         if (!this.textures.exists(handle)) {
           this.createColoredTermImage(s.term, hash, handle);
@@ -1963,17 +1970,24 @@ export default class Play extends Phaser.Scene {
       })
       .with({ Atype: 'stage', term: undefined }, () => 'block')
       .with({ Atype: 'stage' }, () => {
-        if (s.Atype !== 'stage' || s.term === undefined) {
+        log(89, s, s.Atype === 'stage' && s.term);
+        const term: Term | undefined =
+          s.Atype === 'stage' ? globalThis.progress[s.stage.id] : undefined;
+
+        if (term === undefined) {
           return 'block';
         }
+        const nterm = normalized(term);
+        log(90, nterm, s.term);
         // eslint-disable-next-line no-param-reassign
-        const name = asCodes(s.term);
+        const name = asCodes(nterm);
+        log(91, name);
         const hash: string = name.length ? objectHash(name) : squareHash(s);
-        const handle = coloredHandleFrom(s.term, hash);
-        log(10, handle);
+        const handle = coloredHandleFrom(nterm, hash);
+        log(94, nterm, name, hash, handle);
 
         if (!this.textures.exists(handle)) {
-          this.createColoredTermImage(s.term, hash, handle);
+          this.createColoredTermImage(nterm, hash, handle);
         }
         return handle;
       })
@@ -2053,6 +2067,9 @@ export default class Play extends Phaser.Scene {
         const y = 16 * i;
         const x = 16 * j;
         const s = this.currentMap.squares[i][j];
+        if (s.Atype === 'stage') {
+          s.term = globalThis.progress[s.stage.id];
+        }
         s.image.push(
           this.add
             .image(
@@ -2088,7 +2105,8 @@ export default class Play extends Phaser.Scene {
         }
 
         if (s.Atype === 'stage') {
-          s.movable = s.movable || globalThis.progress[s.stage.id];
+          s.movable =
+            s.movable || globalThis.progress[s.stage.id] !== undefined;
 
           if (s.movable) {
             s.image.push(
@@ -2096,6 +2114,7 @@ export default class Play extends Phaser.Scene {
                 .image(this.mapOriginx + x + 1, this.mapOriginy + y, 'ac')
                 .setDepth(-9)
             );
+            s.term = globalThis.progress[s.stage.id];
           }
         }
 
@@ -2611,6 +2630,7 @@ export default class Play extends Phaser.Scene {
         return;
       }
       st.term = sub.term;
+      log(92, asCodes(sub.term));
 
       this.removeSquareImage(this.focusnexti, this.focusnextj);
       this.currentMap.squares[this.focusnexti][this.focusnextj] = airSquare();
@@ -2623,7 +2643,7 @@ export default class Play extends Phaser.Scene {
       }
       this.saveTargets = [];
 
-      globalThis.progress[st.stage.id] = true;
+      globalThis.progress[st.stage.id] = sub.term;
       globalThis.storage.set('progress', globalThis.progress);
       this.moveOn();
     }

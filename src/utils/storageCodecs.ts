@@ -1,4 +1,5 @@
 import { KeyConfig } from '../data/keyConfig';
+import Term from './term';
 import { Codec } from './typedStorage';
 
 export const stringCodec: Codec<string> = {
@@ -22,7 +23,10 @@ export const keyConfigCodec: Codec<KeyConfig> = {
   decode: (s: string) => JSON.parse(s) as KeyConfig
 };
 
-export const progressCodec: Codec<boolean[]> = {
-  encode: (p: boolean[]) => JSON.stringify(p),
-  decode: (s: string) => JSON.parse(s) as boolean[]
+export const progressCodec: Codec<(Term | undefined)[]> = {
+  encode: (p: (Term | undefined)[]) => JSON.stringify(p),
+  decode: (s: string) => {
+    const a = [...Object.values(JSON.parse(s))] as (Term | undefined | null)[];
+    return a.map((t) => (t === null ? undefined : t));
+  }
 };
