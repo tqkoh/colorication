@@ -4,7 +4,7 @@ import objectHash from 'object-hash';
 import Phaser from 'phaser';
 import { match, P } from 'ts-pattern';
 import { isDown, justDown, keysFrom } from '../data/keyConfig';
-import mapRoot, { sandboxRoot } from '../data/maps/mapRoot';
+import { mapRoot, sandboxRoot } from '../data/maps/mapBeginning';
 import { log } from '../utils/deb';
 import { codesFrom } from '../utils/font';
 import FontForPhaser from '../utils/fontForPhaser';
@@ -1481,7 +1481,7 @@ export default class Play extends Phaser.Scene {
     this.mainState = 'applyAnimating';
   }
 
-  execEnter() {
+  execEnter(manual: boolean = false) {
     let afterLeave = false;
     if (
       this.focusi < 0 ||
@@ -1499,7 +1499,7 @@ export default class Play extends Phaser.Scene {
       return;
     }
     if (focus.Atype === 'map') {
-      afterMap = focus.map;
+      afterMap = cloneDeep(focus.map);
       focus.map.enter();
     } else if (focus.Atype === 'stage') {
       // reset
@@ -1518,6 +1518,12 @@ export default class Play extends Phaser.Scene {
       if (this.currentMap.parentMap) {
         afterMap = this.currentMap.parentMap;
       } else {
+        return;
+      }
+
+      if (manual && afterMap.parentMap === undefined) {
+        this.sPuzzle.stop();
+        this.scene.start('title');
         return;
       }
       if (!this.leaveCheck()) return;
@@ -1786,18 +1792,16 @@ export default class Play extends Phaser.Scene {
     }
     if (justDown(this.keys.R)) {
       log(8, this.currentSquares);
-      if (this.currentSquares.slice(-1)[0].Atype === 'stage') {
-        for (let i = 0; i < this.currentMap.h; i += 1) {
-          for (let j = 0; j < this.currentMap.w; j += 1) {
-            const s = this.currentMap.squares[i][j];
-            if (s.Atype === 'block' && s.block === 'parent') {
-              this.focusi = i;
-              this.focusj = j;
-              this.execEnter();
-              this.execEnter();
-              this.sEnter.play();
-              break;
-            }
+      for (let i = 0; i < this.currentMap.h; i += 1) {
+        for (let j = 0; j < this.currentMap.w; j += 1) {
+          const s = this.currentMap.squares[i][j];
+          if (s.Atype === 'block' && s.block === 'parent') {
+            this.focusi = i;
+            this.focusj = j;
+            this.execEnter();
+            this.execEnter();
+            this.sEnter.play();
+            break;
           }
         }
       }
@@ -2206,6 +2210,10 @@ export default class Play extends Phaser.Scene {
     log(10, this.map);
 
     this.initDrawing();
+
+    if (this.mode === 'puzzle') {
+      this.execEnter();
+    }
 
     this.cameras.main.fadeIn(FADEIN_LENGTH / 2, WHITE[0], WHITE[1], WHITE[2]);
     this.cameras.main.setBackgroundColor(
