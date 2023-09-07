@@ -11,4 +11,4 @@ export function log(level: number, ...s: any[]) {
   }
 }
 
-export const CLEAR_ALL = true;
+export const CLEAR_ALL = false;

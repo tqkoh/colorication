@@ -4,6 +4,7 @@ import objectHash from 'object-hash';
 import Phaser from 'phaser';
 import { match, P } from 'ts-pattern';
 import { isDown, justDown, keysFrom } from '../data/keyConfig';
+import mapRoot, { sandboxRoot } from '../data/maps/mapRoot';
 import { log } from '../utils/deb';
 import { codesFrom } from '../utils/font';
 import FontForPhaser from '../utils/fontForPhaser';
@@ -27,7 +28,6 @@ import {
   submitSquare,
   wallSquare
 } from './play/gamemap';
-import mapRoot, { sandboxRoot } from './play/maps/mapRoot';
 import { skills } from './play/skills';
 import { Stage } from './play/stage';
 // const completeSubst = subst;
@@ -581,6 +581,13 @@ export default class Play extends Phaser.Scene {
           .image(this.mapOriginx + x + 1, this.mapOriginy + y, 'locked')
           .setAlpha(alpha)
           .setDepth(100)
+      );
+    }
+    if (s.Atype === 'stage' && s.movable) {
+      s.image.push(
+        this.add
+          .image(this.mapOriginx + x + 1, this.mapOriginy + y, 'ac')
+          .setDepth(-9)
       );
     }
     log(89, s.image);
@@ -1642,6 +1649,19 @@ export default class Play extends Phaser.Scene {
           )
         );
         this.gMapBackAir[i][j]?.setDepth(-11);
+
+        const s = this.currentMap.squares[i][j];
+        if (s.Atype === 'stage') {
+          s.movable = s.movable || globalThis.progress[s.stage.id];
+
+          if (s.movable) {
+            s.image.push(
+              this.add
+                .image(this.mapOriginx + x + 1, this.mapOriginy + y, 'ac')
+                .setDepth(-9)
+            );
+          }
+        }
       }
     }
   }
@@ -2033,6 +2053,18 @@ export default class Play extends Phaser.Scene {
               .image(this.mapOriginx + x + 8, this.mapOriginy + y + 8, handle)
               .setDepth(-9)
           );
+        }
+
+        if (s.Atype === 'stage') {
+          s.movable = s.movable || globalThis.progress[s.stage.id];
+
+          if (s.movable) {
+            s.image.push(
+              this.add
+                .image(this.mapOriginx + x + 1, this.mapOriginy + y, 'ac')
+                .setDepth(-9)
+            );
+          }
         }
 
         this.gMapBackAir[i].push(
@@ -2539,6 +2571,13 @@ export default class Play extends Phaser.Scene {
       }
       this.saveTargets = [];
 
+      const st = this.currentSquares.slice(-1)[0];
+      if (st.Atype !== 'stage') {
+        // impossible
+        return;
+      }
+      globalThis.progress[st.stage.id] = true;
+      globalThis.storage.set('progress', globalThis.progress);
       this.moveOn();
     }
     if (this.animationClearFrame > ANIMATION_CLEAR_LENGTH) {

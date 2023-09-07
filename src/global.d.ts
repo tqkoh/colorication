@@ -8,8 +8,10 @@ import { Codec, TypedStorage } from './utils/typedStorage';
 declare global {
   var storage: TypedStorage<{
     keyConfig: Codec<KeyConfig>;
+    progress: Codec<boolean[]>;
   }>;
   var keyConfig: KeyConfig;
+  var progress: boolean[];
   var screenh: number;
   var screenw: number;
   var game: Phaser.Game;

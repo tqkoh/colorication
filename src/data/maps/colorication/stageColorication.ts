@@ -1,4 +1,3 @@
-import { randomized } from '../../../../utils/term';
 import {
   Square,
   airSquare as a,
@@ -6,8 +5,9 @@ import {
   startSquare as s,
   submitSquare as u,
   wallSquare as w
-} from '../../gamemap';
-import { Stage } from '../../stage';
+} from '../../../scenes/play/gamemap';
+import { Stage } from '../../../scenes/play/stage';
+import { randomized } from '../../../utils/term';
 
 const ons: Square = {
   Atype: 'term',
@@ -50,6 +50,7 @@ const zrs: Square = {
 };
 
 const stageColorication: Stage = new Stage(
+  10,
   '0. Colorication',
   [
     {

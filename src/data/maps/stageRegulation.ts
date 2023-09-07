@@ -1,13 +1,12 @@
-import { randomized } from '../../../utils/term';
 import {
   Square,
   airSquare as a,
   parentSquare as p,
   startSquare as s,
-  submitSquare as u,
-  wallSquare as w
-} from '../gamemap';
-import { Stage } from '../stage';
+  submitSquare as u
+} from '../../scenes/play/gamemap';
+import { Stage } from '../../scenes/play/stage';
+import { randomized } from '../../utils/term';
 
 const ids: Square = {
   Atype: 'term',
@@ -23,8 +22,9 @@ const ids: Square = {
   image: []
 };
 
-const stageSokoban: Stage = new Stage(
-  '1. Sokoban',
+const stageRegulation: Stage = new Stage(
+  0,
+  '0. Regulation             press R to reset!',
   [
     {
       input: [],
@@ -47,13 +47,12 @@ const stageSokoban: Stage = new Stage(
     }
   ],
   [
-    [p(), s(), a(), w(), a(), a(), a()],
-    [a(), a(), a(), a(), a(), a(), a()],
-    [a(), a(), a(), a(), w(), w(), w()],
-    [u(), a(), w(), a(), a(), a(), a()],
-    [w(), w(), w(), a(), ids, a(), a()],
-    [w(), w(), w(), w(), w(), a(), a()]
+    [p(), s(), a(), a(), a()],
+    [a(), a(), a(), a(), a()],
+    [u(), a(), a(), ids, a()],
+    [a(), a(), a(), a(), a()],
+    [a(), a(), a(), a(), a()]
   ]
 );
 
-export default stageSokoban;
+export default stageRegulation;

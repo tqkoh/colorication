@@ -1,14 +1,14 @@
-import { CLEAR_ALL } from '../../../utils/deb';
-import { codesFrom } from '../../../utils/font';
 import {
   GameMap,
   Square,
   airSquare as ai,
   startSquare as st,
   wallSquare as wa
-} from '../gamemap';
+} from '../../scenes/play/gamemap';
+import { CLEAR_ALL } from '../../utils/deb';
+import { codesFrom } from '../../utils/font';
 
-import { Stage } from '../stage';
+import { Stage } from '../../scenes/play/stage';
 import mapColorication from './colorication/mapColorication';
 import stageCombination from './stageCombination';
 import stageRegulation from './stageRegulation';

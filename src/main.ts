@@ -3,12 +3,15 @@ import { defaultKeyConfig } from './data/keyConfig';
 import Load from './scenes/load';
 import Play from './scenes/play';
 import Title from './scenes/title';
-import { keyConfigCodec } from './utils/storageCodecs';
+import { keyConfigCodec, progressCodec } from './utils/storageCodecs';
 import { BaseStorage, createTypedStorage } from './utils/typedStorage';
+
+const MAX_STAGE_NUM = 20;
 
 globalThis.storage = createTypedStorage(
   {
-    keyConfig: keyConfigCodec
+    keyConfig: keyConfigCodec,
+    progress: progressCodec
   },
   new BaseStorage(localStorage)
 );
@@ -17,7 +20,7 @@ globalThis.keyConfig = defaultKeyConfig;
 
 {
   const keyConfigFromStorage = globalThis.storage.get('keyConfig');
-  if (keyConfigFromStorage == null) {
+  if (keyConfigFromStorage === null) {
     globalThis.keyConfig = defaultKeyConfig;
     globalThis.storage.set('keyConfig', globalThis.keyConfig);
   } else {
@@ -26,6 +29,20 @@ globalThis.keyConfig = defaultKeyConfig;
       ...keyConfigFromStorage
     };
     globalThis.storage.set('keyConfig', globalThis.keyConfig);
+  }
+}
+
+globalThis.progress = new Array<boolean>(MAX_STAGE_NUM);
+
+{
+  const progressFromStorage = globalThis.storage.get('progress');
+  if (progressFromStorage === null) {
+    globalThis.storage.set('progress', globalThis.progress);
+  } else {
+    globalThis.progress = {
+      ...globalThis.progress,
+      ...progressFromStorage
+    };
   }
 }
 
