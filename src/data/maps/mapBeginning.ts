@@ -11,6 +11,7 @@ import { codesFrom } from '../../utils/font';
 
 import { Stage } from '../../scenes/play/stage';
 import mapColorication from './colorication/mapColorication';
+import stageDoNotMix from './colorication/stageDoNotMix';
 import stageCombination from './stageCombination';
 import stageRegulation from './stageRegulation';
 import stageSokoban from './stageSokoban';
@@ -42,7 +43,10 @@ const stages: Stage[] = [
   stageSokoban,
   stageCombination,
   stageStairs,
-  stageRegulation
+  stageRegulation,
+
+  // debug 5..
+  stageDoNotMix
 ];
 const s: Square[] = stages.map((stage) => ({
   Atype: 'stage',

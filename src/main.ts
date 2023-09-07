@@ -4,6 +4,7 @@ import Load from './scenes/load';
 import Play from './scenes/play';
 import Title from './scenes/title';
 import { keyConfigCodec, progressCodec } from './utils/storageCodecs';
+import Term from './utils/term';
 import { BaseStorage, createTypedStorage } from './utils/typedStorage';
 
 const MAX_STAGE_NUM = 20;
@@ -32,7 +33,7 @@ globalThis.keyConfig = defaultKeyConfig;
   }
 }
 
-globalThis.progress = new Array<boolean>(MAX_STAGE_NUM);
+globalThis.progress = new Array<Term | undefined>(MAX_STAGE_NUM);
 
 {
   const progressFromStorage = globalThis.storage.get('progress');

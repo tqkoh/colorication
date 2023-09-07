@@ -27,7 +27,7 @@ function i(): Square {
 
 const stageStairs: Stage = new Stage(
   3,
-  '3. Stairs',
+  '3.',
   [
     {
       input: [],

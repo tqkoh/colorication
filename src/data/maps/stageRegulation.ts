@@ -24,7 +24,7 @@ const ids: Square = {
 
 const stageRegulation: Stage = new Stage(
   0,
-  '0. Regulation             press R to reset!',
+  '0.                        press R to reset!',
   [
     {
       input: [],

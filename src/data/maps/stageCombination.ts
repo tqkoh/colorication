@@ -27,7 +27,7 @@ function i(): Square {
 
 const stageCombination: Stage = new Stage(
   2,
-  '2. Combination',
+  '2.',
   [
     {
       input: [],
