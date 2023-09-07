@@ -945,7 +945,7 @@ export default class Play extends Phaser.Scene {
           } else {
             this.entering = false;
             this.sEnter.play();
-            this.execEnter();
+            this.execEnter(true);
           }
           result = 'enter';
           break;
@@ -1764,11 +1764,11 @@ export default class Play extends Phaser.Scene {
           this.closeMenu();
         })
         .with(menuElement.enter, () => {
-          this.execEnter();
+          this.execEnter(true);
           this.closeMenu();
         })
         .with(menuElement.leave, () => {
-          this.execEnter();
+          this.execEnter(true);
           this.closeMenu();
         })
         .with(menuElement.memo, () => {

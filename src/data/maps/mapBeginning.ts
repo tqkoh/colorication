@@ -71,7 +71,7 @@ const mapBeginning: Square[][] = [
 const wo0: Square = {
   Atype: 'map',
   map: new GameMap(mapBeginning),
-  name: codesFrom('Color'),
+  name: codesFrom('Beginning                 WASD to move!'),
   movable: false,
   collidable: true,
   locked: false,
