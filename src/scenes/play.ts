@@ -545,7 +545,6 @@ export default class Play extends Phaser.Scene {
         .setAlpha(alpha)
         .setDepth(-10)
     );
-    log(89, s.image);
 
     if (
       skills.seeNumber ||
@@ -587,7 +586,7 @@ export default class Play extends Phaser.Scene {
       s.image.push(
         this.add
           .image(this.mapOriginx + x + 1, this.mapOriginy + y, 'ac')
-          .setDepth(-9)
+          .setDepth(100)
       );
     }
     log(89, s.image);
@@ -1861,8 +1860,10 @@ export default class Play extends Phaser.Scene {
     log(10, deltaH, originalTexture, h, w);
 
     const pixels: ImageData = context.getImageData(0, 0, w, h);
-    // const n = pixels.data.length / 4;
     for (let i = 0; i < h; i += 1) {
+      // const n = pixels.data.length / 4;
+      let deltaVt = Math.floor(deltaH * 255) * 128;
+      log(56, deltaVt);
       for (let j = 0; j < w; j += 1) {
         const rgb =
           this.textures.getPixel(j, i, t.Atype) ||
@@ -1871,10 +1872,12 @@ export default class Play extends Phaser.Scene {
         const g = rgb.green;
         const b = rgb.blue;
         const hsv = Phaser.Display.Color.RGBToHSV(r, g, b);
+        deltaVt = Math.floor(deltaVt / 2);
+        const deltaV = i === h - 5 ? (deltaVt % 2) * -0.3 : 0;
         const afterRgb = Phaser.Display.Color.HSVToRGB(
           hsv.h + deltaH,
           hsv.s,
-          hsv.v
+          Math.max(hsv.v + deltaV, 0)
         );
         if ('r' in afterRgb) {
           pixels.data[(i * w + j) * 4 + 0] = afterRgb.r;
