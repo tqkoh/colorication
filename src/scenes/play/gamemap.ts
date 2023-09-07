@@ -24,6 +24,7 @@ export function opposite(d: Direction): Direction {
 }
 
 export type Block =
+  | 'solid'
   | 'start'
   | 'parent'
   | 'return_title'

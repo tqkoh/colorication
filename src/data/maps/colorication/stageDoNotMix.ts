@@ -65,6 +65,16 @@ const ons: Square = {
   image: []
 };
 
+const blk: Square = {
+  Atype: 'block',
+  block: 'solid',
+  name: [],
+  movable: true,
+  collidable: true,
+  locked: false,
+  image: []
+};
+
 function z(): Square {
   return cloneDeep(zrs);
 }
@@ -73,6 +83,9 @@ function i(): Square {
 }
 function o(): Square {
   return cloneDeep(ons);
+}
+function b(): Square {
+  return cloneDeep(blk);
 }
 
 const stageDoNotMix: Stage = new Stage(
@@ -105,13 +118,13 @@ const stageDoNotMix: Stage = new Stage(
     }
   ],
   [
-    [w(), w(), a(), a(), a(), a(), w(), a(), w(), w()],
+    [w(), w(), a(), a(), b(), a(), w(), a(), w(), w()],
     [w(), a(), a(), w(), z(), o(), a(), a(), a(), w()],
     [a(), a(), a(), a(), i(), a(), w(), a(), a(), a()],
     [u(), a(), a(), w(), a(), w(), w(), w(), s(), p()],
     [a(), a(), a(), a(), i(), a(), w(), a(), a(), a()],
     [w(), a(), a(), w(), z(), o(), a(), a(), a(), w()],
-    [w(), w(), a(), a(), a(), a(), w(), a(), w(), w()]
+    [w(), w(), a(), a(), b(), a(), w(), a(), w(), w()]
   ]
 );
 
