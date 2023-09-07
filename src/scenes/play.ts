@@ -8,12 +8,7 @@ import { mapRoot, sandboxRoot } from '../data/maps/mapBeginning';
 import { log } from '../utils/deb';
 import { codesFrom } from '../utils/font';
 import FontForPhaser from '../utils/fontForPhaser';
-import Term, {
-  completeSubst,
-  freeValue,
-  normalized,
-  randomized
-} from '../utils/term';
+import Term, { completeSubst, freeValue, randomized } from '../utils/term';
 import {
   asCodes,
   coloredHandleFrom,
@@ -1961,7 +1956,6 @@ export default class Play extends Phaser.Scene {
         s.name = asCodes(s.term);
         const hash: string = s.name.length ? objectHash(s.name) : squareHash(s);
         const handle = coloredHandleFrom(s.term, hash);
-        log(93, s.term, s.name, hash, handle);
 
         if (!this.textures.exists(handle)) {
           this.createColoredTermImage(s.term, hash, handle);
@@ -1977,17 +1971,17 @@ export default class Play extends Phaser.Scene {
         if (term === undefined) {
           return 'block';
         }
-        const nterm = normalized(term);
-        log(90, nterm, s.term);
+        log(90, term, s.term);
         // eslint-disable-next-line no-param-reassign
-        const name = asCodes(nterm);
+        const name = asCodes(term);
         log(91, name);
-        const hash: string = name.length ? objectHash(name) : squareHash(s);
-        const handle = coloredHandleFrom(nterm, hash);
-        log(94, nterm, name, hash, handle);
+        const hash: string = name.length
+          ? objectHash(name)
+          : squareHash({ ...s, name, term });
+        const handle = coloredHandleFrom(term, hash);
 
         if (!this.textures.exists(handle)) {
-          this.createColoredTermImage(nterm, hash, handle);
+          this.createColoredTermImage(term, hash, handle);
         }
         return handle;
       })
