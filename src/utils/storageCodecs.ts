@@ -21,3 +21,8 @@ export const keyConfigCodec: Codec<KeyConfig> = {
   encode: (k: KeyConfig) => JSON.stringify(k),
   decode: (s: string) => JSON.parse(s) as KeyConfig
 };
+
+export const progressCodec: Codec<boolean[]> = {
+  encode: (p: boolean[]) => JSON.stringify(p),
+  decode: (s: string) => JSON.parse(s) as boolean[]
+};

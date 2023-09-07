@@ -13,9 +13,11 @@ export class Stage extends GameMap {
 
   outputCoords: [number, number][] = [];
 
+  id: number;
+
   name: string;
 
-  constructor(name: string, tests: Test[], squares: Square[][]) {
+  constructor(id: number, name: string, tests: Test[], squares: Square[][]) {
     log(10, 'constructor of Stage: squares:', squares);
 
     const s: Square[][] = [];
@@ -37,7 +39,8 @@ export class Stage extends GameMap {
 
     for (let i = 0; i < tests.length; i += 1) {
       inputCoords.push([]);
-      const ci = Math.floor(squares.length / 2) - (tests.length - 1) + i * 2;
+      const ci =
+        Math.floor((squares.length - 1) / 2) - (tests.length - 1) + i * 2;
       log(8, ci);
       s[ci][1] = tests[i].output;
       outputCoords.push([ci, 1]);
@@ -59,6 +62,7 @@ export class Stage extends GameMap {
     }
 
     super(s);
+    this.id = id;
     this.name = name;
     this.tests = tests;
     this.inputCoords = inputCoords;

@@ -1,4 +1,3 @@
-import { randomized } from '../../../utils/term';
 import {
   Square,
   airSquare as a,
@@ -6,8 +5,9 @@ import {
   startSquare as s,
   submitSquare as u,
   wallSquare as w
-} from '../gamemap';
-import { Stage } from '../stage';
+} from '../../scenes/play/gamemap';
+import { Stage } from '../../scenes/play/stage';
+import { randomized } from '../../utils/term';
 
 function i(): Square {
   return {
@@ -25,8 +25,9 @@ function i(): Square {
   };
 }
 
-const stageCombination: Stage = new Stage(
-  '2. Combination',
+const stageStairs: Stage = new Stage(
+  3,
+  '3. Stairs',
   [
     {
       input: [],
@@ -49,12 +50,11 @@ const stageCombination: Stage = new Stage(
     }
   ],
   [
-    [w(), a(), a(), a(), a(), w(), w()],
-    [w(), a(), a(), a(), a(), a(), a()],
-    [u(), a(), a(), w(), i(), i(), i()],
-    [w(), a(), a(), w(), a(), a(), w()],
-    [w(), w(), w(), w(), a(), s(), p()]
+    [w(), a(), i(), i(), i(), w(), a(), p()],
+    [u(), a(), a(), i(), i(), w(), a(), s()],
+    [w(), i(), a(), a(), i(), w(), a(), a()],
+    [w(), i(), i(), a(), a(), a(), a(), a()]
   ]
 );
 
-export default stageCombination;
+export default stageStairs;

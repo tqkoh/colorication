@@ -1,12 +1,12 @@
-import { CLEAR_ALL } from '../../../../utils/deb';
-import { codesFrom } from '../../../../utils/font';
 import {
   Square,
   airSquare as ai,
   parentSquare as pa,
   startSquare as st
-} from '../../gamemap';
-import { Stage } from '../../stage';
+} from '../../../scenes/play/gamemap';
+import { Stage } from '../../../scenes/play/stage';
+import { CLEAR_ALL } from '../../../utils/deb';
+import { codesFrom } from '../../../utils/font';
 import stageColorication from './stageColorication';
 
 const stages: Stage[] = [stageColorication];
