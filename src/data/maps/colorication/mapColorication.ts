@@ -22,7 +22,7 @@ const s: Square[] = stages.map((stage) => ({
 }));
 
 const mapColorication: Square[][] = [
-  [pa(), st(), ai(), ai(), s[0]],
-  [ai(), ai(), ai(), ai(), s[1]]
+  [pa(), st(), ai(), ai(), s[0], ai()],
+  [ai(), ai(), ai(), ai(), s[1], ai()]
 ];
 export default mapColorication;

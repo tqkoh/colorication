@@ -1590,14 +1590,17 @@ export default class Play extends Phaser.Scene {
     // background
     {
       let y = 31;
-      let x = -14;
+      let x = 0;
       if (this.currentMap.h % 2) {
         y -= 8;
+      }
+      if (this.currentMap.w % 2 === 0) {
+        x -= 8;
       }
       const h = 240;
       // const w = 368;
       y += h / 2;
-      x = globalThis.screenw / 2;
+      x += globalThis.screenw / 2;
       if (this.gMapBackTile) {
         this.gMapBackTile.setY(y).setX(x);
       }
@@ -1649,6 +1652,7 @@ export default class Play extends Phaser.Scene {
             : 1
         );
     }
+    log(13, 'globalThis.progress', globalThis.progress);
     this.gMapBackAir = [];
     for (let i = 0; i < this.currentMap.h; i += 1) {
       this.gMapBackAir.push([]);
@@ -1881,12 +1885,18 @@ export default class Play extends Phaser.Scene {
         const b = rgb.blue;
         const hsv = Phaser.Display.Color.RGBToHSV(r, g, b);
         deltaVt = Math.floor(deltaVt / 2);
-        const deltaV = i === h - 5 ? (deltaVt % 2) * -0.3 : 0;
-        const afterRgb = Phaser.Display.Color.HSVToRGB(
-          hsv.h + deltaH,
-          hsv.s,
-          Math.max(hsv.v + deltaV, 0)
-        );
+        const afterRgb = i === h - 3 && (deltaVt % 2) === 1 ?
+          Phaser.Display.Color.HSVToRGB(
+            hsv.h + deltaH,
+            0.22,
+            1
+          ) :
+          Phaser.Display.Color.HSVToRGB(
+            hsv.h + deltaH,
+            hsv.s,
+            hsv.v
+          );
+          
         if ('r' in afterRgb) {
           pixels.data[(i * w + j) * 4 + 0] = afterRgb.r;
         }
@@ -1971,13 +1981,12 @@ export default class Play extends Phaser.Scene {
         if (term === undefined) {
           return 'block';
         }
-        log(90, term, s.term);
         // eslint-disable-next-line no-param-reassign
         const name = asCodes(term);
         log(91, name);
         const hash: string = name.length
           ? objectHash(name)
-          : squareHash({ ...s, name, term });
+          : squareHash({ ...s, name, term } as Square);
         const handle = coloredHandleFrom(term, hash);
 
         if (!this.textures.exists(handle)) {
@@ -2639,6 +2648,7 @@ export default class Play extends Phaser.Scene {
 
       globalThis.progress[st.stage.id] = sub.term;
       globalThis.storage.set('progress', globalThis.progress);
+      log(13, 'clear', st.stage.id, globalThis.progress[st.stage.id])
       this.moveOn();
     }
     if (this.animationClearFrame > ANIMATION_CLEAR_LENGTH) {

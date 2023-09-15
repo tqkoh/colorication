@@ -7,7 +7,7 @@ import { keyConfigCodec, progressCodec } from './utils/storageCodecs';
 import Term from './utils/term';
 import { BaseStorage, createTypedStorage } from './utils/typedStorage';
 
-const MAX_STAGE_NUM = 20;
+const MAX_STAGE_NUM = 30;
 
 globalThis.storage = createTypedStorage(
   {
@@ -33,17 +33,17 @@ globalThis.keyConfig = defaultKeyConfig;
   }
 }
 
-globalThis.progress = new Array<Term | undefined>(MAX_STAGE_NUM);
+globalThis.progress = new Array<Term | undefined>(MAX_STAGE_NUM).fill(undefined);
 
 {
   const progressFromStorage = globalThis.storage.get('progress');
   if (progressFromStorage === null) {
     globalThis.storage.set('progress', globalThis.progress);
   } else {
-    globalThis.progress = {
-      ...globalThis.progress,
-      ...progressFromStorage
-    };
+    for (let i = 0; i < progressFromStorage.length; i+=1) {
+      globalThis.progress[i] = progressFromStorage[i];
+    }
+    globalThis.storage.set('progress', globalThis.progress);
   }
 }
 
