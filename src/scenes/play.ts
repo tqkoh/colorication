@@ -18,7 +18,6 @@ import {
   squareHash
 } from '../utils/termUtils';
 import {
-  airSquare,
   Block,
   cloneSquare,
   Direction,
@@ -26,10 +25,9 @@ import {
   opposite,
   Square,
   squaresFromTerm,
-  submitSquare,
-  wallSquare
 } from './play/gamemap';
 import { skills } from './play/skills';
+import { airSquare, submitSquare, wallSquare } from './play/squares';
 import { Stage } from './play/stage';
 // const completeSubst = subst;
 

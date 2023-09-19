@@ -1,9 +1,9 @@
 /* eslint-disable no-use-before-define */
-import * as lodash from 'lodash';
 import { cloneDeep } from 'lodash';
 import Phaser from 'phaser';
 import { log } from '../../utils/deb';
 import Term, { randomized } from '../../utils/term';
+import { airSquare, startSquare } from './squares';
 import { Stage } from './stage';
 
 export type Direction = 'right' | 'down' | 'left' | 'up';
@@ -149,89 +149,7 @@ export class GameMap {
   }
 }
 
-export const airSquareI: Square = {
-  Atype: 'air',
-  airtype: 'normal',
-  name: [],
-  movable: false,
-  collidable: false,
-  locked: false,
-  image: []
-};
 
-export function airSquare() {
-  return lodash.cloneDeep(airSquareI);
-}
-
-export const airOutSquareI: Square = {
-  Atype: 'air',
-  airtype: 'out',
-  name: [],
-  movable: false,
-  collidable: false,
-  locked: false,
-  image: []
-};
-
-export function airOutSquare() {
-  return lodash.cloneDeep(airOutSquareI);
-}
-
-export const parentSquareI: Square = {
-  Atype: 'block',
-  block: 'parent',
-  name: [],
-  movable: false,
-  collidable: true,
-  locked: false,
-  image: []
-};
-
-export function parentSquare() {
-  return lodash.cloneDeep(parentSquareI);
-}
-
-export const submitSquareI: Square = {
-  Atype: 'block',
-  block: 'submit',
-  name: [],
-  movable: false,
-  collidable: true,
-  locked: false,
-  image: []
-};
-
-export function submitSquare() {
-  return lodash.cloneDeep(submitSquareI);
-}
-
-export const wallSquareI: Square = {
-  Atype: 'block',
-  block: 'wall',
-  name: [],
-  movable: false,
-  collidable: true,
-  locked: false,
-  image: []
-};
-
-export function wallSquare() {
-  return lodash.cloneDeep(wallSquareI);
-}
-
-export const startSquareI: Square = {
-  Atype: 'block',
-  block: 'start',
-  name: [],
-  movable: false,
-  collidable: false,
-  locked: false,
-  image: []
-};
-
-export function startSquare() {
-  return lodash.cloneDeep(startSquareI);
-}
 
 // export function squaresFrom(s: string[]): Square[][] {
 // 	const h = s.length;

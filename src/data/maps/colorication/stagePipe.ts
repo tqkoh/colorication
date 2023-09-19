@@ -6,11 +6,11 @@ import {
   submitSquare as u,
   wallSquare as w,
   zeroSquare as z
-} from '../../../scenes/play/squares';
+} from "../../../scenes/play/squares";
 import { Stage } from '../../../scenes/play/stage';
 
-const stageDoNotMix: Stage = new Stage(
-  11,
+const stagePipe: Stage = new Stage(
+  12,
   '1.',
   [
     {
@@ -39,14 +39,12 @@ const stageDoNotMix: Stage = new Stage(
     }
   ],
   [
-    [w(), w(), w(), a(), b(), a(), w(), w(), w()],
-    [w(), a(), a(), w(), z(), o(), a(), a(), w()],
-    [w(), a(), a(), a(), i(), a(), w(), a(), w()],
-    [u(), a(), a(), a(), a(), w(), w(), s(), p()],
-    [w(), a(), a(), a(), i(), a(), w(), a(), w()],
-    [w(), a(), a(), w(), z(), o(), a(), a(), w()],
-    [w(), w(), w(), a(), b(), a(), w(), w(), w()]
+    [w(), a(), a(), a(), a(), a(), a(), a(), w()],
+    [w(), b(), w(), w(), w(), w(), z(), a(), w()],
+    [u(), a(), a(), i(), i(), i(), i(), s(), p()],
+    [w(), b(), w(), w(), w(), w(), o(), a(), w()],
+    [w(), a(), a(), a(), a(), a(), a(), a(), w()]
   ]
 );
 
-export default stageDoNotMix;
+export default stagePipe;

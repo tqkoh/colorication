@@ -1,11 +1,10 @@
+import { GameMap, Square } from '../../scenes/play/gamemap';
 import {
-  GameMap,
-  Square,
   airSquare as ai,
   parentSquare as pa,
   startSquare as st,
   wallSquare as wa
-} from '../../scenes/play/gamemap';
+} from "../../scenes/play/squares";
 import { CLEAR_ALL } from '../../utils/deb';
 import { codesFrom } from '../../utils/font';
 
@@ -68,8 +67,8 @@ const mapBeginning: Square[][] = [
   [wa(), wa(), wa(), wa(), ai(), ai(), wa(), wa(), wa(), ai(), ai(), ai(), ai()],
   [wa(), wa(), wa(), wa(), ai(), ai(), wa(), wa(), wa(), ai(), ai(), wa(), wa()],
   [wa(), wa(), wa(), wa(), ai(), s[2], wa(), ai(), ai(), s[4], wa(), wa(), wa()],
-  [wa(), wa(), wa(), wa(), wa(), ai(), ai(), ai(), wa(), s[3], wa(), wa(), wa()],
-  [wa(), wa(), wa(), wa(), wa(), ai(), ai(), ai(), ai(), ai(), wa(), wa(), wa()]
+  [wa(), wa(), wa(), wa(), wa(), ai(), ai(), ai(), wa(), s[3], ai(), wa(), wa()],
+  [wa(), wa(), wa(), wa(), wa(), ai(), ai(), ai(), ai(), ai(), ai(), wa(), wa()]
 ];
 
 const wo0: Square = {
