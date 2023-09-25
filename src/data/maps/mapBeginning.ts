@@ -4,7 +4,7 @@ import {
   parentSquare as pa,
   startSquare as st,
   wallSquare as wa
-} from "../../scenes/play/squares";
+} from '../../scenes/play/squares';
 import { CLEAR_ALL } from '../../utils/deb';
 import { codesFrom } from '../../utils/font';
 

@@ -1,10 +1,10 @@
+import { Square } from '../../scenes/play/gamemap';
 import {
-  Square,
   airSquare as a,
   parentSquare as p,
   startSquare as s,
   submitSquare as u
-} from '../../scenes/play/gamemap';
+} from '../../scenes/play/squares';
 import { Stage } from '../../scenes/play/stage';
 import { randomized } from '../../utils/term';
 

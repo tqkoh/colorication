@@ -149,8 +149,6 @@ export class GameMap {
   }
 }
 
-
-
 // export function squaresFrom(s: string[]): Square[][] {
 // 	const h = s.length;
 // 	if (!h) return [];

@@ -33,14 +33,16 @@ globalThis.keyConfig = defaultKeyConfig;
   }
 }
 
-globalThis.progress = new Array<Term | undefined>(MAX_STAGE_NUM).fill(undefined);
+globalThis.progress = new Array<Term | undefined>(MAX_STAGE_NUM).fill(
+  undefined
+);
 
 {
   const progressFromStorage = globalThis.storage.get('progress');
   if (progressFromStorage === null) {
     globalThis.storage.set('progress', globalThis.progress);
   } else {
-    for (let i = 0; i < progressFromStorage.length; i+=1) {
+    for (let i = 0; i < progressFromStorage.length; i += 1) {
       globalThis.progress[i] = progressFromStorage[i];
     }
     globalThis.storage.set('progress', globalThis.progress);

@@ -24,7 +24,7 @@ import {
   GameMap,
   opposite,
   Square,
-  squaresFromTerm,
+  squaresFromTerm
 } from './play/gamemap';
 import { skills } from './play/skills';
 import { airSquare, submitSquare, wallSquare } from './play/squares';
@@ -1495,6 +1495,7 @@ export default class Play extends Phaser.Scene {
       return;
     }
     const focus = this.currentMap.squares[this.focusi][this.focusj];
+    log(34, 'execenter', focus);
     let afterMap: GameMap;
     if (focus.Atype === 'block' && focus.block === 'return_title') {
       this.sPuzzle.stop();
@@ -1583,7 +1584,9 @@ export default class Play extends Phaser.Scene {
       this.gImagePlayer.rotation = rotationFromDirection(this.playerDirection);
     }
     this.moveToPosition(this.currentMap.starti, this.currentMap.startj);
-    this.reflectModified();
+    if (focus.Atype === 'block' && focus.block === 'parent') {
+      this.reflectModified();
+    }
 
     // background
     {
@@ -1883,18 +1886,11 @@ export default class Play extends Phaser.Scene {
         const b = rgb.blue;
         const hsv = Phaser.Display.Color.RGBToHSV(r, g, b);
         deltaVt = Math.floor(deltaVt / 2);
-        const afterRgb = i === h - 3 && (deltaVt % 2) === 1 ?
-          Phaser.Display.Color.HSVToRGB(
-            hsv.h + deltaH,
-            0.22,
-            1
-          ) :
-          Phaser.Display.Color.HSVToRGB(
-            hsv.h + deltaH,
-            hsv.s,
-            hsv.v
-          );
-          
+        const afterRgb =
+          i === h - 3 && deltaVt % 2 === 1
+            ? Phaser.Display.Color.HSVToRGB(hsv.h + deltaH, 0.22, 1)
+            : Phaser.Display.Color.HSVToRGB(hsv.h + deltaH, hsv.s, hsv.v);
+
         if ('r' in afterRgb) {
           pixels.data[(i * w + j) * 4 + 0] = afterRgb.r;
         }
@@ -2646,7 +2642,7 @@ export default class Play extends Phaser.Scene {
 
       globalThis.progress[st.stage.id] = sub.term;
       globalThis.storage.set('progress', globalThis.progress);
-      log(13, 'clear', st.stage.id, globalThis.progress[st.stage.id])
+      log(13, 'clear', st.stage.id, globalThis.progress[st.stage.id]);
       this.moveOn();
     }
     if (this.animationClearFrame > ANIMATION_CLEAR_LENGTH) {

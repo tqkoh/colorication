@@ -1,6 +1,8 @@
 import {
   airSquare as a,
-  blockSquare as b, idSquare as i, oneSquare as o,
+  blockSquare as b,
+  idSquare as i,
+  oneSquare as o,
   parentSquare as p,
   startSquare as s,
   submitSquare as u,

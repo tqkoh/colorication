@@ -1,11 +1,9 @@
-import {
-  Square
-} from '../../../scenes/play/gamemap';
+import { Square } from '../../../scenes/play/gamemap';
 import {
   airSquare as ai,
   parentSquare as pa,
   startSquare as st
-} from "../../../scenes/play/squares";
+} from '../../../scenes/play/squares';
 import { Stage } from '../../../scenes/play/stage';
 import { CLEAR_ALL } from '../../../utils/deb';
 import { codesFrom } from '../../../utils/font';

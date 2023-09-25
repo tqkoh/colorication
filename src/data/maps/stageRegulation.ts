@@ -4,7 +4,7 @@ import {
   parentSquare as p,
   startSquare as s,
   submitSquare as u
-} from "../../scenes/play/squares";
+} from '../../scenes/play/squares';
 import { Stage } from '../../scenes/play/stage';
 import { randomized } from '../../utils/term';
 

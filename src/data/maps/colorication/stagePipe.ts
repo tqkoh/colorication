@@ -1,12 +1,14 @@
 import {
   airSquare as a,
-  blockSquare as b, idSquare as i, oneSquare as o,
+  blockSquare as b,
+  idSquare as i,
+  oneSquare as o,
   parentSquare as p,
   startSquare as s,
   submitSquare as u,
   wallSquare as w,
   zeroSquare as z
-} from "../../../scenes/play/squares";
+} from '../../../scenes/play/squares';
 import { Stage } from '../../../scenes/play/stage';
 
 const stagePipe: Stage = new Stage(

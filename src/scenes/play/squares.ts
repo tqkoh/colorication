@@ -32,8 +32,6 @@ export const parentSquareI: Square = {
   image: []
 };
 
-
-
 export const submitSquareI: Square = {
   Atype: 'block',
   block: 'submit',
