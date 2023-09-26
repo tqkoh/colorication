@@ -30,8 +30,15 @@ const stagePipe2: Stage = new Stage(
       }
     }
   ],
+  // prettier-ignore
   squaresFromAA(
-    ['.bi.##..#', '#i#.##0.#', '!.0000isp', '#b####1.#', '#.......#'],
+    [
+      '.bi.##..#',
+      '#i#.##0.#',
+      '!.0000isp',
+      '#b####1.#',
+      '#.......#'
+    ],
     []
   )
 );

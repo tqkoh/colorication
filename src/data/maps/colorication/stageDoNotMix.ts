@@ -30,6 +30,7 @@ const stageDoNotMix: Stage = new Stage(
       }
     }
   ],
+  // prettier-ignore
   squaresFromAA(
     [
       '###.b.###',

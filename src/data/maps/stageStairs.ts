@@ -25,7 +25,13 @@ const stageStairs: Stage = new Stage(
       }
     }
   ],
-  squaresFromAA(['#.iii#.p', '!..ii#.s', '#i..i#..', '#ii.....'], [])
+  // prettier-ignore
+  squaresFromAA([
+    '#.iii#.p',
+    '!..ii#.s',
+    '#i..i#..',
+    '#ii.....'
+  ], [])
 );
 
 export default stageStairs;

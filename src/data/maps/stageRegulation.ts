@@ -25,7 +25,14 @@ const stageRegulation: Stage = new Stage(
       }
     }
   ],
-  squaresFromAA(['ps...', '.....', '!..i.', '.....', '.....'], [])
+  // prettier-ignore
+  squaresFromAA([
+    'ps...',
+    '.....',
+    '!..i.',
+    '.....',
+    '.....'
+  ], [])
 );
 
 export default stageRegulation;

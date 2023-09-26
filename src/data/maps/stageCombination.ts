@@ -25,7 +25,14 @@ const stageCombination: Stage = new Stage(
       }
     }
   ],
-  squaresFromAA(['#....##', '#......', '!..#iii', '#..#..#', '####.sp'], [])
+  // prettier-ignore
+  squaresFromAA([
+    '#....##',
+    '#......',
+    '!..#iii',
+    '#..#..#',
+    '####.sp'
+  ], [])
 );
 
 export default stageCombination;

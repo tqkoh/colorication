@@ -51,6 +51,7 @@ const stagesquares: Square[] = stages.map((stage) => ({
   image: []
 }));
 
+// prettier-ignore
 const mapBeginningAA = [
   '......#######',
   '......B.#####',
@@ -77,6 +78,7 @@ const wo0: Square = {
 
 export const mapRoot: Square[][] = [[rett, st(), wo0]];
 
+// prettier-ignore
 export const sandboxRoot: Square[][] = squaresFromAA(
   [
     'As.........',

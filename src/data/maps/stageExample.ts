@@ -115,7 +115,14 @@ const stageExample = new Stage(
       }
     }
   ],
-  squaresFromAA(['ps...', '...i.', '!...?', '...0.', '.....'], [])
+  // prettier-ignore
+  squaresFromAA([
+    'ps...',
+    '...i.',
+    '!...?',
+    '...0.',
+    '.....'
+  ], [])
 );
 
 export default stageExample;
