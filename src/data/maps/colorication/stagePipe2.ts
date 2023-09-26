@@ -1,7 +1,7 @@
 import { squaresFromAA } from '../../../scenes/play/squares';
 import { Stage } from '../../../scenes/play/stage';
 
-const stagePipe: Stage = new Stage(
+const stagePipe2: Stage = new Stage(
   12,
   '0.',
   [
@@ -31,16 +31,9 @@ const stagePipe: Stage = new Stage(
     }
   ],
   squaresFromAA(
-    [
-      '.b..##..#',
-      '#b#.##i.#',
-      '!.iiii0sp',
-      '#b####1.#',
-      '#i......#',
-      '#..######'
-    ],
+    ['.bi.##..#', '#i#.##0.#', '!.0000isp', '#b####1.#', '#.......#'],
     []
   )
 );
 
-export default stagePipe;
+export default stagePipe2;

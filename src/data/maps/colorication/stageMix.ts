@@ -1,57 +1,9 @@
-import { Square } from '../../../scenes/play/gamemap';
-import {
-  airSquare as a,
-  parentSquare as p,
-  startSquare as s,
-  submitSquare as u,
-  wallSquare as w
-} from '../../../scenes/play/squares';
+import { squaresFromAA } from '../../../scenes/play/squares';
 import { Stage } from '../../../scenes/play/stage';
-import { randomized } from '../../../utils/term';
-
-const zrs: Square = {
-  Atype: 'term',
-  term: randomized({
-    Atype: 'lam',
-    var: '0',
-    ret: {
-      Atype: 'lam',
-      var: '1',
-      ret: { Atype: 'var', var: '1' }
-    }
-  }),
-  name: [],
-  movable: true,
-  collidable: true,
-  locked: false,
-  image: []
-};
-
-const ons: Square = {
-  Atype: 'term',
-  term: randomized({
-    Atype: 'lam',
-    var: '0',
-    ret: {
-      Atype: 'lam',
-      var: '1',
-      ret: {
-        Atype: 'app',
-        lam: { Atype: 'var', var: '0' },
-        param: { Atype: 'var', var: '1' }
-      }
-    }
-  }),
-  name: [],
-  movable: true,
-  collidable: true,
-  locked: false,
-  image: []
-};
 
 const stageMix: Stage = new Stage(
   10,
-  '0.',
+  '1.',
   [
     {
       input: [],
@@ -73,14 +25,10 @@ const stageMix: Stage = new Stage(
       }
     }
   ],
-  [
-    [w(), s(), a(), w(), w(), w()],
-    [w(), a(), a(), a(), a(), a()],
-    [u(), a(), a(), ons, a(), a()],
-    [a(), a(), zrs, a(), s(), p()],
-    [a(), a(), a(), a(), a(), w()],
-    [w(), w(), w(), a(), a(), w()]
-  ]
+  squaresFromAA(
+    ['#..###', '#.....', '!..1..', '..0.sp', '.....#', '###..#'],
+    []
+  )
 );
 
 export default stageMix;

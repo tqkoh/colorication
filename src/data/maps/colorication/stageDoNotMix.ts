@@ -1,19 +1,9 @@
-import {
-  airSquare as a,
-  blockSquare as b,
-  idSquare as i,
-  oneSquare as o,
-  parentSquare as p,
-  startSquare as s,
-  submitSquare as u,
-  wallSquare as w,
-  zeroSquare as z
-} from '../../../scenes/play/squares';
+import { squaresFromAA } from '../../../scenes/play/squares';
 import { Stage } from '../../../scenes/play/stage';
 
 const stageDoNotMix: Stage = new Stage(
   11,
-  '1.',
+  '2.',
   [
     {
       input: [],
@@ -40,15 +30,18 @@ const stageDoNotMix: Stage = new Stage(
       }
     }
   ],
-  [
-    [w(), w(), w(), a(), b(), a(), w(), w(), w()],
-    [w(), a(), a(), w(), z(), o(), a(), a(), w()],
-    [w(), a(), a(), a(), i(), a(), w(), a(), w()],
-    [u(), a(), a(), a(), a(), w(), w(), s(), p()],
-    [w(), a(), a(), a(), i(), a(), w(), a(), w()],
-    [w(), a(), a(), w(), z(), o(), a(), a(), w()],
-    [w(), w(), w(), a(), b(), a(), w(), w(), w()]
-  ]
+  squaresFromAA(
+    [
+      '###.b.###',
+      '#..#01..#',
+      '#...i.#.#',
+      '!....##sp',
+      '#...i.#.#',
+      '#..#01..#',
+      '###.b.###'
+    ],
+    []
+  )
 );
 
 export default stageDoNotMix;
