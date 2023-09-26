@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash';
-import { randomized } from '../../utils/term';
+import Term, { randomized } from '../../utils/term';
 import { Square } from './gamemap';
 
 export const airSquareI: Square = {
@@ -127,6 +127,29 @@ const blockSquareI: Square = {
   image: []
 };
 
+const rec: Term = {
+  Atype: 'lam',
+  var: '0',
+  ret: {
+    Atype: 'ref',
+    var: '0',
+    ref: undefined
+  }
+};
+if (rec.ret.Atype === 'ref') {
+  rec.ret.ref = rec;
+}
+
+const recSquareI: Square = {
+  Atype: 'term',
+  term: randomized(rec),
+  name: [],
+  movable: true,
+  collidable: true,
+  locked: false,
+  image: []
+};
+
 const inputSquareI: Square = {
   Atype: 'term',
   term: randomized({
@@ -170,6 +193,9 @@ export function oneSquare(): Square {
 export function blockSquare(): Square {
   return cloneDeep(blockSquareI);
 }
+export function recSquare(): Square {
+  return cloneDeep(recSquareI);
+}
 export function inputSquare(): Square {
   return cloneDeep(inputSquareI);
 }
@@ -195,6 +221,8 @@ export function squaresFromAA(aa: string[], alphabets: Square[]): Square[][] {
         ret[i].push(inputSquare());
       } else if (aa[i][j] === 'b') {
         ret[i].push(blockSquare());
+      } else if (aa[i][j] === 'r') {
+        ret[i].push(recSquare());
       } else if (aa[i][j] === 'i') {
         ret[i].push(idSquare());
       } else if (aa[i][j] === '0') {

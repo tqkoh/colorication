@@ -296,6 +296,13 @@ export function squaresFromTerm(t: Term): Square[][] {
   if (t.Atype === 'app') {
     return squaresFromApp(t.lam, t.param);
   }
+  if (t.Atype === 'ref') {
+    log(1, 'ref before lam become squares');
+    if (t.ref && t.ref.Atype === 'lam') {
+      return squaresFromLam(t.ref.var, t.ref.ret);
+    }
+    throw new Error('ref is not lam');
+  }
   throw new Error('var cant become map');
 }
 
@@ -321,26 +328,24 @@ export function cloneSquare(
 
   log(10, s.map);
 
-  const newMap = new GameMap(
-    s.map.squares.map((col) =>
-      col.map((sq) => cloneSquare(sq, false, randomize))
+  if (s.Atype === 'term' && (randomize || s.term.Atype === 'ref')) {
+    return {
+      ...s,
+      term: randomized(s.term),
+      map: undefined,
+      movable: s.movable || addMovable,
+      image: []
+    };
+  }
+  return {
+    ...s,
+    map: new GameMap(
+      s.map.squares.map((col) =>
+        col.map((sq) => cloneSquare(sq, false, randomize))
+      ),
+      s.map
     ),
-    s.map
-  );
-  const ret: Square =
-    s.Atype === 'term' && randomize
-      ? {
-          ...s,
-          term: randomized(s.term),
-          map: undefined,
-          movable: s.movable || addMovable,
-          image: []
-        }
-      : {
-          ...s,
-          map: newMap,
-          movable: s.movable || addMovable,
-          image: []
-        };
-  return ret;
+    movable: s.movable || addMovable,
+    image: []
+  };
 }

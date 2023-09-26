@@ -197,6 +197,8 @@ export default class Play extends Phaser.Scene {
 
   map: GameMap;
 
+  lamMapMap: Map<string, GameMap>;
+
   currentMap: GameMap;
 
   currentSquares: Square[];
@@ -316,6 +318,7 @@ export default class Play extends Phaser.Scene {
     this.gMenuElements = [];
     this.allowedCommands = false;
     this.map = new GameMap(sandboxRoot);
+    this.lamMapMap = new Map<string, GameMap>();
     this.currentMap = this.map; // ref
     this.front = [];
     this.currentSquares = [
@@ -427,6 +430,7 @@ export default class Play extends Phaser.Scene {
     this.gMenuElements = [];
     this.allowedCommands = data.mode === 'sandbox';
     this.map = new GameMap(data.mode === 'sandbox' ? sandboxRoot : mapRoot);
+    this.lamMapMap = new Map<string, GameMap>();
     this.currentMap = this.map; // ref
     this.currentSquares = [
       {
@@ -532,8 +536,8 @@ export default class Play extends Phaser.Scene {
     const y = 16 * i;
     const x = 16 * j;
     const s = this.currentMap.squares[i][j];
-    log(88, this.focusi, this.focusj, this.focusnexti, this.focusnextj);
-    log(88, 'addsquareimage', i, j, s, this.imageHandleFromSquare(s, i, j));
+    // log(88, this.focusi, this.focusj, this.focusnexti, this.focusnextj);
+    // log(88, 'addsquareimage', i, j, s, this.imageHandleFromSquare(s, i, j));
     s.image.push(
       this.add
         .image(
@@ -588,7 +592,7 @@ export default class Play extends Phaser.Scene {
           .setDepth(100)
       );
     }
-    log(89, s.image);
+    // log(89, s.image);
   }
 
   updateClipImage() {
@@ -1301,7 +1305,59 @@ export default class Play extends Phaser.Scene {
   leaveCheck() {
     log(9, this.currentSquares);
     return match(this.currentSquares.slice(-1)[0])
-      .with({ Atype: 'term', term: { Atype: 'lam' } }, () => {
+      .with({ Atype: 'term', term: { Atype: 'app' } }, () => {
+        let ok = true;
+        if (this.currentMap.squares[2][2].Atype !== 'term') {
+          this.removeSquareImage(2, 2);
+          this.currentMap.squares[2][2] = {
+            Atype: 'term',
+            term: randomized({
+              Atype: 'lam',
+              var: '0',
+              ret: { Atype: 'var', var: '0' }
+            }),
+            name: [],
+            movable: true,
+            collidable: true,
+            locked: false,
+            image: []
+          };
+          this.addSquareImage(2, 2);
+          ok = false;
+        }
+        if (this.currentMap.squares[2][4].Atype !== 'term') {
+          this.removeSquareImage(2, 4);
+          this.currentMap.squares[2][4] = {
+            Atype: 'term',
+            term: randomized({
+              Atype: 'lam',
+              var: '0',
+              ret: { Atype: 'var', var: '0' }
+            }),
+            name: [],
+            movable: true,
+            collidable: true,
+            locked: false,
+            image: []
+          };
+          this.addSquareImage(2, 4);
+          ok = false;
+        }
+        if (!ok) return false;
+
+        this.modifiedTerm = [
+          this.currentMap.squares[2][2].term,
+          this.currentMap.squares[2][4].term
+        ];
+
+        return true;
+      })
+      .with({ Atype: 'term', term: { Atype: 'var' } }, () => {
+        this.modifiedTerm = [];
+        return true;
+      })
+      .with({ Atype: 'term' }, () => {
+        // lam and ref
         if (this.currentMap.squares[2][1].Atype !== 'term') {
           if (
             this.currentMap.squares[2][5].Atype === 'term' &&
@@ -1350,53 +1406,6 @@ export default class Play extends Phaser.Scene {
           }
         }
         this.modifiedTerm = [this.currentMap.squares[2][1].term];
-
-        return true;
-      })
-      .with({ Atype: 'term', term: { Atype: 'app' } }, () => {
-        let ok = true;
-        if (this.currentMap.squares[2][2].Atype !== 'term') {
-          this.removeSquareImage(2, 2);
-          this.currentMap.squares[2][2] = {
-            Atype: 'term',
-            term: randomized({
-              Atype: 'lam',
-              var: '0',
-              ret: { Atype: 'var', var: '0' }
-            }),
-            name: [],
-            movable: true,
-            collidable: true,
-            locked: false,
-            image: []
-          };
-          this.addSquareImage(2, 2);
-          ok = false;
-        }
-        if (this.currentMap.squares[2][4].Atype !== 'term') {
-          this.removeSquareImage(2, 4);
-          this.currentMap.squares[2][4] = {
-            Atype: 'term',
-            term: randomized({
-              Atype: 'lam',
-              var: '0',
-              ret: { Atype: 'var', var: '0' }
-            }),
-            name: [],
-            movable: true,
-            collidable: true,
-            locked: false,
-            image: []
-          };
-          this.addSquareImage(2, 4);
-          ok = false;
-        }
-        if (!ok) return false;
-
-        this.modifiedTerm = [
-          this.currentMap.squares[2][2].term,
-          this.currentMap.squares[2][4].term
-        ];
 
         return true;
       })
@@ -1515,6 +1524,18 @@ export default class Play extends Phaser.Scene {
     ) {
       if (!focus.map) {
         focus.map = new GameMap(squaresFromTerm(focus.term));
+        if (focus.term.Atype === 'lam') {
+          this.lamMapMap.set(focus.term.var, focus.map);
+        }
+      }
+      afterMap = focus.map;
+    } else if (focus.Atype === 'term' && focus.term.Atype === 'ref') {
+      if (!focus.map) {
+        let map = this.lamMapMap.get(focus.term.var);
+        if (map === undefined) {
+          map = new GameMap(squaresFromTerm(focus.term));
+        }
+        focus.map = map;
       }
       afterMap = focus.map;
     } else if (focus.Atype === 'block' && focus.block === 'parent') {
@@ -1538,7 +1559,14 @@ export default class Play extends Phaser.Scene {
     } else {
       return;
     }
-    if (focus.Atype !== 'block' || focus.block !== 'parent') {
+    if (
+      (focus.Atype !== 'block' || focus.block !== 'parent') &&
+      !(
+        focus.Atype === 'term' &&
+        focus.term.Atype === 'ref' &&
+        focus.map?.parentMap !== undefined
+      )
+    ) {
       afterMap.setParent(this.currentMap);
     }
 

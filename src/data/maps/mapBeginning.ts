@@ -4,6 +4,7 @@ import { CLEAR_ALL } from '../../utils/deb';
 import { codesFrom } from '../../utils/font';
 
 import { Stage } from '../../scenes/play/stage';
+import Term from '../../utils/term';
 import mapColorication from './colorication/mapColorication';
 import stagePipe2 from './colorication/stagePipe2';
 import stageCombination from './stageCombination';
@@ -53,7 +54,7 @@ const stagesquares: Square[] = stages.map((stage) => ({
 
 // prettier-ignore
 const mapBeginningAA = [
-  '......#######',
+  '.G....#######',
   '......B.#####',
   '...###..#####',
   'ps.###..##...',
@@ -78,17 +79,38 @@ const wo0: Square = {
 
 export const mapRoot: Square[][] = [[rett, st(), wo0]];
 
+const rec: Term = {
+  Atype: 'lam',
+  var: '0',
+  ret: {
+    Atype: 'ref',
+    var: '0',
+    ref: undefined
+  }
+};
+if (rec.ret.Atype === 'ref') {
+  rec.ret.ref = rec;
+}
+
 // prettier-ignore
 export const sandboxRoot: Square[][] = squaresFromAA(
   [
     'As.........',
-    '...........',
+    '.........B.',
     '...........',
     '...........',
     '...........',
     '...........'
   ],
-  [rett]
+  [rett, {
+    Atype: 'term',
+    term: rec,
+    name: [],
+    movable: true,
+    collidable: true,
+    locked: false,
+    image: [],
+  }]
 );
 
 export default mapBeginning;

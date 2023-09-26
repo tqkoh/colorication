@@ -35,7 +35,7 @@ const stagePipe2: Stage = new Stage(
     [
       '.bi.##..#',
       '#i#.##0.#',
-      '!.0000isp',
+      '!.rrrrisp',
       '#b####1.#',
       '#.......#'
     ],
