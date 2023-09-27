@@ -11,18 +11,21 @@ const MAX_SUBST_TIME_COMPLETE = 1000;
 type Term =
   | { Atype: 'var'; var: string }
   | { Atype: 'app'; lam: Term; param: Term }
-  | { Atype: 'lam'; var: string; ret: Term };
+  | { Atype: 'lam'; var: string; ret: Term }
+  | { Atype: 'ref'; var: string; ref: Term | undefined };
+
+const termMap: Map<string, Term> = new Map<string, Term>();
 
 export function normalized(
   t: Term, // ref
-  m: Map<string, number> = new Map<string, number>()
+  idMap: Map<string, number> = new Map<string, number>()
 ): Term {
   return match(t)
     .with({ Atype: 'var' }, (v) => {
-      const id: number | undefined = m.get(v.var);
+      const id: number | undefined = idMap.get(v.var);
       if (id === undefined) {
-        const newId: number = m.size;
-        m.set(v.var, newId);
+        const newId: number = idMap.size;
+        idMap.set(v.var, newId);
         const ret: Term = {
           Atype: 'var',
           var: newId.toString()
@@ -38,18 +41,42 @@ export function normalized(
     .with({ Atype: 'app' }, (a) => {
       const ret: Term = {
         Atype: 'app',
-        lam: normalized(a.lam, m),
-        param: normalized(a.param, m)
+        lam: normalized(a.lam, idMap),
+        param: normalized(a.param, idMap)
       };
       return ret;
     })
     .with({ Atype: 'lam' }, (l) => {
-      const newId: number = m.size;
-      m.set(l.var, newId);
+      const newId: number = idMap.size;
+      idMap.set(l.var, newId);
+      termMap.set(l.var, l);
       const ret: Term = {
         Atype: 'lam',
         var: newId.toString(),
-        ret: normalized(l.ret, m)
+        ret: normalized(l.ret, idMap)
+      };
+      return ret;
+    })
+    .with({ Atype: 'ref' }, (r) => {
+      const id: number | undefined = idMap.get(r.var);
+      const term: Term | undefined = termMap.get(r.var);
+      if (id === undefined || term === undefined) {
+        const newId: number = idMap.size;
+        idMap.set(r.var, newId);
+        const ret: Term = {
+          Atype: 'ref',
+          var: newId.toString(),
+          ref: {
+            Atype: 'var',
+            var: '0'
+          }
+        };
+        return ret;
+      }
+      const ret: Term = {
+        Atype: 'ref',
+        var: id.toString(),
+        ref: term
       };
       return ret;
     })
@@ -89,10 +116,34 @@ export function randomized(
     .with({ Atype: 'lam' }, (l) => {
       const newId = uuid();
       m.set(l.var, newId);
+      termMap.set(l.var, l);
       const ret: Term = {
         Atype: 'lam',
         var: newId,
         ret: randomized(l.ret, m)
+      };
+      return ret;
+    })
+    .with({ Atype: 'ref' }, (r) => {
+      const id: string | undefined = m.get(r.var);
+      const term: Term | undefined = termMap.get(r.var);
+      if (id === undefined || term === undefined) {
+        const newId: string = uuid();
+        m.set(r.var, newId);
+        const ret: Term = {
+          Atype: 'ref',
+          var: newId,
+          ref: term || {
+            Atype: 'var',
+            var: '0'
+          }
+        };
+        return ret;
+      }
+      const ret: Term = {
+        Atype: 'ref',
+        var: id,
+        ref: term
       };
       return ret;
     })
@@ -128,6 +179,7 @@ export function freeValue(t: Term): string[] {
         return acc;
       }, []);
     })
+    .with({ Atype: 'ref' }, (r) => [r.var])
     .exhaustive();
 }
 
@@ -226,12 +278,16 @@ function substI(
       log(100, 'subst', 1.5);
 
       log(102, sid, ap.lam);
-      const substLam = substI(ap.lam, before, a);
+      const substLam: [Term, SubstStatus] =
+        ap.lam.Atype === 'ref' ? [ap.lam, 'ok'] : substI(ap.lam, before, a);
       if (substLam[1] === 'muri') {
         return [t, 'compromise'];
       }
       log(103, sid, substLam[0]);
-      const substParam = substI(ap.param, before, a);
+      const substParam: [Term, SubstStatus] =
+        ap.param.Atype === 'ref'
+          ? [ap.param, 'ok']
+          : substI(ap.param, before, a);
       return substParam[1] === 'muri'
         ? [
             {
@@ -306,6 +362,11 @@ function substI(
             },
             t1[1]
           ];
+    })
+    .with([{ Atype: 'ref' }, P._], ([re]) => {
+      log(100, 'subst', 6);
+
+      return [re, 'ok'];
     })
     .with([P._, P._], () => {
       log(100, 'subst', 6);

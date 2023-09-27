@@ -1,9 +1,9 @@
 /* eslint-disable no-use-before-define */
-import * as lodash from 'lodash';
 import { cloneDeep } from 'lodash';
 import Phaser from 'phaser';
 import { log } from '../../utils/deb';
 import Term, { randomized } from '../../utils/term';
+import { airSquare, startSquare } from './squares';
 import { Stage } from './stage';
 
 export type Direction = 'right' | 'down' | 'left' | 'up';
@@ -56,6 +56,12 @@ export type Square = (
 export class GameMap {
   // eslint-disable-next-line no-use-before-define
   parentMap: GameMap | undefined;
+
+  currentSquare: Square | undefined;
+
+  currentSquarei: number;
+
+  currentSquarej: number;
 
   squares: Square[][];
 
@@ -119,7 +125,8 @@ export class GameMap {
       }
     }
     this.squares = cloneDeep(squares);
-    log(10, 'constructor of GameMap: clone squares', squares);
+    this.currentSquarei = 0;
+    this.currentSquarej = 0;
     this.h = squares.length;
     this.w = this.h ? squares[0].length : 0;
     for (let i = 0; i < squares.length; i += 1) {
@@ -147,90 +154,6 @@ export class GameMap {
   setParent(parent: GameMap) {
     this.parentMap = parent;
   }
-}
-
-export const airSquareI: Square = {
-  Atype: 'air',
-  airtype: 'normal',
-  name: [],
-  movable: false,
-  collidable: false,
-  locked: false,
-  image: []
-};
-
-export function airSquare() {
-  return lodash.cloneDeep(airSquareI);
-}
-
-export const airOutSquareI: Square = {
-  Atype: 'air',
-  airtype: 'out',
-  name: [],
-  movable: false,
-  collidable: false,
-  locked: false,
-  image: []
-};
-
-export function airOutSquare() {
-  return lodash.cloneDeep(airOutSquareI);
-}
-
-export const parentSquareI: Square = {
-  Atype: 'block',
-  block: 'parent',
-  name: [],
-  movable: false,
-  collidable: true,
-  locked: false,
-  image: []
-};
-
-export function parentSquare() {
-  return lodash.cloneDeep(parentSquareI);
-}
-
-export const submitSquareI: Square = {
-  Atype: 'block',
-  block: 'submit',
-  name: [],
-  movable: false,
-  collidable: true,
-  locked: false,
-  image: []
-};
-
-export function submitSquare() {
-  return lodash.cloneDeep(submitSquareI);
-}
-
-export const wallSquareI: Square = {
-  Atype: 'block',
-  block: 'wall',
-  name: [],
-  movable: false,
-  collidable: true,
-  locked: false,
-  image: []
-};
-
-export function wallSquare() {
-  return lodash.cloneDeep(wallSquareI);
-}
-
-export const startSquareI: Square = {
-  Atype: 'block',
-  block: 'start',
-  name: [],
-  movable: false,
-  collidable: false,
-  locked: false,
-  image: []
-};
-
-export function startSquare() {
-  return lodash.cloneDeep(startSquareI);
 }
 
 // export function squaresFrom(s: string[]): Square[][] {
@@ -380,6 +303,14 @@ export function squaresFromTerm(t: Term): Square[][] {
   if (t.Atype === 'app') {
     return squaresFromApp(t.lam, t.param);
   }
+  if (t.Atype === 'ref') {
+    log(1, 'ref before lam become squares');
+    if (t.ref && t.ref.Atype === 'lam') {
+      return squaresFromLam(t.ref.var, t.ref.ret);
+    }
+    log(10, 't.ref:', t.ref);
+    throw new Error('ref is not lam');
+  }
   throw new Error('var cant become map');
 }
 
@@ -405,26 +336,24 @@ export function cloneSquare(
 
   log(10, s.map);
 
-  const newMap = new GameMap(
-    s.map.squares.map((col) =>
-      col.map((sq) => cloneSquare(sq, false, randomize))
+  if (s.Atype === 'term' && (randomize || s.term.Atype === 'ref')) {
+    return {
+      ...s,
+      term: randomized(s.term),
+      map: undefined,
+      movable: s.movable || addMovable,
+      image: []
+    };
+  }
+  return {
+    ...s,
+    map: new GameMap(
+      s.map.squares.map((col) =>
+        col.map((sq) => cloneSquare(sq, false, randomize))
+      ),
+      s.map
     ),
-    s.map
-  );
-  const ret: Square =
-    s.Atype === 'term' && randomize
-      ? {
-          ...s,
-          term: randomized(s.term),
-          map: undefined,
-          movable: s.movable || addMovable,
-          image: []
-        }
-      : {
-          ...s,
-          map: newMap,
-          movable: s.movable || addMovable,
-          image: []
-        };
-  return ret;
+    movable: s.movable || addMovable,
+    image: []
+  };
 }

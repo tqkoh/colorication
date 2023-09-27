@@ -1,57 +1,5 @@
-import {
-  Square,
-  airSquare as a,
-  parentSquare as p,
-  startSquare as s,
-  submitSquare as u
-} from '../../scenes/play/gamemap';
+import { squaresFromAA } from '../../scenes/play/squares';
 import { Stage } from '../../scenes/play/stage';
-import { randomized } from '../../utils/term';
-
-const ids: Square = {
-  Atype: 'term',
-  term: randomized({
-    Atype: 'lam',
-    var: '0',
-    ret: { Atype: 'var', var: '0' }
-  }),
-  name: [],
-  movable: true,
-  collidable: true,
-  locked: false,
-  image: []
-};
-
-const zrs: Square = {
-  Atype: 'term',
-  term: randomized({
-    Atype: 'lam',
-    var: '0',
-    ret: {
-      Atype: 'lam',
-      var: '1',
-      ret: { Atype: 'var', var: '1' }
-    }
-  }),
-  name: [],
-  movable: true,
-  collidable: true,
-  locked: false,
-  image: []
-};
-
-const ins: Square = {
-  Atype: 'term',
-  term: randomized({
-    Atype: 'var',
-    var: '0'
-  }),
-  name: [],
-  movable: false,
-  collidable: true,
-  locked: false,
-  image: []
-};
 
 const stageExample = new Stage(
   9,
@@ -73,7 +21,7 @@ const stageExample = new Stage(
           name: [],
           movable: false,
           collidable: true,
-          locked: true,
+          locked: false,
           image: []
         },
         {
@@ -90,7 +38,7 @@ const stageExample = new Stage(
           name: [],
           movable: false,
           collidable: true,
-          locked: true,
+          locked: false,
           image: []
         }
       ],
@@ -167,13 +115,14 @@ const stageExample = new Stage(
       }
     }
   ],
-  [
-    [p(), s(), a(), a(), a()],
-    [a(), a(), a(), ids, a()],
-    [u(), a(), a(), a(), ins],
-    [a(), a(), a(), zrs, a()],
-    [a(), a(), a(), a(), a()]
-  ]
+  // prettier-ignore
+  squaresFromAA([
+    'ps...',
+    '...i.',
+    '!...?',
+    '...0.',
+    '.....'
+  ], [])
 );
 
 export default stageExample;

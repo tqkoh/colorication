@@ -1,9 +1,9 @@
 import { squaresFromAA } from '../../../scenes/play/squares';
 import { Stage } from '../../../scenes/play/stage';
 
-const stageMix: Stage = new Stage(
-  10,
-  '1.',
+const stagePipe2: Stage = new Stage(
+  12,
+  '0.',
   [
     {
       input: [],
@@ -13,8 +13,13 @@ const stageMix: Stage = new Stage(
           Atype: 'lam',
           var: '0',
           ret: {
-            Atype: 'var',
-            var: '0'
+            Atype: 'lam',
+            var: '1',
+            ret: {
+              Atype: 'app',
+              lam: { Atype: 'var', var: '0' },
+              param: { Atype: 'var', var: '1' }
+            }
           }
         },
         name: [],
@@ -28,15 +33,14 @@ const stageMix: Stage = new Stage(
   // prettier-ignore
   squaresFromAA(
     [
-      '#..###',
-      '#.....',
-      '!..1..',
-      '..0.sp',
-      '.....#',
-      '###..#'
+      '.bi.##..#',
+      '#i#.##0.#',
+      '!.rrrrisp',
+      '#b####1.#',
+      '#.......#'
     ],
     []
   )
 );
 
-export default stageMix;
+export default stagePipe2;

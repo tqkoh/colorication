@@ -1,5 +1,6 @@
 import { log } from '../../utils/deb';
-import { GameMap, Square, airOutSquare, wallSquare } from './gamemap';
+import { GameMap, Square } from './gamemap';
+import { airOutSquare, wallSquare } from './squares';
 
 export type Test = {
   input: Square[];

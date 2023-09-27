@@ -1,17 +1,12 @@
-import {
-  GameMap,
-  Square,
-  airSquare as ai,
-  parentSquare as pa,
-  startSquare as st,
-  wallSquare as wa
-} from '../../scenes/play/gamemap';
+import { GameMap, Square } from '../../scenes/play/gamemap';
+import { squaresFromAA, startSquare as st } from '../../scenes/play/squares';
 import { CLEAR_ALL } from '../../utils/deb';
 import { codesFrom } from '../../utils/font';
 
 import { Stage } from '../../scenes/play/stage';
+import Term from '../../utils/term';
 import mapColorication from './colorication/mapColorication';
-import stageDoNotMix from './colorication/stageDoNotMix';
+import stagePipe2 from './colorication/stagePipe2';
 import stageCombination from './stageCombination';
 import stageRegulation from './stageRegulation';
 import stageSokoban from './stageSokoban';
@@ -39,16 +34,15 @@ const rett: Square = {
 };
 
 const stages: Stage[] = [
-  stageRegulation,
-  stageSokoban,
-  stageCombination,
-  stageStairs,
-  stageRegulation,
+  stageRegulation, // B
+  stageSokoban, // C
+  stageCombination, // D
+  stageStairs, // E
+  stageRegulation, // F
 
-  // debug 5..
-  stageDoNotMix
+  stagePipe2 // debug G
 ];
-const s: Square[] = stages.map((stage) => ({
+const stagesquares: Square[] = stages.map((stage) => ({
   Atype: 'stage',
   stage,
   name: codesFrom(stage.name),
@@ -59,23 +53,24 @@ const s: Square[] = stages.map((stage) => ({
 }));
 
 // prettier-ignore
-const mapBeginning: Square[][] = [
-  [ai(), ai(), ai(), ai(), ai(), ai(), wa(), wa(), wa(), wa(), wa(), wa(), wa()],
-  [ai(), ai(), ai(), ai(), ai(), ai(), s[0], ai(), wa(), wa(), wa(), wa(), wa()],
-  [ai(), ai(), ai(), wa(), wa(), wa(), ai(), ai(), wa(), wa(), wa(), wa(), wa()],
-  [pa(), st(), ai(), wa(), wa(), wa(), ai(), ai(), wa(), ai(), ai(), ai(), ai()],
-  [ai(), ai(), ai(), wa(), ai(), s[1], ai(), ai(), wa(), ai(), ai(), ai(), wo1],
-  [wa(), wa(), wa(), wa(), ai(), ai(), wa(), wa(), wa(), ai(), ai(), ai(), ai()],
-  [wa(), wa(), wa(), wa(), ai(), ai(), wa(), wa(), wa(), ai(), ai(), wa(), wa()],
-  [wa(), wa(), wa(), wa(), ai(), s[2], wa(), ai(), ai(), s[4], wa(), wa(), wa()],
-  [wa(), wa(), wa(), wa(), wa(), ai(), ai(), ai(), wa(), s[3], wa(), wa(), wa()],
-  [wa(), wa(), wa(), wa(), wa(), ai(), ai(), ai(), ai(), ai(), wa(), wa(), wa()]
+const mapBeginningAA = [
+  '......#######',
+  '......B.#####',
+  '...###..#####',
+  'ps.###..##...',
+  '...#.C..##..A',
+  '####..###....',
+  '####..###..##',
+  '####.D#..F###',
+  '#####...#E.##',
+  '#####......##'
 ];
+const mapBeginning = squaresFromAA(mapBeginningAA, [wo1, ...stagesquares]);
 
 const wo0: Square = {
   Atype: 'map',
   map: new GameMap(mapBeginning),
-  name: codesFrom('Beginning                 WASD to move!'),
+  name: codesFrom('Beginning            WASD to move, R to reset!'),
   movable: false,
   collidable: true,
   locked: false,
@@ -84,13 +79,38 @@ const wo0: Square = {
 
 export const mapRoot: Square[][] = [[rett, st(), wo0]];
 
-export const sandboxRoot: Square[][] = [
-  [rett, st(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai()],
-  [ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai()],
-  [ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai()],
-  [ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai()],
-  [ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai()],
-  [ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai(), ai()]
-];
+const rec: Term = {
+  Atype: 'lam',
+  var: '0',
+  ret: {
+    Atype: 'ref',
+    var: '0',
+    ref: undefined
+  }
+};
+if (rec.ret.Atype === 'ref') {
+  rec.ret.ref = rec;
+}
+
+// prettier-ignore
+export const sandboxRoot: Square[][] = squaresFromAA(
+  [
+    'As.........',
+    '.........B.',
+    '...........',
+    '...........',
+    '...........',
+    '...........'
+  ],
+  [rett, {
+    Atype: 'term',
+    term: rec,
+    name: [],
+    movable: true,
+    collidable: true,
+    locked: false,
+    image: [],
+  }]
+);
 
 export default mapBeginning;

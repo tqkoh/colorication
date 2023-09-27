@@ -49,6 +49,11 @@ export function cloneTerm(t: Term): Term {
         ret: r[r.length - 1]
       };
     })
+    .with({ Atype: 'ref' }, (re) => ({
+      Atype: 'ref',
+      var: re.var,
+      ref: re.ref
+    }))
     .exhaustive();
 }
 
@@ -90,6 +95,14 @@ function reduceTerm(t: Term): Term {
         Atype: 'lam',
         var: la.var,
         ret: reducedRet
+      };
+    })
+    .with({ Atype: 'ref' }, (re) => {
+      depth -= 1;
+      return {
+        Atype: 'ref',
+        var: re.var,
+        ref: re.ref
       };
     })
     .exhaustive();
