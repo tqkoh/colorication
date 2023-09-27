@@ -54,7 +54,7 @@ const stagesquares: Square[] = stages.map((stage) => ({
 
 // prettier-ignore
 const mapBeginningAA = [
-  '.G....#######',
+  '......#######',
   '......B.#####',
   '...###..#####',
   'ps.###..##...',

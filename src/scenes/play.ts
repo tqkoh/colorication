@@ -1632,6 +1632,7 @@ export default class Play extends Phaser.Scene {
     } else {
       afteri = afterMap.starti;
       afterj = afterMap.startj;
+      afterd = afterMap.startd;
     }
 
     // if (focus.Atype === 'block' && focus.block === 'parent') {
@@ -1871,9 +1872,13 @@ export default class Play extends Phaser.Scene {
         for (let j = 0; j < this.currentMap.w; j += 1) {
           const s = this.currentMap.squares[i][j];
           if (s.Atype === 'block' && s.block === 'parent') {
+            const currenti = this.currentMap.currentSquarei;
+            const currentj = this.currentMap.currentSquarej;
             this.focusi = i;
             this.focusj = j;
             this.execEnter();
+            this.focusi = currenti;
+            this.focusj = currentj;
             this.execEnter();
             this.sEnter.play();
             break;
