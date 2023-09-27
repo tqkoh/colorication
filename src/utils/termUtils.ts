@@ -123,7 +123,7 @@ export function squareHash(s: Square): string {
     }
     depth = 0;
     count = 0;
-    return hash({ term: normalized(reduceTerm(s.term)) });
+    return hash({ term: normalized(reduceTerm(s.term.Atype === 'ref' && s.term.ref ? s.term.ref : s.term)) });
   }
   return hash(s);
 }
