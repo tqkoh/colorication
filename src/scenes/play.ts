@@ -2,7 +2,7 @@ import { Howl } from 'howler';
 import { cloneDeep } from 'lodash';
 import objectHash from 'object-hash';
 import Phaser from 'phaser';
-import { match, P } from 'ts-pattern';
+import { P, match } from 'ts-pattern';
 import { isDown, justDown, keysFrom } from '../data/keyConfig';
 import { mapRoot, sandboxRoot } from '../data/maps/mapBeginning';
 import { log } from '../utils/deb';
@@ -19,11 +19,11 @@ import {
 } from '../utils/termUtils';
 import {
   Block,
-  cloneSquare,
   Direction,
   GameMap,
-  opposite,
   Square,
+  cloneSquare,
+  opposite,
   squaresFromTerm
 } from './play/gamemap';
 import { skills } from './play/skills';
@@ -609,6 +609,9 @@ export default class Play extends Phaser.Scene {
     this.playeri = nexti;
     this.playerj = nextj;
     this.playerDirection = nextd;
+    if (this.gImagePlayer) {
+      this.gImagePlayer.rotation = rotationFromDirection(nextd);
+    }
     log(100, this.playeri, this.playerj, this.playerDirection);
     this.updatePlayerAndFocus();
   }
@@ -1538,6 +1541,7 @@ export default class Play extends Phaser.Scene {
     } else {
       return;
     }
+
     if (
       (focus.Atype !== 'block' || focus.block !== 'parent') &&
       !(
@@ -1546,9 +1550,31 @@ export default class Play extends Phaser.Scene {
         focus.map?.parentMap !== undefined
       )
     ) {
-      afterMap.setParent(this.currentMap);
+      if (focus.Atype === 'term' && focus.term.Atype === 'ref') {
+        if (!focus.term.ref) {
+          throw new Error('ref is undefined');
+        }
+        if (focus.term.ref.Atype !== 'lam') {
+          throw new Error('ref is not lam');
+        }
+        const lamMap = this.lamMapMap.get(focus.term.ref.var);
+        if (!lamMap) {
+          throw new Error('ref before lam');
+        }
+        if (!lamMap.parentMap) {
+          throw new Error('lamMap.parentMap is undefined');
+        }
+        afterMap.setParent(lamMap.parentMap);
+        afterMap.currentSquare = lamMap.currentSquare;
+        afterMap.currentSquarei = lamMap.currentSquarei;
+        afterMap.currentSquarej = lamMap.currentSquarej;
+      } else {
+        afterMap.setParent(this.currentMap);
+        afterMap.currentSquare = focus;
+        afterMap.currentSquarei = this.focusi;
+        afterMap.currentSquarej = this.focusj;
+      }
     }
-    afterMap.currentSquare = focus;
 
     // destroy previous map
     this.gMapName?.destroy();
@@ -1568,9 +1594,45 @@ export default class Play extends Phaser.Scene {
     }
     this.gMapBackParent?.destroy();
 
-    this.currentMap.starti = this.playeri;
-    this.currentMap.startj = this.playerj;
-    this.currentMap.startd = this.playerDirection;
+    let afteri: number;
+    let afterj: number;
+    let afterd: Direction = 'right';
+    if (focus.Atype === 'block' && focus.block === 'parent') {
+      afteri = this.currentMap.currentSquarei;
+      afterj = this.currentMap.currentSquarej;
+      // afterMap の afteri, afterj から 4 方向確認して air があればそっち向きにする
+      const d = [
+        [0, 1],
+        [1, 0],
+        [0, -1],
+        [-1, 0]
+      ];
+      const dname: Direction[] = ['right', 'down', 'left', 'up'];
+      for (let k = 0; k < 4; k += 1) {
+        const ni = afteri + d[k][0];
+        const nj = afterj + d[k][1];
+        if (
+          ni < 0 ||
+          afterMap.h <= ni ||
+          nj < 0 ||
+          afterMap.w <= nj ||
+          afterMap.squares[ni][nj].Atype !== 'air'
+        ) {
+          // eslint-disable-next-line no-continue
+          continue;
+        }
+        if (afterMap.squares[ni][nj].Atype === 'air') {
+          afteri = ni;
+          afterj = nj;
+          afterd = dname[k];
+          break;
+        }
+        break;
+      }
+    } else {
+      afteri = afterMap.starti;
+      afterj = afterMap.startj;
+    }
 
     // if (focus.Atype === 'block' && focus.block === 'parent') {
     //   this.currentSquares.pop();
@@ -1587,11 +1649,7 @@ export default class Play extends Phaser.Scene {
       this.mapOriginx = W / 2 - w / 2;
     }
 
-    this.playerDirection = this.currentMap.startd;
-    if (this.gImagePlayer) {
-      this.gImagePlayer.rotation = rotationFromDirection(this.playerDirection);
-    }
-    this.moveToPosition(this.currentMap.starti, this.currentMap.startj);
+    this.moveToPosition(afteri, afterj, afterd);
     if (focus.Atype === 'block' && focus.block === 'parent') {
       this.reflectModified();
     }
@@ -1861,7 +1919,9 @@ export default class Play extends Phaser.Scene {
 
   createColoredTermImage(t: Term, hash: string, handle: string) {
     const deltaH = deltaHFrom(hash);
-    const originalTexture = this.textures.get(t.Atype);
+    const originalTexture = this.textures.get(
+      t.Atype === 'ref' ? 'lam' : t.Atype
+    );
     const originalTextureImage = originalTexture.getSourceImage();
     const h = originalTextureImage.height;
     const w = originalTextureImage.width;
@@ -1901,11 +1961,12 @@ export default class Play extends Phaser.Scene {
         if ('b' in afterRgb) {
           pixels.data[(i * w + j) * 4 + 2] = afterRgb.b;
         }
-        pixels.data[(i * w + j) * 4 + 3] = this.textures.getPixelAlpha(
-          j,
-          i,
-          t.Atype
-        );
+        pixels.data[(i * w + j) * 4 + 3] =
+          this.textures.getPixelAlpha(
+            j,
+            i,
+            t.Atype === 'ref' ? 'lam' : t.Atype
+          ) * (t.Atype === 'ref' ? 0.8 : 1);
       }
     }
     context.putImageData(pixels, 0, 0);

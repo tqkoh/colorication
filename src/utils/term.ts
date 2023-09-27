@@ -14,10 +14,11 @@ type Term =
   | { Atype: 'lam'; var: string; ret: Term }
   | { Atype: 'ref'; var: string; ref: Term | undefined };
 
+const termMap: Map<string, Term> = new Map<string, Term>();
+
 export function normalized(
   t: Term, // ref
-  idMap: Map<string, number> = new Map<string, number>(),
-  termMap: Map<string, Term> = new Map<string, Term>()
+  idMap: Map<string, number> = new Map<string, number>()
 ): Term {
   return match(t)
     .with({ Atype: 'var' }, (v) => {
@@ -40,8 +41,8 @@ export function normalized(
     .with({ Atype: 'app' }, (a) => {
       const ret: Term = {
         Atype: 'app',
-        lam: normalized(a.lam, idMap, termMap),
-        param: normalized(a.param, idMap, termMap)
+        lam: normalized(a.lam, idMap),
+        param: normalized(a.param, idMap)
       };
       return ret;
     })
@@ -52,7 +53,7 @@ export function normalized(
       const ret: Term = {
         Atype: 'lam',
         var: newId.toString(),
-        ret: normalized(l.ret, idMap, termMap)
+        ret: normalized(l.ret, idMap)
       };
       return ret;
     })
@@ -84,8 +85,7 @@ export function normalized(
 
 export function randomized(
   t: Term, // ref
-  m: Map<string, string> = new Map<string, string>(),
-  termMap: Map<string, Term> = new Map<string, Term>()
+  m: Map<string, string> = new Map<string, string>()
 ): Term {
   return match(t)
     .with({ Atype: 'var' }, (v) => {
@@ -108,8 +108,8 @@ export function randomized(
     .with({ Atype: 'app' }, (a) => {
       const ret: Term = {
         Atype: 'app',
-        lam: randomized(a.lam, m, termMap),
-        param: randomized(a.param, m, termMap)
+        lam: randomized(a.lam, m),
+        param: randomized(a.param, m)
       };
       return ret;
     })
@@ -120,7 +120,7 @@ export function randomized(
       const ret: Term = {
         Atype: 'lam',
         var: newId,
-        ret: randomized(l.ret, m, termMap)
+        ret: randomized(l.ret, m)
       };
       return ret;
     })
@@ -133,7 +133,7 @@ export function randomized(
         const ret: Term = {
           Atype: 'ref',
           var: newId,
-          ref: {
+          ref: term || {
             Atype: 'var',
             var: '0'
           }

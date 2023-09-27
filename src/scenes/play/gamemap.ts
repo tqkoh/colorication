@@ -59,6 +59,10 @@ export class GameMap {
 
   currentSquare: Square | undefined;
 
+  currentSquarei: number;
+
+  currentSquarej: number;
+
   squares: Square[][];
 
   h: number;
@@ -121,6 +125,8 @@ export class GameMap {
       }
     }
     this.squares = cloneDeep(squares);
+    this.currentSquarei = 0;
+    this.currentSquarej = 0;
     this.h = squares.length;
     this.w = this.h ? squares[0].length : 0;
     for (let i = 0; i < squares.length; i += 1) {
@@ -302,6 +308,7 @@ export function squaresFromTerm(t: Term): Square[][] {
     if (t.ref && t.ref.Atype === 'lam') {
       return squaresFromLam(t.ref.var, t.ref.ret);
     }
+    log(10, 't.ref:', t.ref);
     throw new Error('ref is not lam');
   }
   throw new Error('var cant become map');
