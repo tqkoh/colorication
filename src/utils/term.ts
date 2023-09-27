@@ -18,7 +18,8 @@ const termMap: Map<string, Term> = new Map<string, Term>();
 
 export function normalized(
   t: Term, // ref
-  idMap: Map<string, number> = new Map<string, number>()
+  idMap: Map<string, number> = new Map<string, number>(),
+  refTmpMap: Map<number, Term> = new Map<number, Term>()
 ): Term {
   return match(t)
     .with({ Atype: 'var' }, (v) => {
@@ -41,8 +42,8 @@ export function normalized(
     .with({ Atype: 'app' }, (a) => {
       const ret: Term = {
         Atype: 'app',
-        lam: normalized(a.lam, idMap),
-        param: normalized(a.param, idMap)
+        lam: normalized(a.lam, idMap, refTmpMap),
+        param: normalized(a.param, idMap, refTmpMap)
       };
       return ret;
     })
@@ -53,14 +54,17 @@ export function normalized(
       const ret: Term = {
         Atype: 'lam',
         var: newId.toString(),
-        ret: normalized(l.ret, idMap)
+        ret: normalized(l.ret, idMap, refTmpMap)
       };
+      const term = refTmpMap.get(newId);
+      if (term && term.Atype === 'ref') {
+        term.ref = ret;
+      }
       return ret;
     })
     .with({ Atype: 'ref' }, (r) => {
       const id: number | undefined = idMap.get(r.var);
-      const term: Term | undefined = termMap.get(r.var);
-      if (id === undefined || term === undefined) {
+      if (id === undefined) {
         const newId: number = idMap.size;
         idMap.set(r.var, newId);
         const ret: Term = {
@@ -76,8 +80,9 @@ export function normalized(
       const ret: Term = {
         Atype: 'ref',
         var: id.toString(),
-        ref: term
+        ref: undefined
       };
+      refTmpMap.set(id, ret);
       return ret;
     })
     .exhaustive();
@@ -85,14 +90,15 @@ export function normalized(
 
 export function randomized(
   t: Term, // ref
-  m: Map<string, string> = new Map<string, string>()
+  idMap: Map<string, string> = new Map<string, string>(),
+  refTmpMap: Map<string, Term> = new Map<string, Term>()
 ): Term {
   return match(t)
     .with({ Atype: 'var' }, (v) => {
-      const id: string | undefined = m.get(v.var);
+      const id: string | undefined = idMap.get(v.var);
       if (id === undefined) {
         const newId: string = uuid();
-        m.set(v.var, newId);
+        idMap.set(v.var, newId);
         const ret: Term = {
           Atype: 'var',
           var: newId
@@ -108,32 +114,43 @@ export function randomized(
     .with({ Atype: 'app' }, (a) => {
       const ret: Term = {
         Atype: 'app',
-        lam: randomized(a.lam, m),
-        param: randomized(a.param, m)
+        lam: randomized(a.lam, idMap, refTmpMap),
+        param: randomized(a.param, idMap, refTmpMap)
       };
       return ret;
     })
     .with({ Atype: 'lam' }, (l) => {
       const newId = uuid();
-      m.set(l.var, newId);
+      idMap.set(l.var, newId);
+      log(33, l.var, newId);
       termMap.set(l.var, l);
+      termMap.set(newId, l);
       const ret: Term = {
         Atype: 'lam',
         var: newId,
-        ret: randomized(l.ret, m)
+        ret: randomized(l.ret, idMap, refTmpMap)
       };
+      const term = refTmpMap.get(newId);
+      if (term && term.Atype === 'ref') {
+        term.ref = ret;
+      }
+      log(33, 'lam', ret);
       return ret;
     })
     .with({ Atype: 'ref' }, (r) => {
-      const id: string | undefined = m.get(r.var);
-      const term: Term | undefined = termMap.get(r.var);
-      if (id === undefined || term === undefined) {
+      const id: string | undefined = idMap.get(r.var);
+      if (id === undefined) {
+        const term = termMap.get(r.var);
+        if (term !== undefined && term.Atype === 'lam') {
+          return t;
+        }
+        log(33, 'No id');
         const newId: string = uuid();
-        m.set(r.var, newId);
+        idMap.set(r.var, newId);
         const ret: Term = {
           Atype: 'ref',
           var: newId,
-          ref: term || {
+          ref: {
             Atype: 'var',
             var: '0'
           }
@@ -143,8 +160,10 @@ export function randomized(
       const ret: Term = {
         Atype: 'ref',
         var: id,
-        ref: term
+        ref: undefined
       };
+      refTmpMap.set(id, ret);
+      log(33, 'ref', ret);
       return ret;
     })
     .exhaustive();

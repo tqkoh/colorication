@@ -73,10 +73,7 @@ function reduceTerm(t: Term): Term {
   return match<Term, Term>(t)
     .with({ Atype: 'var' }, (va) => {
       depth -= 1;
-      return {
-        Atype: 'var',
-        var: va.var
-      };
+      return va;
     })
     .with({ Atype: 'app' }, (ap) => {
       const reducedLam = reduceTerm(ap.lam);
@@ -99,11 +96,7 @@ function reduceTerm(t: Term): Term {
     })
     .with({ Atype: 'ref' }, (re) => {
       depth -= 1;
-      return {
-        Atype: 'ref',
-        var: re.var,
-        ref: re.ref
-      };
+      return re;
     })
     .exhaustive();
 }
@@ -123,7 +116,11 @@ export function squareHash(s: Square): string {
     }
     depth = 0;
     count = 0;
-    return hash({ term: normalized(reduceTerm(s.term)) });
+    return hash({
+      term: normalized(
+        reduceTerm(s.term.Atype === 'ref' && s.term.ref ? s.term.ref : s.term)
+      )
+    });
   }
   return hash(s);
 }

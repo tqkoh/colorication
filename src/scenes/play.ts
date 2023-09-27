@@ -1924,9 +1924,9 @@ export default class Play extends Phaser.Scene {
 
   createColoredTermImage(t: Term, hash: string, handle: string) {
     const deltaH = deltaHFrom(hash);
-    const originalTexture = this.textures.get(
-      t.Atype === 'ref' ? 'lam' : t.Atype
-    );
+    const deltaS = t.Atype === 'ref' ? -0.1 : 0;
+    const originalHandle = t.Atype === 'ref' ? 'lam' : t.Atype;
+    const originalTexture = this.textures.get(originalHandle);
     const originalTextureImage = originalTexture.getSourceImage();
     const h = originalTextureImage.height;
     const w = originalTextureImage.width;
@@ -1945,7 +1945,7 @@ export default class Play extends Phaser.Scene {
       log(56, deltaVt);
       for (let j = 0; j < w; j += 1) {
         const rgb =
-          this.textures.getPixel(j, i, t.Atype) ||
+          this.textures.getPixel(j, i, originalHandle) ||
           Phaser.Display.Color.RGBStringToColor('#000000');
         const r = rgb.red;
         const g = rgb.green;
@@ -1954,8 +1954,12 @@ export default class Play extends Phaser.Scene {
         deltaVt = Math.floor(deltaVt / 2);
         const afterRgb =
           i === h - 3 && deltaVt % 2 === 1
-            ? Phaser.Display.Color.HSVToRGB(hsv.h + deltaH, 0.22, 1)
-            : Phaser.Display.Color.HSVToRGB(hsv.h + deltaH, hsv.s, hsv.v);
+            ? Phaser.Display.Color.HSVToRGB(hsv.h + deltaH, 0.22 + deltaS, 1)
+            : Phaser.Display.Color.HSVToRGB(
+                hsv.h + deltaH,
+                hsv.s + deltaS,
+                hsv.v
+              );
 
         if ('r' in afterRgb) {
           pixels.data[(i * w + j) * 4 + 0] = afterRgb.r;
@@ -1967,11 +1971,8 @@ export default class Play extends Phaser.Scene {
           pixels.data[(i * w + j) * 4 + 2] = afterRgb.b;
         }
         pixels.data[(i * w + j) * 4 + 3] =
-          this.textures.getPixelAlpha(
-            j,
-            i,
-            t.Atype === 'ref' ? 'lam' : t.Atype
-          ) * (t.Atype === 'ref' ? 0.8 : 1);
+          this.textures.getPixelAlpha(j, i, originalHandle) *
+          (t.Atype === 'ref' ? 1 : 1);
       }
     }
     context.putImageData(pixels, 0, 0);

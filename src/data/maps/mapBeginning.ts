@@ -1,10 +1,10 @@
 import { GameMap, Square } from '../../scenes/play/gamemap';
 import { squaresFromAA, startSquare as st } from '../../scenes/play/squares';
-import { CLEAR_ALL } from '../../utils/deb';
+import { CLEAR_ALL, log } from '../../utils/deb';
 import { codesFrom } from '../../utils/font';
 
 import { Stage } from '../../scenes/play/stage';
-import Term from '../../utils/term';
+import Term, { randomized } from '../../utils/term';
 import mapColorication from './colorication/mapColorication';
 import stagePipe2 from './colorication/stagePipe2';
 import stageCombination from './stageCombination';
@@ -79,7 +79,7 @@ const wo0: Square = {
 
 export const mapRoot: Square[][] = [[rett, st(), wo0]];
 
-const rec: Term = {
+const recI: Term = {
   Atype: 'lam',
   var: '0',
   ret: {
@@ -88,9 +88,11 @@ const rec: Term = {
     ref: undefined
   }
 };
-if (rec.ret.Atype === 'ref') {
-  rec.ret.ref = rec;
+if (recI.ret.Atype === 'ref') {
+  recI.ret.ref = recI;
 }
+log(33, 'kore');
+const rec = randomized(recI);
 
 // prettier-ignore
 export const sandboxRoot: Square[][] = squaresFromAA(
