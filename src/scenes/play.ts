@@ -201,8 +201,6 @@ export default class Play extends Phaser.Scene {
 
   currentMap: GameMap;
 
-  currentSquares: Square[];
-
   clipSquare: Square;
 
   modifiedTerm: Term[];
@@ -321,23 +319,6 @@ export default class Play extends Phaser.Scene {
     this.lamMapMap = new Map<string, GameMap>();
     this.currentMap = this.map; // ref
     this.front = [];
-    this.currentSquares = [
-      {
-        Atype: 'air',
-        airtype: 'normal',
-        name: codesFrom(
-          `${
-            this.allowedCommands
-              ? 'WASD to move, use shift to just turn'
-              : 'Beginning                 WASD to move!'
-          }`
-        ),
-        collidable: false,
-        movable: false,
-        locked: false,
-        image: []
-      }
-    ];
     this.clipSquare = airSquare();
     this.modifiedTerm = [];
     this.entering = false;
@@ -432,23 +413,6 @@ export default class Play extends Phaser.Scene {
     this.map = new GameMap(data.mode === 'sandbox' ? sandboxRoot : mapRoot);
     this.lamMapMap = new Map<string, GameMap>();
     this.currentMap = this.map; // ref
-    this.currentSquares = [
-      {
-        Atype: 'air',
-        airtype: 'normal',
-        name: codesFrom(
-          `${
-            this.allowedCommands
-              ? 'WASD to move, use shift to just turn'
-              : 'Beginning                 WASD to move!'
-          }`
-        ),
-        collidable: false,
-        movable: false,
-        locked: false,
-        image: []
-      }
-    ];
     this.clipSquare = airSquare();
     this.modifiedTerm = [];
     this.playerDirection = this.currentMap.startd;
@@ -645,13 +609,13 @@ export default class Play extends Phaser.Scene {
     this.playeri = nexti;
     this.playerj = nextj;
     this.playerDirection = nextd;
-    log(10, this.playeri, this.playerj, this.playerDirection);
+    log(100, this.playeri, this.playerj, this.playerDirection);
     this.updatePlayerAndFocus();
   }
 
   checkChangeBackParent(i: number, j: number) {
-    if (!this.currentSquares.length) return;
-    const current = this.currentSquares.slice(-1)[0];
+    if (!this.currentMap.currentSquare) return;
+    const current = this.currentMap.currentSquare;
     if (current.Atype !== 'term') return;
     if (current.term.Atype === 'lam') {
       if (i === 2 && j === 1 && this.gMapBackParent) {
@@ -1303,8 +1267,7 @@ export default class Play extends Phaser.Scene {
   }
 
   leaveCheck() {
-    log(9, this.currentSquares);
-    return match(this.currentSquares.slice(-1)[0])
+    return match(this.currentMap.currentSquare)
       .with({ Atype: 'term', term: { Atype: 'app' } }, () => {
         let ok = true;
         if (this.currentMap.squares[2][2].Atype !== 'term') {
@@ -1409,6 +1372,11 @@ export default class Play extends Phaser.Scene {
 
         return true;
       })
+      .with(undefined, () => {
+        log(10, 'currentSquare is undefined');
+        this.modifiedTerm = [];
+        return true;
+      })
       .with(P._, () => {
         this.modifiedTerm = [];
         return true;
@@ -1421,7 +1389,10 @@ export default class Play extends Phaser.Scene {
       this.currentMap.squares[this.focusi][this.focusj]
     )
       .with({ Atype: 'term', term: { Atype: 'lam' } }, (focus) => {
-        if (this.modifiedTerm.length < 1) throw new Error('s');
+        if (this.modifiedTerm.length < 1) {
+          log(10, 'leaving lam but modifiedTerm is empty');
+          return undefined;
+        }
         const lam: Term = {
           Atype: 'lam',
           var: focus.term.var,
@@ -1434,7 +1405,15 @@ export default class Play extends Phaser.Scene {
         return lam;
       })
       .with({ Atype: 'term', term: { Atype: 'app' } }, (focus) => {
-        if (this.modifiedTerm.length < 2) throw new Error('s');
+        if (this.modifiedTerm.length < 2) {
+          log(
+            10,
+            'leaving app but modifiedTerm.length is',
+            this.modifiedTerm.length,
+            '(must be >= 2)'
+          );
+          return undefined;
+        }
 
         const app: Term = {
           Atype: 'app',
@@ -1569,6 +1548,7 @@ export default class Play extends Phaser.Scene {
     ) {
       afterMap.setParent(this.currentMap);
     }
+    afterMap.currentSquare = focus;
 
     // destroy previous map
     this.gMapName?.destroy();
@@ -1592,11 +1572,11 @@ export default class Play extends Phaser.Scene {
     this.currentMap.startj = this.playerj;
     this.currentMap.startd = this.playerDirection;
 
-    if (focus.Atype === 'block' && focus.block === 'parent') {
-      this.currentSquares.pop();
-    } else {
-      this.currentSquares.push(focus);
-    }
+    // if (focus.Atype === 'block' && focus.block === 'parent') {
+    //   this.currentSquares.pop();
+    // } else {
+    //   this.currentSquares.push(focus);
+    // }
     this.currentMap = afterMap;
     {
       const H = globalThis.screenh - 31;
@@ -1642,8 +1622,8 @@ export default class Play extends Phaser.Scene {
       // this.gMapBackground.strokeRectShape(this.gMapBackgroundShape);
       this.gMapBackground.fillRectShape(this.gMapBackgroundShape);
     }
-    if (this.currentSquares.length) {
-      const current = this.currentSquares.slice(-1)[0];
+    if (this.currentMap.currentSquare) {
+      const current = this.currentMap.currentSquare;
       if (current.Atype === 'term') {
         const y = 31 + (globalThis.screenh - 31) / 2;
         const x = globalThis.screenw / 2;
@@ -1652,7 +1632,7 @@ export default class Play extends Phaser.Scene {
           .image(
             x,
             y,
-            this.imageHandleFromSquare(this.currentSquares.slice(-1)[0], 1, 1)
+            this.imageHandleFromSquare(this.currentMap.currentSquare, 1, 1)
           )
           .setScale(7)
           .setAlpha(afterLeave ? 0.2 : 0.5)
@@ -1662,23 +1642,17 @@ export default class Play extends Phaser.Scene {
 
     // add next map
 
-    if (this.currentSquares.length) {
-      const handle = `mapname_${this.currentSquares.slice(-1)[0].name}`;
+    if (this.currentMap.currentSquare) {
+      const handle = `mapname_${this.currentMap.currentSquare.name}`;
       if (!this.textures.exists(handle)) {
-        this.font?.loadImageFrom(
-          this.currentSquares.slice(-1)[0].name,
-          handle,
-          1
-        );
+        this.font?.loadImageFrom(this.currentMap.currentSquare.name, handle, 1);
       }
       const t = this.textures.get(handle).getSourceImage();
       const w = t.width;
       this.gMapName = this.add
         .image(10 + w / 2, 15, handle)
         .setAlpha(
-          afterLeave && this.currentSquares.slice(-1)[0].Atype === 'term'
-            ? 0.3
-            : 1
+          afterLeave && this.currentMap.currentSquare.Atype === 'term' ? 0.3 : 1
         );
     }
     log(13, 'globalThis.progress', globalThis.progress);
@@ -1835,7 +1809,6 @@ export default class Play extends Phaser.Scene {
       this.closeMenu();
     }
     if (justDown(this.keys.R)) {
-      log(8, this.currentSquares);
       for (let i = 0; i < this.currentMap.h; i += 1) {
         for (let j = 0; j < this.currentMap.w; j += 1) {
           const s = this.currentMap.squares[i][j];
@@ -2072,14 +2045,10 @@ export default class Play extends Phaser.Scene {
     this.gMapBackground.fillRectShape(this.gMapBackgroundShape);
     this.gMapBackground.setDepth(-90);
 
-    if (this.currentSquares.length) {
-      const handle = `mapname_${this.currentSquares.slice(-1)[0].name}`;
+    if (this.currentMap.currentSquare) {
+      const handle = `mapname_${this.currentMap.currentSquare.name}`;
       if (!this.textures.exists(handle)) {
-        this.font?.loadImageFrom(
-          this.currentSquares.slice(-1)[0].name,
-          handle,
-          1
-        );
+        this.font?.loadImageFrom(this.currentMap.currentSquare.name, handle, 1);
       }
       const t = this.textures.get(handle).getSourceImage();
       const w = t.width;
@@ -2413,17 +2382,21 @@ export default class Play extends Phaser.Scene {
 
   updateAnimationSubmit() {
     log(100, this.submitPhase);
-    const currentSquare = this.currentSquares.slice(-1)[0];
-    if (currentSquare.Atype !== 'stage') return;
+    if (!this.currentMap.currentSquare) {
+      log(10, 'this.currentMap.currentSquare is undefined');
+      return;
+    }
+    const current = this.currentMap.currentSquare;
+    if (current.Atype !== 'stage') return;
     if (
-      currentSquare.Atype !== 'stage' ||
+      current.Atype !== 'stage' ||
       this.front[0].Atype !== 'term' ||
       this.front[1].Atype !== 'term'
     ) {
       this.mainState = 'operating';
       return;
     }
-    const s = currentSquare.stage;
+    const s = current.stage;
     switch (this.submitPhase) {
       case 'input': {
         this.animationSubmitFrame += 1;
@@ -2442,7 +2415,7 @@ export default class Play extends Phaser.Scene {
           // 最後だったら判定して次のテストケースに行く
           if (
             this.submitTestCount[1] ===
-            currentSquare.stage.tests[this.submitTestCount[0]].input.length
+            current.stage.tests[this.submitTestCount[0]].input.length
           ) {
             log(121);
             const out = s.tests[this.submitTestCount[0]].output;
@@ -2564,10 +2537,10 @@ export default class Play extends Phaser.Scene {
 
           this.saveState = this.mainState;
           this.execApply(
-            currentSquare.stage.inputCoords[this.submitTestCount[0]][
+            current.stage.inputCoords[this.submitTestCount[0]][
               this.submitTestCount[1]
             ][0],
-            currentSquare.stage.inputCoords[this.submitTestCount[0]][
+            current.stage.inputCoords[this.submitTestCount[0]][
               this.submitTestCount[1]
             ][1],
             this.focusnexti,
@@ -2601,7 +2574,7 @@ export default class Play extends Phaser.Scene {
         break;
       }
       case 'ac': {
-        const c = this.currentSquares.slice(-1)[0];
+        const c = this.currentMap.currentSquare;
         if (c.Atype !== 'stage') {
           this.submitPhase = 'input';
           break;
@@ -2645,7 +2618,10 @@ export default class Play extends Phaser.Scene {
     if (this.animationClearFrame === 1) {
       this.sClear.play();
 
-      const st = this.currentSquares.slice(-1)[0];
+      if (!this.currentMap.currentSquare) {
+        return;
+      }
+      const st = this.currentMap.currentSquare;
       if (st.Atype !== 'stage') {
         // impossible
         return;

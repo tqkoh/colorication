@@ -57,6 +57,8 @@ export class GameMap {
   // eslint-disable-next-line no-use-before-define
   parentMap: GameMap | undefined;
 
+  currentSquare: Square | undefined;
+
   squares: Square[][];
 
   h: number;
@@ -119,7 +121,6 @@ export class GameMap {
       }
     }
     this.squares = cloneDeep(squares);
-    log(10, 'constructor of GameMap: clone squares', squares);
     this.h = squares.length;
     this.w = this.h ? squares[0].length : 0;
     for (let i = 0; i < squares.length; i += 1) {
