@@ -337,6 +337,7 @@ export function cloneSquare(
   log(10, s.map);
 
   if (s.Atype === 'term' && (randomize || s.term.Atype === 'ref')) {
+    log(33, 'clonesquare', s, randomized(s.term));
     return {
       ...s,
       term: randomized(s.term),

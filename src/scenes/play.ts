@@ -1955,7 +1955,11 @@ export default class Play extends Phaser.Scene {
         const afterRgb =
           i === h - 3 && deltaVt % 2 === 1
             ? Phaser.Display.Color.HSVToRGB(hsv.h + deltaH, 0.22 + deltaS, 1)
-            : Phaser.Display.Color.HSVToRGB(hsv.h + deltaH, hsv.s + deltaS, hsv.v);
+            : Phaser.Display.Color.HSVToRGB(
+                hsv.h + deltaH,
+                hsv.s + deltaS,
+                hsv.v
+              );
 
         if ('r' in afterRgb) {
           pixels.data[(i * w + j) * 4 + 0] = afterRgb.r;
@@ -1967,11 +1971,8 @@ export default class Play extends Phaser.Scene {
           pixels.data[(i * w + j) * 4 + 2] = afterRgb.b;
         }
         pixels.data[(i * w + j) * 4 + 3] =
-          this.textures.getPixelAlpha(
-            j,
-            i,
-            originalHandle
-          ) * (t.Atype === 'ref' ? 1 : 1);
+          this.textures.getPixelAlpha(j, i, originalHandle) *
+          (t.Atype === 'ref' ? 1 : 1);
       }
     }
     context.putImageData(pixels, 0, 0);
