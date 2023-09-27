@@ -1387,10 +1387,8 @@ export default class Play extends Phaser.Scene {
       .exhaustive();
   }
 
-  reflectModified() {
-    const changedTerm: Term | undefined = match(
-      this.currentMap.squares[this.focusi][this.focusj]
-    )
+  reflectModified(map: GameMap, i: number, j: number) {
+    const changedTerm: Term | undefined = match(map.squares[i][j])
       .with({ Atype: 'term', term: { Atype: 'lam' } }, (focus) => {
         if (this.modifiedTerm.length < 1) {
           log(10, 'leaving lam but modifiedTerm is empty');
@@ -1401,7 +1399,8 @@ export default class Play extends Phaser.Scene {
           var: focus.term.var,
           ret: this.modifiedTerm[0]
         };
-        this.currentMap.squares[this.focusi][this.focusj] = {
+        // eslint-disable-next-line no-param-reassign
+        map.squares[i][j] = {
           ...focus,
           term: lam
         };
@@ -1424,7 +1423,8 @@ export default class Play extends Phaser.Scene {
           param: this.modifiedTerm[1]
         };
 
-        this.currentMap.squares[this.focusi][this.focusj] = {
+        // eslint-disable-next-line no-param-reassign
+        map.squares[i][j] = {
           ...focus,
           term: app
         };
@@ -1441,7 +1441,7 @@ export default class Play extends Phaser.Scene {
     {
       const y = 16 * this.focusi;
       const x = 16 * this.focusj;
-      this.gAnimationApply = this.substProgress.map((e, i) =>
+      this.gAnimationApply = this.substProgress.map((e, k) =>
         this.add
           .image(
             this.mapOriginx + x + 8,
@@ -1460,12 +1460,13 @@ export default class Play extends Phaser.Scene {
               this.focusj
             )
           )
-          .setDepth(10 + i)
+          .setDepth(10 + k)
       );
     }
 
-    this.currentMap.squares[this.focusi][this.focusj] = {
-      ...this.currentMap.squares[this.focusi][this.focusj],
+    // eslint-disable-next-line no-param-reassign
+    map.squares[i][j] = {
+      ...map.squares[i][j],
       map: undefined,
       Atype: 'term',
       term: cloneDeep(this.substProgress[0])
@@ -1512,6 +1513,7 @@ export default class Play extends Phaser.Scene {
       }
       afterMap = focus.map;
     } else if (focus.Atype === 'term' && focus.term.Atype === 'ref') {
+      if (!this.leaveCheck()) return;
       if (!focus.map) {
         let map = this.lamMapMap.get(focus.term.var);
         if (map === undefined) {
@@ -1634,6 +1636,11 @@ export default class Play extends Phaser.Scene {
       afterj = afterMap.startj;
       afterd = afterMap.startd;
     }
+    const currenti = this.currentMap.currentSquarei;
+    const currentj = this.currentMap.currentSquarej;
+    if (this.currentMap.parentMap) {
+      this.reflectModified(this.currentMap.parentMap, currenti, currentj);
+    }
 
     // if (focus.Atype === 'block' && focus.block === 'parent') {
     //   this.currentSquares.pop();
@@ -1651,9 +1658,6 @@ export default class Play extends Phaser.Scene {
     }
 
     this.moveToPosition(afteri, afterj, afterd);
-    if (focus.Atype === 'block' && focus.block === 'parent') {
-      this.reflectModified();
-    }
 
     // background
     {
