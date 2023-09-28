@@ -15,6 +15,7 @@ import {
   deltaHFrom,
   equal,
   isTermSquare,
+  recTermExample,
   squareHash
 } from '../utils/termUtils';
 import {
@@ -169,6 +170,7 @@ const MOVEMENT_CYCLE = 24;
 // const LONG_PRESS = 12;
 
 export default class Play extends Phaser.Scene {
+  // keybinds
   keys: {
     Enter: Phaser.Input.Keyboard.Key[];
     Ctrl: Phaser.Input.Keyboard.Key[];
@@ -182,6 +184,8 @@ export default class Play extends Phaser.Scene {
     E: Phaser.Input.Keyboard.Key[];
     C: Phaser.Input.Keyboard.Key[];
     V: Phaser.Input.Keyboard.Key[];
+    F: Phaser.Input.Keyboard.Key[];
+    B: Phaser.Input.Keyboard.Key[];
     Q: Phaser.Input.Keyboard.Key[];
     Z: Phaser.Input.Keyboard.Key[];
     R: Phaser.Input.Keyboard.Key[];
@@ -305,6 +309,8 @@ export default class Play extends Phaser.Scene {
       E: [],
       C: [],
       V: [],
+      F: [],
+      B: [],
       Q: [],
       Z: [],
       R: [],
@@ -400,6 +406,8 @@ export default class Play extends Phaser.Scene {
       E: [],
       C: [],
       V: [],
+      F: [],
+      B: [],
       Q: [],
       Z: [],
       R: [],
@@ -1776,7 +1784,7 @@ export default class Play extends Phaser.Scene {
   execMemo() {}
 
   // eslint-disable-next-line class-methods-use-this
-  execNew() {
+  execNew(newBlock: 'id' | 'f' | 'block' = 'id') {
     if (
       this.focusi < 0 ||
       this.currentMap.h <= this.focusi ||
@@ -1796,19 +1804,51 @@ export default class Play extends Phaser.Scene {
       focus.image[k].destroy();
     }
     focus.image = [];
-    const newSquare: Square = {
-      Atype: 'term',
-      term: randomized({
-        Atype: 'lam',
-        var: '0',
-        ret: { Atype: 'var', var: '0' }
-      }),
-      name: [],
-      movable: true,
-      collidable: true,
-      locked: false,
-      image: []
-    };
+    const newSquare: Square = match(newBlock)
+      .with(
+        'id',
+        () =>
+          ({
+            Atype: 'term',
+            term: randomized({
+              Atype: 'lam',
+              var: '0',
+              ret: { Atype: 'var', var: '0' }
+            }),
+            name: [],
+            movable: true,
+            collidable: true,
+            locked: false,
+            image: []
+          }) as Square
+      )
+      .with(
+        'f',
+        () =>
+          ({
+            Atype: 'term',
+            term: recTermExample(),
+            name: [],
+            movable: true,
+            collidable: true,
+            locked: false,
+            image: []
+          }) as Square
+      )
+      .with(
+        'block',
+        () =>
+          ({
+            Atype: 'block',
+            block: 'solid',
+            name: [],
+            movable: true,
+            collidable: true,
+            locked: false,
+            image: []
+          }) as Square
+      )
+      .exhaustive();
     this.currentMap.squares[this.focusi][this.focusj] = newSquare;
     this.addSquareImage(this.focusi, this.focusj);
   }
@@ -1904,6 +1944,14 @@ export default class Play extends Phaser.Scene {
     }
     if (this.allowedCommands && justDown(this.keys.V)) {
       this.execPaste();
+      this.closeMenu();
+    }
+    if (this.allowedCommands && justDown(this.keys.F)) {
+      this.execNew('f');
+      this.closeMenu();
+    }
+    if (this.allowedCommands && justDown(this.keys.B)) {
+      this.execNew('block');
       this.closeMenu();
     }
     if (this.allowedCommands && justDown(this.keys.Q)) {
@@ -2257,6 +2305,7 @@ export default class Play extends Phaser.Scene {
       `rgba(${WHITE[0]},${WHITE[1]},${WHITE[2]},1)`
     );
 
+    // keybinds
     this.keys.Enter = keysFrom(this, globalThis.keyConfig.Enter);
     this.keys.Ctrl = keysFrom(this, globalThis.keyConfig.Ctrl);
     this.keys.Shift = keysFrom(this, globalThis.keyConfig.Shift);
@@ -2269,6 +2318,8 @@ export default class Play extends Phaser.Scene {
     this.keys.E = keysFrom(this, globalThis.keyConfig.E);
     this.keys.C = keysFrom(this, globalThis.keyConfig.C);
     this.keys.V = keysFrom(this, globalThis.keyConfig.V);
+    this.keys.F = keysFrom(this, globalThis.keyConfig.F);
+    this.keys.B = keysFrom(this, globalThis.keyConfig.B);
     this.keys.Q = keysFrom(this, globalThis.keyConfig.Q);
     this.keys.Z = keysFrom(this, globalThis.keyConfig.Z);
     this.keys.R = keysFrom(this, globalThis.keyConfig.R);
@@ -2727,8 +2778,12 @@ export default class Play extends Phaser.Scene {
         this.currentMap.startj,
         opposite(this.currentMap.startd)
       );
+      if (this.currentMap.parentMap) {
+        this.currentMap.parentMap.squares[this.currentMap.currentSquarei][
+          this.currentMap.currentSquarej
+        ].movable = true;
+      }
       this.execEnter();
-      this.currentMap.squares[this.focusi][this.focusj].movable = true;
     }
   }
 

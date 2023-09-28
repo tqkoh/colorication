@@ -1,9 +1,9 @@
-import { squaresFromAA } from '../../../scenes/play/squares';
-import { Stage } from '../../../scenes/play/stage';
+import { squaresFromAA } from '../../../../scenes/play/squares';
+import { Stage } from '../../../../scenes/play/stage';
 
 const stagePipe2: Stage = new Stage(
-  12,
-  '0.',
+  13,
+  '3.',
   [
     {
       input: [],
