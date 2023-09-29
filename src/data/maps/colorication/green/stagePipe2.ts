@@ -34,9 +34,9 @@ const stagePipe2: Stage = new Stage(
   squaresFromAA(
     [
       '.bi.##..#',
-      '#i#.##0.#',
+      '#i#.##1.#',
       '!.rrrrisp',
-      '#b####1.#',
+      '#b####0.#',
       '#.......#'
     ],
     []

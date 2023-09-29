@@ -15,7 +15,6 @@ import {
   deltaHFrom,
   equal,
   isTermSquare,
-  recTermExample,
   squareHash
 } from '../utils/termUtils';
 import {
@@ -28,7 +27,7 @@ import {
   squaresFromTerm
 } from './play/gamemap';
 import { skills } from './play/skills';
-import { airSquare, submitSquare, wallSquare } from './play/squares';
+import { airSquare, blockSquare, idSquare, recSquare, submitSquare, wallSquare } from './play/squares';
 import { Stage } from './play/stage';
 // const completeSubst = subst;
 
@@ -185,6 +184,7 @@ export default class Play extends Phaser.Scene {
     C: Phaser.Input.Keyboard.Key[];
     V: Phaser.Input.Keyboard.Key[];
     F: Phaser.Input.Keyboard.Key[];
+    G: Phaser.Input.Keyboard.Key[];
     B: Phaser.Input.Keyboard.Key[];
     Q: Phaser.Input.Keyboard.Key[];
     Z: Phaser.Input.Keyboard.Key[];
@@ -310,6 +310,7 @@ export default class Play extends Phaser.Scene {
       C: [],
       V: [],
       F: [],
+      G: [],
       B: [],
       Q: [],
       Z: [],
@@ -407,6 +408,7 @@ export default class Play extends Phaser.Scene {
       C: [],
       V: [],
       F: [],
+      G: [],
       B: [],
       Q: [],
       Z: [],
@@ -1784,7 +1786,7 @@ export default class Play extends Phaser.Scene {
   execMemo() {}
 
   // eslint-disable-next-line class-methods-use-this
-  execNew(newBlock: 'id' | 'f' | 'block' = 'id') {
+  execNew(newBlock: 'id' | 'f' | 'wall' | 'block' = 'id') {
     if (
       this.focusi < 0 ||
       this.currentMap.h <= this.focusi ||
@@ -1808,49 +1810,44 @@ export default class Play extends Phaser.Scene {
       .with(
         'id',
         () =>
-          ({
-            Atype: 'term',
-            term: randomized({
-              Atype: 'lam',
-              var: '0',
-              ret: { Atype: 'var', var: '0' }
-            }),
-            name: [],
-            movable: true,
-            collidable: true,
-            locked: false,
-            image: []
-          }) as Square
+          idSquare()
       )
       .with(
         'f',
         () =>
-          ({
-            Atype: 'term',
-            term: recTermExample(),
-            name: [],
-            movable: true,
-            collidable: true,
-            locked: false,
-            image: []
-          }) as Square
-      )
+          recSquare()
+    )
+      .with('wall', ()=>wallSquare())
       .with(
         'block',
         () =>
-          ({
-            Atype: 'block',
-            block: 'solid',
-            name: [],
-            movable: true,
-            collidable: true,
-            locked: false,
-            image: []
-          }) as Square
+          blockSquare()
       )
       .exhaustive();
     this.currentMap.squares[this.focusi][this.focusj] = newSquare;
     this.addSquareImage(this.focusi, this.focusj);
+    if (newBlock === 'wall') {
+      // 4 方向の air を更新する
+      const d = [
+        [0, 1],
+        [1, 0],
+        [0, -1],
+        [-1, 0]
+      ]
+      for (let k = 0; k < 4; k += 1){
+        const ni = this.focusi + d[k][0];
+        const nj = this.focusj + d[k][1];
+        if (
+          ni >= 0 &&
+          ni < this.currentMap.h &&
+          nj >= 0 &&
+          nj < this.currentMap.w
+        ) {
+          this.removeSquareImage(ni, nj);
+          this.addSquareImage(ni, nj);
+        }
+      }
+    }
   }
 
   handleMenu() {
@@ -1948,6 +1945,10 @@ export default class Play extends Phaser.Scene {
     }
     if (this.allowedCommands && justDown(this.keys.F)) {
       this.execNew('f');
+      this.closeMenu();
+    }
+    if (this.allowedCommands && justDown(this.keys.G)) {
+      this.execNew('wall');
       this.closeMenu();
     }
     if (this.allowedCommands && justDown(this.keys.B)) {
@@ -2319,6 +2320,7 @@ export default class Play extends Phaser.Scene {
     this.keys.C = keysFrom(this, globalThis.keyConfig.C);
     this.keys.V = keysFrom(this, globalThis.keyConfig.V);
     this.keys.F = keysFrom(this, globalThis.keyConfig.F);
+    this.keys.G = keysFrom(this, globalThis.keyConfig.G);
     this.keys.B = keysFrom(this, globalThis.keyConfig.B);
     this.keys.Q = keysFrom(this, globalThis.keyConfig.Q);
     this.keys.Z = keysFrom(this, globalThis.keyConfig.Z);
