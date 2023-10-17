@@ -1,23 +1,24 @@
 import { GameMap, Square } from '../../scenes/play/gamemap';
 import { squaresFromAA, startSquare as st } from '../../scenes/play/squares';
-import { CLEAR_ALL, log } from '../../utils/deb';
+import { CLEAR_ALL } from '../../utils/deb';
 import { codesFrom } from '../../utils/font';
 
 import { Stage } from '../../scenes/play/stage';
-import Term, { randomized } from '../../utils/term';
-import mapColorication from './colorication/mapColorication';
-import stagePipe2 from './colorication/stagePipe2';
+import stagePipe2 from './colorication/green/stagePipe2';
+import mapColorication, {
+  mapColoricationName
+} from './colorication/mapColorication';
 import stageCombination from './stageCombination';
 import stageRegulation from './stageRegulation';
 import stageSokoban from './stageSokoban';
 import stageStairs from './stageStairs';
 
-const wo1: Square = {
+const worldCyan: Square = {
   Atype: 'map',
   map: new GameMap(mapColorication, undefined, () => {
     // skills.enterTerm = true;
   }),
-  name: codesFrom('Colorication'),
+  name: codesFrom(mapColoricationName),
   movable: false,
   collidable: true,
   locked: false,
@@ -65,9 +66,12 @@ const mapBeginningAA = [
   '#####...#E.##',
   '#####......##'
 ];
-const mapBeginning = squaresFromAA(mapBeginningAA, [wo1, ...stagesquares]);
+const mapBeginning = squaresFromAA(mapBeginningAA, [
+  worldCyan,
+  ...stagesquares
+]);
 
-const wo0: Square = {
+const worldBeginning: Square = {
   Atype: 'map',
   map: new GameMap(mapBeginning),
   name: codesFrom('Beginning            WASD to move, R to reset!'),
@@ -77,42 +81,19 @@ const wo0: Square = {
   image: []
 };
 
-export const mapRoot: Square[][] = [[rett, st(), wo0]];
-
-const recI: Term = {
-  Atype: 'lam',
-  var: '0',
-  ret: {
-    Atype: 'ref',
-    var: '0',
-    ref: undefined
-  }
-};
-if (recI.ret.Atype === 'ref') {
-  recI.ret.ref = recI;
-}
-log(33, 'kore');
-const rec = randomized(recI);
+export const mapRoot: Square[][] = [[rett, st(), worldBeginning]];
 
 // prettier-ignore
 export const sandboxRoot: Square[][] = squaresFromAA(
   [
     'As.........',
-    '.........B.',
+    '...........',
     '...........',
     '...........',
     '...........',
     '...........'
   ],
-  [rett, {
-    Atype: 'term',
-    term: rec,
-    name: [],
-    movable: true,
-    collidable: true,
-    locked: false,
-    image: [],
-  }]
+  [rett]
 );
 
 export default mapBeginning;

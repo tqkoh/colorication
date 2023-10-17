@@ -169,22 +169,6 @@ export function randomized(
     .exhaustive();
 }
 
-export const termExample: Term = randomized({
-  Atype: 'app',
-  lam: {
-    Atype: 'lam',
-    var: '0',
-    ret: {
-      Atype: 'var',
-      var: '0'
-    }
-  },
-  param: {
-    Atype: 'var',
-    var: '1'
-  }
-});
-
 export function freeValue(t: Term): string[] {
   return match(t)
     .with({ Atype: 'var' }, (v) => [v.var])
@@ -385,7 +369,7 @@ function substI(
     .with([{ Atype: 'ref' }, P._], ([re]) => {
       log(100, 'subst', 6);
 
-      return [re, 'ok'];
+      return [re.ref || { Atype: 'var', var: '0' }, 'ok'];
     })
     .with([P._, P._], () => {
       log(100, 'subst', 6);

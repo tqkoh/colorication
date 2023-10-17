@@ -230,3 +230,34 @@ export function asCodes(t: Term): number[] {
   }
   return [n];
 }
+
+export const termExample: Term = randomized({
+  Atype: 'app',
+  lam: {
+    Atype: 'lam',
+    var: '0',
+    ret: {
+      Atype: 'var',
+      var: '0'
+    }
+  },
+  param: {
+    Atype: 'var',
+    var: '1'
+  }
+});
+export const recI: Term = {
+  Atype: 'lam',
+  var: '0',
+  ret: {
+    Atype: 'ref',
+    var: '0',
+    ref: undefined
+  }
+};
+if (recI.ret.Atype === 'ref') {
+  recI.ret.ref = recI;
+}
+export function recTermExample(): Term {
+  return randomized(recI);
+}
