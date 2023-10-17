@@ -1,0 +1,6 @@
+newSquare = recSquare();
+
+if (s.term.Atype === 'lam') {
+  s.term.var = focus.term.var;
+  [s.term.ret] = this.modifiedTerm;
+}

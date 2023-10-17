@@ -63,6 +63,8 @@ export class GameMap {
 
   currentSquarej: number;
 
+  lastDirection: Direction;
+
   squares: Square[][];
 
   h: number;
@@ -127,6 +129,7 @@ export class GameMap {
     this.squares = cloneDeep(squares);
     this.currentSquarei = 0;
     this.currentSquarej = 0;
+    this.lastDirection = 'right';
     this.h = squares.length;
     this.w = this.h ? squares[0].length : 0;
     for (let i = 0; i < squares.length; i += 1) {
